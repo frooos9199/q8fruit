@@ -152,9 +152,9 @@ export default function CartPage() {
   };
 
   const handleCheckout = () => {
-    // تحقق من تعبئة جميع الحقول المطلوبة
-    if (!userInfo.name.trim() || !userInfo.phone.trim() || !userInfo.address.trim()) {
-      alert("يرجى تعبئة جميع بيانات التوصيل (الاسم، رقم الهاتف، العنوان)");
+    // تحقق من تعبئة الحقول الأساسية فقط (الاسم ورقم الهاتف)
+    if (!userInfo.name.trim() || !userInfo.phone.trim()) {
+      alert("يرجى تعبئة الاسم ورقم الهاتف على الأقل");
       return;
     }
     if (typeof window !== "undefined") {
@@ -170,9 +170,14 @@ export default function CartPage() {
         deliveryPrice,
         deliveryNote,
         deliveryTime,
-        userInfo,
+        userInfo: {
+          ...userInfo,
+          // إذا ما كتب عنوان، حط رسالة توضيحية
+          address: userInfo.address.trim() || "سيتم التواصل لتحديد العنوان"
+        },
         paymentType,
-        userEmail,
+        userEmail: userEmail || "زائر",
+        isGuest: !userEmail, // علامة للطلبات الضيوف
       };
       invoices.push(invoice);
       window.localStorage.setItem("invoices", JSON.stringify(invoices));
@@ -183,7 +188,7 @@ export default function CartPage() {
         id: invoice.id,
         customer: userInfo.name,
         phone: userInfo.phone,
-        address: userInfo.address,
+        address: userInfo.address.trim() || "سيتم التواصل لتحديد العنوان",
         total: invoice.total,
         deliveryFee: deliveryPrice,
         status: "جديد",
@@ -195,6 +200,7 @@ export default function CartPage() {
           quantity: item.quantity
         })),
         paymentType: paymentType,
+        isGuest: !userEmail, // علامة للطلبات الضيوف
       };
       orders.push(order);
       window.localStorage.setItem("orders", JSON.stringify(orders));
@@ -204,7 +210,7 @@ export default function CartPage() {
       if (email) {
         alert(`تم إرسال الفاتورة إلى بريدك الإلكتروني: ${email}`);
       } else {
-        alert("تم إرسال الطلب! سيتم التواصل معك قريبًا.");
+        alert(`شكراً ${userInfo.name}! تم استلام طلبك بنجاح 🎉\nسنتواصل معك على رقم ${userInfo.phone} قريباً`);
       }
     }
     handleClear();
@@ -221,6 +227,12 @@ export default function CartPage() {
         &times;
       </button>
   <h1 className="text-3xl font-extrabold text-green-500 mb-8 text-center tracking-tight drop-shadow-lg">سلة المشتريات</h1>
+      
+      {/* رسالة ترحيبية للزوار */}
+      <div className="bg-green-900/30 border-2 border-green-500 rounded-2xl p-4 mb-6 w-full max-w-md text-center">
+        <p className="text-green-300 font-bold text-sm">🛒 اطلب الآن كزائر - فقط اسمك ورقم موبايلك!</p>
+      </div>
+
       {/* الاسم دائماً */}
       <div className="bg-gray-800 rounded-2xl p-6 mb-6 border-2 border-green-400 shadow-xl w-full max-w-md flex flex-col items-center">
         <h2 className="text-xl font-bold text-green-400 mb-4">الاسم الكامل</h2>
@@ -306,26 +318,25 @@ export default function CartPage() {
 
           {/* نموذج بيانات المستخدم */}
           <div className="bg-gray-800 rounded-2xl p-6 mt-8 mb-2 border-2 border-green-400 w-full max-w-md flex flex-col items-center">
-            <h2 className="text-lg font-bold text-green-400 mb-3">بيانات التوصيل</h2>
+            <h2 className="text-lg font-bold text-green-400 mb-3">معلومات التوصيل</h2>
             <div className="mb-2 w-full">
-              <label className="block text-gray-200 mb-1">رقم الهاتف</label>
+              <label className="block text-gray-200 mb-1">رقم الهاتف *</label>
               <input
                 type="tel"
                 className="w-full rounded-full p-3 bg-gray-900 border-2 border-green-300 text-white text-lg focus:ring-2 focus:ring-green-400 outline-none transition-all"
                 value={userInfo.phone}
                 onChange={e => setUserInfo({ ...userInfo, phone: e.target.value })}
-                placeholder=""
+                placeholder="مثال: 98899426"
                 required
               />
             </div>
             <div className="mb-2 w-full">
-              <label className="block text-gray-200 mb-1">العنوان</label>
+              <label className="block text-gray-200 mb-1">العنوان (اختياري)</label>
               <textarea
                 className="w-full rounded-xl p-3 bg-gray-900 border-2 border-green-300 text-white min-h-[48px] focus:ring-2 focus:ring-green-400 outline-none transition-all"
                 value={userInfo.address}
                 onChange={e => setUserInfo({ ...userInfo, address: e.target.value })}
-                placeholder=""
-                required
+                placeholder="يمكنك كتابة العنوان هنا أو إرساله عبر الواتساب لاحقاً"
               />
             </div>
           </div>
