@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🍎 متجر الفواكه والخضار - Q8 Fruit
 
-## Getting Started
+متجر إلكتروني متكامل لبيع الفواكه والخضار مع لوحة إدارة شاملة.
 
-First, run the development server:
+## 🚀 المميزات
+
+- ✅ واجهة عربية كاملة
+- ✅ نظام سلة مشتريات ذكي
+- ✅ طلب سريع كزائر (اسم + رقم موبايل فقط)
+- ✅ خيارات دفع متعددة (كاش/كنت)
+- ✅ لوحة إدارة متكاملة
+- ✅ إدارة المنتجات والطلبات والفواتير
+- ✅ رفع وإدارة الصور
+- ✅ Firebase للبيانات والصور
+- ✅ جاهز للتطبيق الموبايل
+
+## 📦 التقنيات المستخدمة
+
+- Next.js 16.0.7
+- React 19.2.1
+- TypeScript
+- Tailwind CSS
+- Firebase (Firestore + Storage + Auth)
+
+## 🔧 إعداد المشروع
+
+### 1. استنساخ المشروع
+
+```bash
+git clone https://github.com/frooos9199/q8fruit.git
+cd q8fruit
+```
+
+### 2. تنصيب المكتبات
+
+```bash
+npm install
+```
+
+### 3. إعداد Firebase
+
+1. اذهب إلى [Firebase Console](https://console.firebase.google.com)
+2. أنشئ مشروع جديد
+3. فعّل **Firestore Database**
+4. فعّل **Storage**
+5. فعّل **Authentication** (Email/Password)
+6. من إعدادات المشروع، احصل على الـ Config
+
+### 4. إعداد متغيرات البيئة
+
+انسخ الملف `.env.example` إلى `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+ثم عدّل القيم في `.env.local` بالقيم من Firebase Console.
+
+### 5. تشغيل المشروع
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+افتح المتصفح على: [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 📱 للتطبيق الموبايل
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+المشروع جاهز للربط مع React Native أو Flutter:
+- جميع البيانات في Firestore
+- الصور في Firebase Storage
+- API موحدة للويب والموبايل
 
-## Learn More
+## 📞 معلومات التواصل
 
-To learn more about Next.js, take a look at the following resources:
+- الواتساب: 98899426
+- المطور: [NexDev](https://nexdev.site)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+صُنع بـ ❤️ في الكويت 🇰🇼
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

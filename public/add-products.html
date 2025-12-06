@@ -118,40 +118,40 @@
         function addProducts() {
             const products = [
                 // الفواكه
-                { id: 1, name: "تفاح امريكي احمر", units: [{name: "كيلو", price: 1.500}], quantity: 1000, active: true, category: "فواكه", images: [] },
-                { id: 2, name: "كيوي ذهبي جنوب افريقيا", units: [{name: "كيلو", price: 3.000}], quantity: 1000, active: true, category: "فواكه", images: [] },
-                { id: 3, name: "برتقال لبناني للعصير", units: [{name: "كيلو", price: 0.800}], quantity: 1000, active: true, category: "فواكه", images: [] },
-                { id: 4, name: "موز فلبيني", units: [{name: "كيلو", price: 0.750}], quantity: 1000, active: true, category: "فواكه", images: [] },
-                { id: 5, name: "تفاح ايراني صغير", units: [{name: "كيلو", price: 1.500}], quantity: 1000, active: true, category: "فواكه", images: [] },
-                { id: 6, name: "فراوله امريكي", units: [{name: "علبة", price: 3.000}], quantity: 1000, active: true, category: "فواكه", images: [] },
-                { id: 7, name: "شمام", units: [{name: "حبة", price: 1.250}], quantity: 1000, active: true, category: "فواكه", images: [] },
-                { id: 8, name: "نكتارين استرالي", units: [{name: "كيلو", price: 2.000}], quantity: 1000, active: true, category: "فواكه", images: [] },
-                { id: 9, name: "خوخ كعب الغزال", units: [{name: "كيلو", price: 1.500}], quantity: 1000, active: true, category: "فواكه", images: [] },
-                { id: 10, name: "مانجو اليمني", units: [{name: "كيلو", price: 4.000}], quantity: 1000, active: true, category: "فواكه", images: [] },
-                { id: 11, name: "تين", units: [{name: "كيلو", price: 3.000}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 1, name: "تفاح امريكي احمر", units: [{name: "كيلو", price: 1.500}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400"] },
+                { id: 2, name: "كيوي ذهبي جنوب افريقيا", units: [{name: "كيلو", price: 3.000}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1585059895524-72359e06133a?w=400"] },
+                { id: 3, name: "برتقال لبناني للعصير", units: [{name: "كيلو", price: 0.800}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1580052614034-c55d20bfee3b?w=400"] },
+                { id: 4, name: "موز فلبيني", units: [{name: "كيلو", price: 0.750}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400"] },
+                { id: 5, name: "تفاح ايراني صغير", units: [{name: "كيلو", price: 1.500}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1568702846914-96b305d2aaeb?w=400"] },
+                { id: 6, name: "فراوله امريكي", units: [{name: "علبة", price: 3.000}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400"] },
+                { id: 7, name: "شمام", units: [{name: "حبة", price: 1.250}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1621583832446-1dfe51308d46?w=400"] },
+                { id: 8, name: "نكتارين استرالي", units: [{name: "كيلو", price: 2.000}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1629828874514-944d8c0b3366?w=400"] },
+                { id: 9, name: "خوخ كعب الغزال", units: [{name: "كيلو", price: 1.500}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1629828874514-944d8c0b3366?w=400"] },
+                { id: 10, name: "مانجو اليمني", units: [{name: "كيلو", price: 4.000}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1553279768-865429fa0078?w=400"] },
+                { id: 11, name: "تين", units: [{name: "كيلو", price: 3.000}], quantity: 1000, active: true, category: "فواكه", images: ["https://images.unsplash.com/photo-1628516235160-900a2c585a55?w=400"] },
                 
                 // الخضار
-                { id: 12, name: "خيار", units: [{name: "كيلو", price: 0.500}], quantity: 1000, active: true, category: "خضار", images: [] },
-                { id: 13, name: "باذنجان", units: [{name: "كيلو", price: 0.650}], quantity: 1000, active: true, category: "خضار", images: [] },
-                { id: 14, name: "زهره", units: [{name: "حبة", price: 1.500}], quantity: 1000, active: true, category: "خضار", images: [] },
-                { id: 15, name: "بروكلي", units: [{name: "حبة", price: 1.500}], quantity: 1000, active: true, category: "خضار", images: [] },
-                { id: 16, name: "قرع مدور", units: [{name: "حبة", price: 1.500}], quantity: 1000, active: true, category: "خضار", images: [] },
-                { id: 17, name: "ليمون اخضر", units: [{name: "كيلو", price: 0.850}], quantity: 1000, active: true, category: "خضار", images: [] },
-                { id: 18, name: "فلفل بارد اخضر", units: [{name: "كيلو", price: 0.750}], quantity: 1000, active: true, category: "خضار", images: [] },
-                { id: 19, name: "فلفل بارد ملون", units: [{name: "كيلو", price: 0.550}], quantity: 1000, active: true, category: "خضار", images: [] },
+                { id: 12, name: "خيار", units: [{name: "كيلو", price: 0.500}], quantity: 1000, active: true, category: "خضار", images: ["https://images.unsplash.com/photo-1604977042946-1eecc30f269e?w=400"] },
+                { id: 13, name: "باذنجان", units: [{name: "كيلو", price: 0.650}], quantity: 1000, active: true, category: "خضار", images: ["https://images.unsplash.com/photo-1659261200833-ec993c7adf37?w=400"] },
+                { id: 14, name: "زهره", units: [{name: "حبة", price: 1.500}], quantity: 1000, active: true, category: "خضار", images: ["https://images.unsplash.com/photo-1568584711271-6f5dc2e1d3a0?w=400"] },
+                { id: 15, name: "بروكلي", units: [{name: "حبة", price: 1.500}], quantity: 1000, active: true, category: "خضار", images: ["https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=400"] },
+                { id: 16, name: "قرع مدور", units: [{name: "حبة", price: 1.500}], quantity: 1000, active: true, category: "خضار", images: ["https://images.unsplash.com/photo-1570586437263-ab629fccc818?w=400"] },
+                { id: 17, name: "ليمون اخضر", units: [{name: "كيلو", price: 0.850}], quantity: 1000, active: true, category: "خضار", images: ["https://images.unsplash.com/photo-1582169296194-e4d644c48063?w=400"] },
+                { id: 18, name: "فلفل بارد اخضر", units: [{name: "كيلو", price: 0.750}], quantity: 1000, active: true, category: "خضار", images: ["https://images.unsplash.com/photo-1563565375-f3fdfdbefa83?w=400"] },
+                { id: 19, name: "فلفل بارد ملون", units: [{name: "كيلو", price: 0.550}], quantity: 1000, active: true, category: "خضار", images: ["https://images.unsplash.com/photo-1525607551316-4a8e16d1f9ba?w=400"] },
                 
                 // الورقيات
-                { id: 20, name: "خس مدور", units: [{name: "حبة", price: 1.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
-                { id: 21, name: "خس", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
-                { id: 22, name: "جرجير", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
-                { id: 23, name: "فجل احمر", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
-                { id: 24, name: "فجل ابيض", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
-                { id: 25, name: "نعناع اخضر", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
+                { id: 20, name: "خس مدور", units: [{name: "حبة", price: 1.250}], quantity: 1000, active: true, category: "ورقيات", images: ["https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400"] },
+                { id: 21, name: "خس", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: ["https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400"] },
+                { id: 22, name: "جرجير", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: ["https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400"] },
+                { id: 23, name: "فجل احمر", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: ["https://images.unsplash.com/photo-1612624729737-8c5d20f14b3c?w=400"] },
+                { id: 24, name: "فجل ابيض", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: ["https://images.unsplash.com/photo-1612624729737-8c5d20f14b3c?w=400"] },
+                { id: 25, name: "نعناع اخضر", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: ["https://images.unsplash.com/photo-1628556899053-68f8e06e9e0b?w=400"] },
                 
                 // سلات الفواكه
-                { id: 26, name: "سلة فواكه مشكلة صغيرة", units: [{name: "سلة", price: 5.000}], quantity: 1000, active: true, category: "سلات الفواكه", images: [] },
-                { id: 27, name: "سلة فواكه مشكلة متوسطة", units: [{name: "سلة", price: 10.000}], quantity: 1000, active: true, category: "سلات الفواكه", images: [] },
-                { id: 28, name: "سلة فواكه مشكلة كبيرة", units: [{name: "سلة", price: 15.000}], quantity: 1000, active: true, category: "سلات الفواكه", images: [] },
+                { id: 26, name: "سلة فواكه مشكلة صغيرة", units: [{name: "سلة", price: 5.000}], quantity: 1000, active: true, category: "سلات الفواكه", images: ["https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400"] },
+                { id: 27, name: "سلة فواكه مشكلة متوسطة", units: [{name: "سلة", price: 10.000}], quantity: 1000, active: true, category: "سلات الفواكه", images: ["https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400"] },
+                { id: 28, name: "سلة فواكه مشكلة كبيرة", units: [{name: "سلة", price: 15.000}], quantity: 1000, active: true, category: "سلات الفواكه", images: ["https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400"] },
             ];
 
             // حفظ في localStorage
