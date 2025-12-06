@@ -228,24 +228,6 @@ export default function CartPage() {
       </button>
   <h1 className="text-3xl font-extrabold text-green-500 mb-8 text-center tracking-tight drop-shadow-lg">سلة المشتريات</h1>
       
-      {/* رسالة ترحيبية للزوار */}
-      <div className="bg-green-900/30 border-2 border-green-500 rounded-2xl p-4 mb-6 w-full max-w-md text-center">
-        <p className="text-green-300 font-bold text-sm">🛒 اطلب الآن كزائر - فقط اسمك ورقم موبايلك!</p>
-      </div>
-
-      {/* الاسم دائماً */}
-      <div className="bg-gray-800 rounded-2xl p-6 mb-6 border-2 border-green-400 shadow-xl w-full max-w-md flex flex-col items-center">
-        <h2 className="text-xl font-bold text-green-400 mb-4">الاسم الكامل</h2>
-        <input
-          type="text"
-          className="w-full rounded-full p-3 bg-gray-900 border-2 border-green-300 text-white text-right text-lg focus:ring-2 focus:ring-green-400 transition-all outline-none"
-          style={{ direction: 'rtl' }}
-          value={userInfo.name}
-          onChange={e => setUserInfo({ ...userInfo, name: e.target.value })}
-          placeholder="اكتب اسمك هنا..."
-          required
-        />
-      </div>
       {/* السلة دائماً */}
       {showAlert && (
         <div className="mb-4 text-center text-white bg-red-600 rounded-lg py-2 px-4 font-bold shadow animate-pulse">تم حذف {deletedName} من السلة</div>
@@ -292,8 +274,8 @@ export default function CartPage() {
           </>
         )}
       </div>
-      {/* باقي الحقول فقط إذا الاسم موجود */}
-      {userInfo.name && (
+      {/* باقي الحقول - تظهر دائماً */}
+      {cart.length > 0 && (
         <>
           {/* بكس ملاحظات المستخدم */}
           <div className="mb-2 mt-8 w-full max-w-md">
@@ -319,6 +301,17 @@ export default function CartPage() {
           {/* نموذج بيانات المستخدم */}
           <div className="bg-gray-800 rounded-2xl p-6 mt-8 mb-2 border-2 border-green-400 w-full max-w-md flex flex-col items-center">
             <h2 className="text-lg font-bold text-green-400 mb-3">معلومات التوصيل</h2>
+            <div className="mb-2 w-full">
+              <label className="block text-gray-200 mb-1">الاسم *</label>
+              <input
+                type="text"
+                className="w-full rounded-full p-3 bg-gray-900 border-2 border-green-300 text-white text-lg focus:ring-2 focus:ring-green-400 outline-none transition-all"
+                value={userInfo.name}
+                onChange={e => setUserInfo({ ...userInfo, name: e.target.value })}
+                placeholder="اكتب اسمك هنا..."
+                required
+              />
+            </div>
             <div className="mb-2 w-full">
               <label className="block text-gray-200 mb-1">رقم الهاتف *</label>
               <input
