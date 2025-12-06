@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>استيراد المنتجات</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .success {
+            color: #10b981;
+            font-weight: bold;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .info {
+            background: #f0f9ff;
+            border: 2px solid #0284c7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: right;
+        }
+        .product-count {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍎 استيراد المنتجات من fruitsq8.com</h1>
+        
+        <div class="info">
+            <strong>سيتم إضافة:</strong>
+            <ul style="text-align: right; margin-top: 10px;">
+                <li>11 منتج فواكه</li>
+                <li>8 منتجات خضار</li>
+                <li>6 منتجات ورقيات</li>
+                <li>3 سلات فواكه مشكلة</li>
+            </ul>
+        </div>
+        
+        <div class="product-count">المجموع: 28 منتج</div>
+        
+        <button onclick="importProducts()">استيراد المنتجات الآن</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function importProducts() {
+            const products = [
+                // الفواكه
+                { id: 1, name: "تفاح امريكي احمر", units: [{name: "كيلو", price: 1.500}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 2, name: "كيوي ذهبي جنوب افريقيا", units: [{name: "كيلو", price: 3.000}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 3, name: "برتقال لبناني للعصير", units: [{name: "كيلو", price: 0.800}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 4, name: "موز فلبيني", units: [{name: "كيلو", price: 0.750}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 5, name: "تفاح ايراني صغير", units: [{name: "كيلو", price: 1.500}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 6, name: "فراوله امريكي", units: [{name: "علبة", price: 3.000}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 7, name: "شمام", units: [{name: "حبة", price: 1.250}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 8, name: "نكتارين استرالي", units: [{name: "كيلو", price: 2.000}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 9, name: "خوخ كعب الغزال", units: [{name: "كيلو", price: 1.500}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 10, name: "مانجو اليمني", units: [{name: "كيلو", price: 4.000}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                { id: 11, name: "تين", units: [{name: "كيلو", price: 3.000}], quantity: 1000, active: true, category: "فواكه", images: [] },
+                
+                // الخضار
+                { id: 12, name: "خيار", units: [{name: "كيلو", price: 0.500}], quantity: 1000, active: true, category: "خضار", images: [] },
+                { id: 13, name: "باذنجان", units: [{name: "كيلو", price: 0.650}], quantity: 1000, active: true, category: "خضار", images: [] },
+                { id: 14, name: "زهره", units: [{name: "حبة", price: 1.500}], quantity: 1000, active: true, category: "خضار", images: [] },
+                { id: 15, name: "بروكلي", units: [{name: "حبة", price: 1.500}], quantity: 1000, active: true, category: "خضار", images: [] },
+                { id: 16, name: "قرع مدور", units: [{name: "حبة", price: 1.500}], quantity: 1000, active: true, category: "خضار", images: [] },
+                { id: 17, name: "ليمون اخضر", units: [{name: "كيلو", price: 0.850}], quantity: 1000, active: true, category: "خضار", images: [] },
+                { id: 18, name: "فلفل بارد اخضر", units: [{name: "كيلو", price: 0.750}], quantity: 1000, active: true, category: "خضار", images: [] },
+                { id: 19, name: "فلفل بارد ملون", units: [{name: "كيلو", price: 0.550}], quantity: 1000, active: true, category: "خضار", images: [] },
+                
+                // الورقيات
+                { id: 20, name: "خس مدور", units: [{name: "حبة", price: 1.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
+                { id: 21, name: "خس", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
+                { id: 22, name: "جرجير", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
+                { id: 23, name: "فجل احمر", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
+                { id: 24, name: "فجل ابيض", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
+                { id: 25, name: "نعناع اخضر", units: [{name: "ربطة", price: 0.250}], quantity: 1000, active: true, category: "ورقيات", images: [] },
+                
+                // سلات الفواكه
+                { id: 26, name: "سلة فواكه مشكلة صغيرة", units: [{name: "سلة", price: 5.000}], quantity: 1000, active: true, category: "سلات الفواكه", images: [] },
+                { id: 27, name: "سلة فواكه مشكلة متوسطة", units: [{name: "سلة", price: 10.000}], quantity: 1000, active: true, category: "سلات الفواكه", images: [] },
+                { id: 28, name: "سلة فواكه مشكلة كبيرة", units: [{name: "سلة", price: 15.000}], quantity: 1000, active: true, category: "سلات الفواكه", images: [] },
+            ];
+
+            // حفظ في localStorage
+            localStorage.setItem('products', JSON.stringify(products));
+            
+            // عرض رسالة النجاح
+            document.getElementById('result').innerHTML = '<div class="success">✅ تم استيراد 28 منتج بنجاح!<br>🔄 سيتم تحديث الصفحة الآن...</div>';
+            
+            // تحديث الصفحة بعد ثانيتين
+            setTimeout(() => {
+                window.location.href = 'http://localhost:3000';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
