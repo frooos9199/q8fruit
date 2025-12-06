@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إعداد حساب الأدمن</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            color: #059669;
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+        .info {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: right;
+        }
+        .message {
+            color: #10b981;
+            font-weight: bold;
+            margin: 25px 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 إعداد حساب الأدمن</h1>
+        <div class="info">
+            <strong>بيانات المدير:</strong><br>
+            📧 البريد: summit_kw@hotmail.com<br>
+            🔑 الباسورد: 9199
+        </div>
+        <div class="message" id="message">جاري إنشاء الحساب...</div>
+    </div>
+
+    <script>
+        // إنشاء حساب الأدمن
+        const adminUser = {
+            email: "summit_kw@hotmail.com",
+            password: "9199",
+            name: "المدير",
+            phone: "98899426",
+            address: "الكويت",
+            role: "admin",
+            createdAt: new Date().toISOString()
+        };
+
+        // الحصول على المستخدمين الحاليين
+        let users = [];
+        try {
+            const stored = localStorage.getItem('users');
+            if (stored) {
+                users = JSON.parse(stored);
+            }
+        } catch (e) {
+            users = [];
+        }
+
+        // التحقق إذا الحساب موجود
+        const existingUser = users.find(u => u.email === adminUser.email);
+        
+        if (existingUser) {
+            // تحديث الحساب الموجود
+            existingUser.password = adminUser.password;
+            existingUser.role = "admin";
+            document.getElementById('message').innerHTML = '✅ تم تحديث حساب الأدمن بنجاح!';
+        } else {
+            // إضافة حساب جديد
+            users.push(adminUser);
+            document.getElementById('message').innerHTML = '✅ تم إنشاء حساب الأدمن بنجاح!';
+        }
+
+        // حفظ المستخدمين
+        localStorage.setItem('users', JSON.stringify(users));
+
+        // التحويل لصفحة تسجيل الدخول
+        setTimeout(() => {
+            document.getElementById('message').innerHTML += '<br>🔄 جاري التحويل لصفحة تسجيل الدخول...';
+            setTimeout(() => {
+                window.location.href = '/login';
+            }, 1000);
+        }, 1500);
+    </script>
+</body>
+</html>
