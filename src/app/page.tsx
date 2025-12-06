@@ -137,7 +137,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
       {/* صف السعر والوحدة */}
       <div className="flex items-center justify-between gap-2 mb-3 px-2">
         <span className="text-lg font-bold text-green-700 dark:text-green-300 flex items-center">
-          د.ك<span className="mx-1" />{(selectedUnit?.price * quantity).toFixed(2)}
+          د.ك<span className="mx-1" />{(selectedUnit?.price * quantity).toFixed(3)}
           {quantity > 1 && (
             <span className="text-xs text-gray-500 ml-2">({selectedUnit?.price} × {quantity})</span>
           )}

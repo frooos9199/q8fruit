@@ -84,13 +84,13 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
               <td style={{ border: '1px solid #e5e7eb', padding: 8 }}>{prod.unit}</td>
               <td style={{ border: '1px solid #e5e7eb', padding: 8 }}>{prod.price} د.ك</td>
               <td style={{ border: '1px solid #e5e7eb', padding: 8 }}>{prod.quantity}</td>
-              <td style={{ border: '1px solid #e5e7eb', padding: 8, fontWeight: 'bold' }}>{(prod.price * prod.quantity).toFixed(2)} د.ك</td>
+              <td style={{ border: '1px solid #e5e7eb', padding: 8, fontWeight: 'bold' }}>{(prod.price * prod.quantity).toFixed(3)} د.ك</td>
             </tr>
           ))}
           <tr style={{ background: '#fefce8' }}>
             <td colSpan={3} style={{ border: '1px solid #e5e7eb', padding: 8, textAlign: 'left', fontWeight: 'bold' }}>سعر التوصيل</td>
             <td style={{ border: '1px solid #e5e7eb', padding: 8, fontWeight: 'bold' }}>-</td>
-            <td style={{ border: '1px solid #e5e7eb', padding: 8, fontWeight: 'bold' }}>{deliveryFee.toFixed(2)} د.ك</td>
+            <td style={{ border: '1px solid #e5e7eb', padding: 8, fontWeight: 'bold' }}>{deliveryFee.toFixed(3)} د.ك</td>
           </tr>
           <tr>
             <td colSpan={5}><hr style={{ border: 'none', borderTop: '1px solid #e5e7eb', margin: '8px 0' }} /></td>
@@ -98,7 +98,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
           <tr style={{ background: '#f0fdf4' }}>
             <td colSpan={3} style={{ border: '1px solid #e5e7eb', padding: 8, textAlign: 'left', fontWeight: 'bold' }}>المجموع</td>
             <td style={{ border: '1px solid #e5e7eb', padding: 8, fontWeight: 'bold' }}>{products?.reduce((sum, p) => sum + (p.quantity || 0), 0)}</td>
-            <td style={{ border: '1px solid #e5e7eb', padding: 8, fontWeight: 'bold' }}>{(total + deliveryFee).toFixed(2)} د.ك</td>
+            <td style={{ border: '1px solid #e5e7eb', padding: 8, fontWeight: 'bold' }}>{(total + deliveryFee).toFixed(3)} د.ك</td>
           </tr>
         </tbody>
       </table>

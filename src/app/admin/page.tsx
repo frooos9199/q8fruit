@@ -103,7 +103,7 @@ export default function AdminDashboard() {
         </div>
         <div className="bg-white dark:bg-gray-800 rounded shadow p-4 text-center">
           <div className="text-lg font-semibold">مجموع المبيعات</div>
-          <div className="text-3xl font-bold text-green-600">{ordersStats.sales.toFixed(2)} د.ك</div>
+          <div className="text-3xl font-bold text-green-600">{ordersStats.sales.toFixed(3)} د.ك</div>
         </div>
       </div>
     </div>

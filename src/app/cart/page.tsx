@@ -283,7 +283,7 @@ export default function CartPage() {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-2">
-                    <div className="text-green-300 font-bold text-lg">{(item.price * item.quantity).toFixed(2)} د.ك</div>
+                    <div className="text-green-300 font-bold text-lg">{(item.price * item.quantity).toFixed(3)} د.ك</div>
                     <button onClick={() => handleRemove(item.id)} className="w-8 h-8 flex items-center justify-center rounded-full bg-red-600 text-white font-bold text-xl shadow hover:bg-red-800 transition-all">&times;</button>
                   </div>
                 </div>
@@ -312,9 +312,9 @@ export default function CartPage() {
             {deliveryTime && (
               <span className="text-xs font-normal text-green-700 dark:text-green-200 bg-green-50 dark:bg-green-900 rounded-full px-3 py-0.5 border border-green-200 dark:border-green-700 ml-2">{deliveryTime}</span>
             )}
-            <span>التوصيل: {deliveryPrice.toFixed(2)} د.ك</span>
+            <span>التوصيل: {deliveryPrice.toFixed(3)} د.ك</span>
           </div>
-          <div className="text-xl font-extrabold text-green-300 text-left mt-4 w-full max-w-md">الإجمالي: {(total + deliveryPrice).toFixed(2)} د.ك</div>
+          <div className="text-xl font-extrabold text-green-300 text-left mt-4 w-full max-w-md">الإجمالي: {(total + deliveryPrice).toFixed(3)} د.ك</div>
 
           {/* نموذج بيانات المستخدم */}
           <div className="bg-gray-800 rounded-2xl p-6 mt-8 mb-2 border-2 border-green-400 w-full max-w-md flex flex-col items-center">

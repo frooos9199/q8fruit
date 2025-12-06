@@ -180,14 +180,14 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
                       <td className="border p-2 text-black">{prod.unit}</td>
                       <td className="border p-2 text-black">{prod.price} د.ك</td>
                       <td className="border p-2 text-black">{prod.quantity}</td>
-                      <td className="border p-2 font-bold text-black">{(prod.price * prod.quantity).toFixed(2)} د.ك</td>
+                      <td className="border p-2 font-bold text-black">{(prod.price * prod.quantity).toFixed(3)} د.ك</td>
                     </tr>
                   ))}
                   {/* صف سعر التوصيل */}
                   <tr className="bg-yellow-50">
                     <td colSpan={3} className="border p-2 text-left font-bold text-black">سعر التوصيل</td>
                     <td className="border p-2 font-bold text-black">-</td>
-                    <td className="border p-2 font-bold text-black">{order.deliveryFee ? order.deliveryFee.toFixed(2) : '0.00'} د.ك</td>
+                    <td className="border p-2 font-bold text-black">{order.deliveryFee ? order.deliveryFee.toFixed(3) : '0.000'} د.ك</td>
                   </tr>
                   {/* خط فاصل */}
                   <tr>
@@ -197,7 +197,7 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
                   <tr className="bg-green-50">
                     <td colSpan={3} className="border p-2 text-left font-bold text-black">المجموع</td>
                     <td className="border p-2 font-bold text-black">{order.products.reduce((sum, p) => sum + (p.quantity || 0), 0)}</td>
-                    <td className="border p-2 font-bold text-black">{((order.total || 0) + (order.deliveryFee || 0)).toFixed(2)} د.ك</td>
+                    <td className="border p-2 font-bold text-black">{((order.total || 0) + (order.deliveryFee || 0)).toFixed(3)} د.ك</td>
                   </tr>
                 </>
               ) : (
