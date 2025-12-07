@@ -1,7 +1,7 @@
-import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getAuth } from 'firebase/auth';
+import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
+import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
+import { getAuth, Auth } from 'firebase/auth';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 
 // إعدادات Firebase
@@ -15,15 +15,24 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-const db = getFirestore(app);
-const storage = getStorage(app);
-const auth = getAuth(app);
-
-// Analytics (يعمل فقط في المتصفح)
+let app: FirebaseApp;
+let db: Firestore;
+let storage: FirebaseStorage;
+let auth: Auth;
 let analytics: Analytics | null = null;
+
+// تهيئة Firebase فقط في المتصفح
 if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app);
+  try {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    db = getFirestore(app);
+    storage = getStorage(app);
+    auth = getAuth(app);
+    analytics = getAnalytics(app);
+  } catch (error) {
+    console.error('خطأ في تهيئة Firebase:', error);
+  }
 }
 
+// تصدير مع قيم افتراضية للسيرفر
 export { app, db, storage, auth, analytics };

@@ -12,8 +12,14 @@ export async function uploadImage(file: File, folder: string = 'images'): Promis
 
   try {
     // استيراد Firebase Storage ديناميكياً
-    const { storage } = await import('./firebase');
+    const firebaseModule = await import('./firebase');
     const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    
+    if (!firebaseModule.storage) {
+      throw new Error('Firebase Storage غير متاح');
+    }
+    
+    const storage = firebaseModule.storage;
     
     // إنشاء اسم فريد للملف
     const timestamp = Date.now();
