@@ -1,6 +1,3 @@
-import { storage } from './firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-
 /**
  * رفع صورة إلى Firebase Storage
  * @param file - ملف الصورة
@@ -8,7 +5,16 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
  * @returns رابط الصورة المرفوعة
  */
 export async function uploadImage(file: File, folder: string = 'images'): Promise<string> {
+  // التأكد من أننا في المتصفح
+  if (typeof window === 'undefined') {
+    throw new Error('يجب استخدام هذه الدالة في المتصفح فقط');
+  }
+
   try {
+    // استيراد Firebase Storage ديناميكياً
+    const { storage } = await import('./firebase');
+    const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    
     // إنشاء اسم فريد للملف
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 9);
@@ -37,7 +43,16 @@ export async function uploadImage(file: File, folder: string = 'images'): Promis
  * @returns رابط الصورة المرفوعة
  */
 export async function uploadBase64Image(base64Data: string, folder: string = 'images'): Promise<string> {
+  // التأكد من أننا في المتصفح
+  if (typeof window === 'undefined') {
+    throw new Error('يجب استخدام هذه الدالة في المتصفح فقط');
+  }
+
   try {
+    // استيراد Firebase Storage ديناميكياً
+    const { storage } = await import('./firebase');
+    const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    
     // تحويل Base64 إلى Blob
     const response = await fetch(base64Data);
     const blob = await response.blob();
