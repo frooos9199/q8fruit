@@ -60,13 +60,13 @@ export default function InvoicesPage() {
             </button>
             <InvoicePrint
               invoiceNumber={selectedInvoice.id}
-              customer={selectedInvoice.customer}
-              phone={selectedInvoice.phone}
-              address={selectedInvoice.address}
+              customer={selectedInvoice.userInfo?.name || selectedInvoice.customer || "عميل"}
+              phone={selectedInvoice.userInfo?.phone || selectedInvoice.phone || ""}
+              address={selectedInvoice.userInfo?.address || selectedInvoice.address || ""}
               date={selectedInvoice.date}
-              products={selectedInvoice.products}
-              deliveryFee={selectedInvoice.deliveryFee}
-              total={selectedInvoice.total}
+              products={selectedInvoice.items || selectedInvoice.products || []}
+              deliveryFee={selectedInvoice.deliveryPrice || selectedInvoice.deliveryFee || 0}
+              total={selectedInvoice.total - (selectedInvoice.deliveryPrice || selectedInvoice.deliveryFee || 0)}
               paymentType={selectedInvoice.paymentType}
             />
           </div>

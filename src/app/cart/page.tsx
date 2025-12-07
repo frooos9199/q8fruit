@@ -437,6 +437,48 @@ export default function CartPage() {
             </div>
           )}
 
+          {/* ملخص الطلب في الخطوة 4 */}
+          {currentStep === 4 && (
+            <div className="bg-gradient-to-br from-green-900 to-green-800 rounded-2xl p-6 mt-6 mb-2 border-2 border-green-400 w-full max-w-md">
+              <h2 className="text-xl font-bold text-green-300 mb-4 text-center">📋 مراجعة الطلب</h2>
+              
+              <div className="space-y-3 bg-gray-900/50 rounded-xl p-4 mb-4">
+                <div className="flex justify-between text-white">
+                  <span className="text-gray-300">👤 الاسم:</span>
+                  <span className="font-bold">{userInfo.name}</span>
+                </div>
+                <div className="flex justify-between text-white">
+                  <span className="text-gray-300">📱 الهاتف:</span>
+                  <span className="font-bold">{userInfo.phone}</span>
+                </div>
+                {userInfo.address && (
+                  <div className="flex justify-between text-white">
+                    <span className="text-gray-300">📍 العنوان:</span>
+                    <span className="font-bold text-sm">{userInfo.address}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-white border-t border-gray-700 pt-3">
+                  <span className="text-gray-300">💳 طريقة الدفع:</span>
+                  <span className={`font-bold ${paymentType === 'knet' ? 'text-blue-400' : 'text-green-400'}`}>
+                    {paymentType === "knet" ? "رابط كنت" : "نقدي عند الاستلام"}
+                  </span>
+                </div>
+                <div className="flex justify-between text-white border-t border-gray-700 pt-3">
+                  <span className="text-gray-300">📦 عدد المنتجات:</span>
+                  <span className="font-bold text-green-400">{totalItems}</span>
+                </div>
+                <div className="flex justify-between text-white text-lg">
+                  <span className="text-gray-300">💰 المجموع:</span>
+                  <span className="font-bold text-green-400">{(total + deliveryPrice).toFixed(3)} د.ك</span>
+                </div>
+              </div>
+              
+              <div className="text-center text-green-300 text-sm">
+                ✓ تأكد من صحة البيانات قبل إتمام الطلب
+              </div>
+            </div>
+          )}
+
           {/* أزرار التنقل والتأكيد */}
           <div className="flex gap-4 mt-6 w-full max-w-md">
             {currentStep > 1 && (
@@ -455,18 +497,28 @@ export default function CartPage() {
                     alert("يرجى تعبئة الاسم ورقم الهاتف");
                     return;
                   }
+                  // الانتقال للخطوة التالية
                   setCurrentStep(currentStep + 1);
                 }}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-full shadow text-lg transition"
               >
-                التالي →
+                {currentStep === 3 ? '← متابعة للتأكيد' : 'التالي →'}
               </button>
             ) : (
               <button 
-                onClick={handleCheckout}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-full shadow text-lg transition animate-pulse"
+                onClick={() => {
+                  // التحقق النهائي قبل الإتمام
+                  if (!userInfo.name.trim() || !userInfo.phone.trim()) {
+                    alert("يرجى تعبئة الاسم ورقم الهاتف");
+                    setCurrentStep(2);
+                    return;
+                  }
+                  handleCheckout();
+                }}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-4 rounded-full shadow text-xl transition"
+                style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}
               >
-                ✓ تأكيد الطلب
+                ✓ تأكيد وإتمام الطلب
               </button>
             )}
           </div>
