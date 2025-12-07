@@ -18,6 +18,15 @@ const initialCategories: CateringCategory[] = [
 
 export default function CateringTable() {
   const [categories, setCategories] = useState<CateringCategory[]>([]);
+  const [newCategory, setNewCategory] = useState("");
+  const [editCategory, setEditCategory] = useState<CateringCategory | null>(null);
+
+  // مزامنة الكاترينج مع localStorage عند أي تغيير
+  const syncCategoriesToStorage = (cats: CateringCategory[]) => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem("cateringCategories", JSON.stringify(cats.map(({id, name}) => ({id, name}))));
+    }
+  };
 
   // قراءة الكاترينج من localStorage عند التحميل
   useEffect(() => {
@@ -44,13 +53,6 @@ export default function CateringTable() {
       }
     }
   }, []);
-
-  // مزامنة الكاترينج مع localStorage عند أي تغيير
-  const syncCategoriesToStorage = (cats: CateringCategory[]) => {
-    window.localStorage.setItem("cateringCategories", JSON.stringify(cats.map(({id, name}) => ({id, name}))));
-  };
-  const [newCategory, setNewCategory] = useState("");
-  const [editCategory, setEditCategory] = useState<CateringCategory | null>(null);
   const handleEdit = (category: CateringCategory) => {
     setEditCategory(category);
   };
@@ -92,6 +94,7 @@ export default function CateringTable() {
           type="text"
           value={newCategory}
           onChange={e => setNewCategory(e.target.value)}
+          onKeyPress={e => e.key === 'Enter' && addCategory()}
           placeholder="اسم التصنيف الجديد"
           className="border rounded p-2 bg-gray-800 text-white placeholder-gray-400"
         />
