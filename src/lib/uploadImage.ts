@@ -1,7 +1,8 @@
 /**
- * ضغط الصورة لتقليل حجمها
+ * ضغط الصورة لتقليل حجمها وتعديل المقاسات
+ * يقبل أي حجم ويعدل المقاسات تلقائياً
  */
-async function compressImage(file: File, maxWidth: number = 1200, quality: number = 0.8): Promise<Blob> {
+async function compressImage(file: File, maxWidth: number = 1920, maxHeight: number = 1920, quality: number = 0.85): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -13,16 +14,25 @@ async function compressImage(file: File, maxWidth: number = 1200, quality: numbe
         let width = img.width;
         let height = img.height;
 
-        // تصغير الحجم إذا كان أكبر من الحد الأقصى
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
+        // حساب النسبة للحفاظ على aspect ratio
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        
+        // إذا كانت الصورة أكبر من الحد الأقصى، قم بتصغيرها
+        if (ratio < 1) {
+          width = Math.floor(width * ratio);
+          height = Math.floor(height * ratio);
         }
 
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // تحسين جودة الرسم
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, 0, 0, width, height);
+        }
 
         canvas.toBlob(
           (blob) => {
