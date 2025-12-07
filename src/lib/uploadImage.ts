@@ -11,15 +11,24 @@ export async function uploadImage(file: File, folder: string = 'images'): Promis
   }
 
   try {
-    // استيراد Firebase Storage ديناميكياً
-    const firebaseModule = await import('./firebase');
+    // استيراد Firebase ديناميكياً
     const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    const { initializeApp, getApps } = await import('firebase/app');
+    const { getStorage } = await import('firebase/storage');
     
-    if (!firebaseModule.storage) {
-      throw new Error('Firebase Storage غير متاح');
-    }
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBW2-EDd8K8Nq5Uj5fJFaeAzQnchjcdbJU",
+      authDomain: "fruitq8-ba5ef.firebaseapp.com",
+      projectId: "fruitq8-ba5ef",
+      storageBucket: "fruitq8-ba5ef.firebasestorage.app",
+      messagingSenderId: "496410641214",
+      appId: "1:496410641214:web:bc829a07ac23b9ba0ae26f",
+    };
     
-    const storage = firebaseModule.storage;
+    // Initialize app
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    const storage = getStorage(app);
     
     // إنشاء اسم فريد للملف
     const timestamp = Date.now();
@@ -55,9 +64,24 @@ export async function uploadBase64Image(base64Data: string, folder: string = 'im
   }
 
   try {
-    // استيراد Firebase Storage ديناميكياً
-    const { storage } = await import('./firebase');
+    // استيراد Firebase ديناميكياً
     const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    const { initializeApp, getApps } = await import('firebase/app');
+    const { getStorage } = await import('firebase/storage');
+    
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyBW2-EDd8K8Nq5Uj5fJFaeAzQnchjcdbJU",
+      authDomain: "fruitq8-ba5ef.firebaseapp.com",
+      projectId: "fruitq8-ba5ef",
+      storageBucket: "fruitq8-ba5ef.firebasestorage.app",
+      messagingSenderId: "496410641214",
+      appId: "1:496410641214:web:bc829a07ac23b9ba0ae26f",
+    };
+    
+    // Initialize app
+    const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    const storage = getStorage(app);
     
     // تحويل Base64 إلى Blob
     const response = await fetch(base64Data);
@@ -83,3 +107,4 @@ export async function uploadBase64Image(base64Data: string, folder: string = 'im
     throw new Error('فشل رفع الصورة');
   }
 }
+

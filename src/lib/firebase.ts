@@ -15,10 +15,10 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app: FirebaseApp;
-let db: Firestore;
-let storage: FirebaseStorage;
-let auth: Auth;
+let app: FirebaseApp | undefined;
+let db: Firestore | undefined;
+let storage: FirebaseStorage | undefined;
+let auth: Auth | undefined;
 let analytics: Analytics | null = null;
 
 // تهيئة Firebase فقط في المتصفح
@@ -28,7 +28,11 @@ if (typeof window !== 'undefined') {
     db = getFirestore(app);
     storage = getStorage(app);
     auth = getAuth(app);
-    analytics = getAnalytics(app);
+    
+    // Analytics يعمل فقط بعد تحميل الصفحة
+    if (typeof window !== 'undefined') {
+      analytics = getAnalytics(app);
+    }
   } catch (error) {
     console.error('خطأ في تهيئة Firebase:', error);
   }
