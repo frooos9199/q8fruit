@@ -24,7 +24,8 @@ export default function CateringTable() {
   // مزامنة الكاترينج مع localStorage عند أي تغيير
   const syncCategoriesToStorage = (cats: CateringCategory[]) => {
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem("cateringCategories", JSON.stringify(cats.map(({id, name}) => ({id, name}))));
+      // حفظ كل البيانات بما فيها الصور والمنتجات
+      window.localStorage.setItem("cateringCategories", JSON.stringify(cats));
     }
   };
 
