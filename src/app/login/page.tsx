@@ -10,7 +10,7 @@ export default function LoginPage() {
 
   // بيانات الأدمن الثابتة
   const ADMIN_EMAIL = "summit_kw@hotmail.com";
-  const ADMIN_PASSWORD = "admin1234";
+  const ADMIN_PASSWORD = "9199";
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
