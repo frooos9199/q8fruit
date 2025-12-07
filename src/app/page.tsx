@@ -81,16 +81,16 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
     <div
       className={`bg-white dark:bg-gray-900 rounded-2xl shadow-md p-3 flex flex-col items-stretch border border-gray-100 dark:border-gray-800 transition-all duration-200 hover:scale-105 hover:shadow-lg group${small ? '' : ''}`}
     >
-      <div className={`${small ? 'w-36 h-36 xs:w-36 xs:h-36 sm:w-40 sm:h-40 mb-2' : 'w-40 h-40 mb-3'} mx-auto rounded-xl overflow-hidden bg-gray-50 flex items-center justify-center`}>
+      <div className={`${small ? 'w-36 h-36 xs:w-36 xs:h-36 sm:w-40 sm:h-40 mb-2' : 'w-40 h-40 mb-3'} mx-auto rounded-xl overflow-hidden bg-white flex items-center justify-center`}>
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[imgIdx]}
             alt={product.name}
-            className={`w-full h-full object-contain group-hover:scale-105 transition-transform duration-200 bg-white transition-opacity duration-200 ${fade ? 'opacity-100' : 'opacity-0'}`}
+            className={`w-full h-full object-cover group-hover:scale-110 transition-all duration-300 ${fade ? 'opacity-100' : 'opacity-0'}`}
             style={{ transition: 'opacity 0.2s' }}
           />
         ) : product.image ? (
-          <img src={product.image} alt={product.name} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-200 bg-white" />
+          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300" />
         ) : null}
       </div>
       <div className={`font-bold ${small ? 'text-sm xs:text-base mb-1' : 'text-base mb-2'} text-gray-800 dark:text-gray-100 text-center`}>{product.name}</div>
