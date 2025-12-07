@@ -16,14 +16,14 @@ export async function uploadImage(file: File, folder: string = 'images'): Promis
     const { initializeApp, getApps } = await import('firebase/app');
     const { getStorage } = await import('firebase/storage');
     
-    // Firebase config
+    // Firebase config - استخدام المتغيرات البيئية
     const firebaseConfig = {
-      apiKey: "AIzaSyBW2-EDd8K8Nq5Uj5fJFaeAzQnchjcdbJU",
-      authDomain: "fruitq8-ba5ef.firebaseapp.com",
-      projectId: "fruitq8-ba5ef",
-      storageBucket: "fruitq8-ba5ef.firebasestorage.app",
-      messagingSenderId: "496410641214",
-      appId: "1:496410641214:web:bc829a07ac23b9ba0ae26f",
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBW2-EDd8K8Nq5Uj5fJFaeAzQnchjcdbJU",
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "fruitq8-ba5ef.firebaseapp.com",
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "fruitq8-ba5ef",
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "fruitq8-ba5ef.firebasestorage.app",
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "496410641214",
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:496410641214:web:bc829a07ac23b9ba0ae26f",
     };
     
     // Initialize app
@@ -69,14 +69,14 @@ export async function uploadBase64Image(base64Data: string, folder: string = 'im
     const { initializeApp, getApps } = await import('firebase/app');
     const { getStorage } = await import('firebase/storage');
     
-    // Firebase config
+    // Firebase config - استخدام المتغيرات البيئية
     const firebaseConfig = {
-      apiKey: "AIzaSyBW2-EDd8K8Nq5Uj5fJFaeAzQnchjcdbJU",
-      authDomain: "fruitq8-ba5ef.firebaseapp.com",
-      projectId: "fruitq8-ba5ef",
-      storageBucket: "fruitq8-ba5ef.firebasestorage.app",
-      messagingSenderId: "496410641214",
-      appId: "1:496410641214:web:bc829a07ac23b9ba0ae26f",
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBW2-EDd8K8Nq5Uj5fJFaeAzQnchjcdbJU",
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "fruitq8-ba5ef.firebaseapp.com",
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "fruitq8-ba5ef",
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "fruitq8-ba5ef.firebasestorage.app",
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "496410641214",
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:496410641214:web:bc829a07ac23b9ba0ae26f",
     };
     
     // Initialize app
@@ -107,4 +107,3 @@ export async function uploadBase64Image(base64Data: string, folder: string = 'im
     throw new Error('فشل رفع الصورة');
   }
 }
-
