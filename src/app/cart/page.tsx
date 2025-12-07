@@ -20,6 +20,9 @@ interface CartItem {
 }
 
 export default function CartPage() {
+  // خطوة الشراء الحالية
+  const [currentStep, setCurrentStep] = useState(1);
+  
   // ملاحظات المستخدم
   const [userNote, setUserNote] = useState("");
   // تحميل ملاحظة المستخدم من localStorage عند التحميل
@@ -226,9 +229,72 @@ export default function CartPage() {
       >
         &times;
       </button>
-  <h1 className="text-3xl font-extrabold text-green-500 mb-8 text-center tracking-tight drop-shadow-lg">سلة المشتريات</h1>
+  <h1 className="text-3xl font-extrabold text-green-500 mb-6 text-center tracking-tight drop-shadow-lg">سلة المشتريات</h1>
       
-      {/* السلة دائماً */}
+      {/* خطوات الشراء */}
+      {cart.length > 0 && (
+        <div className="w-full max-w-2xl mb-8">
+          <div className="flex items-center justify-between relative">
+            {/* الخط الواصل */}
+            <div className="absolute top-5 right-0 left-0 h-1 bg-gray-700 -z-10">
+              <div 
+                className="h-full bg-green-500 transition-all duration-300"
+                style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
+              ></div>
+            </div>
+            
+            {/* الخطوة 1: السلة */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                currentStep >= 1 ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+              }`}>
+                {currentStep > 1 ? '✓' : '1'}
+              </div>
+              <span className={`mt-2 text-xs font-bold ${currentStep >= 1 ? 'text-green-400' : 'text-gray-500'}`}>
+                السلة
+              </span>
+            </div>
+
+            {/* الخطوة 2: العنوان */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                currentStep >= 2 ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+              }`}>
+                {currentStep > 2 ? '✓' : '2'}
+              </div>
+              <span className={`mt-2 text-xs font-bold ${currentStep >= 2 ? 'text-green-400' : 'text-gray-500'}`}>
+                العنوان
+              </span>
+            </div>
+
+            {/* الخطوة 3: الدفع */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                currentStep >= 3 ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+              }`}>
+                {currentStep > 3 ? '✓' : '3'}
+              </div>
+              <span className={`mt-2 text-xs font-bold ${currentStep >= 3 ? 'text-green-400' : 'text-gray-500'}`}>
+                الدفع
+              </span>
+            </div>
+
+            {/* الخطوة 4: التأكيد */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                currentStep >= 4 ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+              }`}>
+                {currentStep > 4 ? '✓' : '4'}
+              </div>
+              <span className={`mt-2 text-xs font-bold ${currentStep >= 4 ? 'text-green-400' : 'text-gray-500'}`}>
+                تأكيد
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* السلة */}
       {showAlert && (
         <div className="mb-4 text-center text-white bg-red-600 rounded-lg py-2 px-4 font-bold shadow animate-pulse">تم حذف {deletedName} من السلة</div>
       )}
@@ -271,22 +337,25 @@ export default function CartPage() {
                 </div>
               ))}
             </div>
+
+            {/* مربع الملاحظات تحت المنتجات مباشرة */}
+            <div className="mt-4 bg-gray-800 rounded-xl p-4 border-2 border-gray-700">
+              <label className="block text-gray-200 mb-2 font-bold text-sm">📝 ملاحظات خاصة بالطلب:</label>
+              <textarea
+                className="w-full rounded-lg p-3 bg-gray-900 border-2 border-green-300 text-white min-h-[80px] focus:ring-2 focus:ring-green-400 outline-none transition-all resize-none"
+                value={userNote}
+                onChange={e => setUserNote(e.target.value)}
+                placeholder="مثال: أحتاج التوصيل صباحاً، أو طلبات إضافية..."
+              />
+            </div>
           </>
         )}
       </div>
-      {/* باقي الحقول - تظهر دائماً */}
+
+      {/* باقي الحقول */}
       {cart.length > 0 && (
         <>
-          {/* بكس ملاحظات المستخدم */}
-          <div className="mb-2 mt-8 w-full max-w-md">
-            <label className="block text-gray-200 mb-1">ملاحظات إضافية (اختياري):</label>
-            <textarea
-              className="w-full rounded-xl p-3 bg-gray-900 border-2 border-green-300 text-white min-h-[40px] focus:ring-2 focus:ring-green-400 outline-none transition-all"
-              value={userNote}
-              onChange={e => setUserNote(e.target.value)}
-              placeholder="اكتب أي ملاحظات أو تعليمات خاصة..."
-            />
-          </div>
+          {/* عرض الإجمالي - يظهر دائماً */}
           <div className="flex items-center justify-end gap-2 text-base font-bold text-green-400 text-right mt-6 w-full max-w-md">
             {deliveryNote && (
               <span className="text-xs font-normal text-green-700 dark:text-green-200 bg-green-50 dark:bg-green-900 rounded-full px-3 py-0.5 border border-green-200 dark:border-green-700 ml-2">{deliveryNote}</span>
@@ -298,76 +367,113 @@ export default function CartPage() {
           </div>
           <div className="text-xl font-extrabold text-green-300 text-left mt-4 w-full max-w-md">الإجمالي: {(total + deliveryPrice).toFixed(3)} د.ك</div>
 
-          {/* نموذج بيانات المستخدم */}
-          <div className="bg-gray-800 rounded-2xl p-6 mt-8 mb-2 border-2 border-green-400 w-full max-w-md flex flex-col items-center">
-            <h2 className="text-lg font-bold text-green-400 mb-3">معلومات التوصيل</h2>
-            <div className="mb-2 w-full">
-              <label className="block text-gray-200 mb-1">الاسم *</label>
-              <input
-                type="text"
-                className="w-full rounded-full p-3 bg-gray-900 border-2 border-green-300 text-white text-lg focus:ring-2 focus:ring-green-400 outline-none transition-all"
-                value={userInfo.name}
-                onChange={e => setUserInfo({ ...userInfo, name: e.target.value })}
-                placeholder="اكتب اسمك هنا..."
-                required
-              />
+          {/* نموذج بيانات المستخدم - الخطوة 2 */}
+          {currentStep >= 2 && (
+            <div className="bg-gray-800 rounded-2xl p-6 mt-8 mb-2 border-2 border-green-400 w-full max-w-md flex flex-col items-center">
+              <h2 className="text-lg font-bold text-green-400 mb-3">معلومات التوصيل</h2>
+              <div className="mb-2 w-full">
+                <label className="block text-gray-200 mb-1">الاسم *</label>
+                <input
+                  type="text"
+                  className="w-full rounded-full p-3 bg-gray-900 border-2 border-green-300 text-white text-lg focus:ring-2 focus:ring-green-400 outline-none transition-all"
+                  value={userInfo.name}
+                  onChange={e => setUserInfo({ ...userInfo, name: e.target.value })}
+                  placeholder="اكتب اسمك هنا..."
+                  required
+                />
+              </div>
+              <div className="mb-2 w-full">
+                <label className="block text-gray-200 mb-1">رقم الهاتف *</label>
+                <input
+                  type="tel"
+                  className="w-full rounded-full p-3 bg-gray-900 border-2 border-green-300 text-white text-lg focus:ring-2 focus:ring-green-400 outline-none transition-all"
+                  value={userInfo.phone}
+                  onChange={e => setUserInfo({ ...userInfo, phone: e.target.value })}
+                  placeholder="مثال: 98899426"
+                  required
+                />
+              </div>
+              <div className="mb-2 w-full">
+                <label className="block text-gray-200 mb-1">العنوان (اختياري)</label>
+                <textarea
+                  className="w-full rounded-xl p-3 bg-gray-900 border-2 border-green-300 text-white min-h-[48px] focus:ring-2 focus:ring-green-400 outline-none transition-all"
+                  value={userInfo.address}
+                  onChange={e => setUserInfo({ ...userInfo, address: e.target.value })}
+                  placeholder="يمكنك كتابة العنوان هنا أو إرساله عبر الواتساب لاحقاً"
+                />
+              </div>
             </div>
-            <div className="mb-2 w-full">
-              <label className="block text-gray-200 mb-1">رقم الهاتف *</label>
-              <input
-                type="tel"
-                className="w-full rounded-full p-3 bg-gray-900 border-2 border-green-300 text-white text-lg focus:ring-2 focus:ring-green-400 outline-none transition-all"
-                value={userInfo.phone}
-                onChange={e => setUserInfo({ ...userInfo, phone: e.target.value })}
-                placeholder="مثال: 98899426"
-                required
-              />
-            </div>
-            <div className="mb-2 w-full">
-              <label className="block text-gray-200 mb-1">العنوان (اختياري)</label>
-              <textarea
-                className="w-full rounded-xl p-3 bg-gray-900 border-2 border-green-300 text-white min-h-[48px] focus:ring-2 focus:ring-green-400 outline-none transition-all"
-                value={userInfo.address}
-                onChange={e => setUserInfo({ ...userInfo, address: e.target.value })}
-                placeholder="يمكنك كتابة العنوان هنا أو إرساله عبر الواتساب لاحقاً"
-              />
-            </div>
-          </div>
+          )}
 
-          {/* خيارات الدفع */}
-          <div className="flex flex-row gap-8 mt-4 mb-2 justify-center items-center w-full max-w-md">
-            <label className={`flex items-center gap-2 cursor-pointer px-6 py-3 rounded-full font-bold transition border-2 text-lg shadow-lg 
-              ${paymentType === "cash" ? "bg-green-600 border-green-600 text-white" : "bg-gray-900 border-gray-700 text-white hover:bg-green-700 hover:border-green-600"}`}
-            >
-              <input
-                type="radio"
-                name="paymentType"
-                value="cash"
-                checked={paymentType === "cash"}
-                onChange={() => setPaymentType("cash")}
-                className="accent-green-600 hidden"
-              />
-              <span>الدفع نقدي عند الاستلام</span>
-            </label>
-            <label className={`flex items-center gap-2 cursor-pointer px-6 py-3 rounded-full font-bold transition border-2 text-lg shadow-lg 
-              ${paymentType === "knet" ? "bg-green-600 border-green-600 text-white" : "bg-gray-900 border-gray-700 text-white hover:bg-green-700 hover:border-green-600"}`}
-            >
-              <input
-                type="radio"
-                name="paymentType"
-                value="knet"
-                checked={paymentType === "knet"}
-                onChange={() => setPaymentType("knet")}
-                className="accent-green-600 hidden"
-              />
-              <span>رابط KNET</span>
-            </label>
+          {/* خيارات الدفع - الخطوة 3 */}
+          {currentStep >= 3 && (
+            <div className="flex flex-row gap-8 mt-4 mb-2 justify-center items-center w-full max-w-md">
+              <label className={`flex items-center gap-2 cursor-pointer px-6 py-3 rounded-full font-bold transition border-2 text-lg shadow-lg 
+                ${paymentType === "cash" ? "bg-green-600 border-green-600 text-white" : "bg-gray-900 border-gray-700 text-white hover:bg-green-700 hover:border-green-600"}`}
+              >
+                <input
+                  type="radio"
+                  name="paymentType"
+                  value="cash"
+                  checked={paymentType === "cash"}
+                  onChange={() => setPaymentType("cash")}
+                  className="accent-green-600 hidden"
+                />
+                <span>الدفع نقدي عند الاستلام</span>
+              </label>
+              <label className={`flex items-center gap-2 cursor-pointer px-6 py-3 rounded-full font-bold transition border-2 text-lg shadow-lg 
+                ${paymentType === "knet" ? "bg-green-600 border-green-600 text-white" : "bg-gray-900 border-gray-700 text-white hover:bg-green-700 hover:border-green-600"}`}
+              >
+                <input
+                  type="radio"
+                  name="paymentType"
+                  value="knet"
+                  checked={paymentType === "knet"}
+                  onChange={() => setPaymentType("knet")}
+                  className="accent-green-600 hidden"
+                />
+                <span>رابط KNET</span>
+              </label>
+            </div>
+          )}
+
+          {/* أزرار التنقل والتأكيد */}
+          <div className="flex gap-4 mt-6 w-full max-w-md">
+            {currentStep > 1 && (
+              <button 
+                onClick={() => setCurrentStep(currentStep - 1)}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-full shadow transition"
+              >
+                ← رجوع
+              </button>
+            )}
+            {currentStep < 4 ? (
+              <button 
+                onClick={() => {
+                  // التحقق من البيانات قبل الانتقال
+                  if (currentStep === 2 && (!userInfo.name.trim() || !userInfo.phone.trim())) {
+                    alert("يرجى تعبئة الاسم ورقم الهاتف");
+                    return;
+                  }
+                  setCurrentStep(currentStep + 1);
+                }}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-full shadow text-lg transition"
+              >
+                التالي →
+              </button>
+            ) : (
+              <button 
+                onClick={handleCheckout}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-full shadow text-lg transition animate-pulse"
+              >
+                ✓ تأكيد الطلب
+              </button>
+            )}
           </div>
-          <button onClick={handleCheckout} className="w-full mt-4 bg-pink-600 hover:bg-green-600 text-white font-extrabold py-4 rounded-full shadow text-xl transition max-w-md mx-auto">إتمام الطلب</button>
         </>
       )}
       <div className="mt-10 text-center w-full max-w-md">
-        <Link href="/" className="inline-block bg-pink-600 hover:bg-green-600 text-white font-extrabold py-3 px-8 rounded-full shadow-lg text-lg transition-all">متابعة التسوق</Link>
+        <Link href="/" className="inline-block bg-gray-700 hover:bg-green-600 text-white font-extrabold py-3 px-8 rounded-full shadow-lg text-lg transition-all">← متابعة التسوق</Link>
       </div>
     </div>
   );
