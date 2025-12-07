@@ -70,7 +70,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
           setImgIdx((prev) => (prev + 1) % product.images!.length);
           setFade(true);
         }, 150); // مدة التلاشي
-  }, 520);
+      }, 3000); // كل 3 ثواني
       return () => clearInterval(interval);
     } else {
       setImgIdx(0);
