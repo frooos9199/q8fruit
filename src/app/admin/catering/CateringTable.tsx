@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CateringEditModal from "./CateringEditModal";
 
 interface CateringCategory {
@@ -10,12 +10,40 @@ interface CateringCategory {
 }
 
 const initialCategories: CateringCategory[] = [
-  { id: 1, name: "بوفيه فواكه", products: ["سلة فواكه مشكلة", "سلة فواكه صغيرة"] },
-  { id: 2, name: "بوكس خضار", products: ["بوكس خضار مشكل"] },
+  { id: 1, name: "فواكه", products: [] },
+  { id: 2, name: "خضار", products: [] },
+  { id: 3, name: "ورقيات", products: [] },
+  { id: 4, name: "سلات الفواكه", products: [] },
 ];
 
 export default function CateringTable() {
-  const [categories, setCategories] = useState<CateringCategory[]>(initialCategories);
+  const [categories, setCategories] = useState<CateringCategory[]>([]);
+
+  // قراءة الكاترينج من localStorage عند التحميل
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem("cateringCategories");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          // تحويل البيانات المخزنة إلى الشكل الكامل
+          const fullCategories = parsed.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name,
+            products: cat.products || [],
+            image: cat.image
+          }));
+          setCategories(fullCategories);
+        } catch {
+          setCategories(initialCategories);
+          syncCategoriesToStorage(initialCategories);
+        }
+      } else {
+        setCategories(initialCategories);
+        syncCategoriesToStorage(initialCategories);
+      }
+    }
+  }, []);
 
   // مزامنة الكاترينج مع localStorage عند أي تغيير
   const syncCategoriesToStorage = (cats: CateringCategory[]) => {

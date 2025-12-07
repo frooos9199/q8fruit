@@ -250,7 +250,39 @@ export default function Home() {
       window.location.href = "/";
     }
   }
+  
   const [cartCount, setCartCount] = useState(0);
+  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  
+  // دالة لجلب التصنيفات
+  const fetchCategories = () => {
+    if (typeof window !== 'undefined') {
+      const stored = window.localStorage.getItem('cateringCategories');
+      if (stored) {
+        try {
+          setCategories(JSON.parse(stored));
+        } catch {
+          setCategories([
+            { id: 1, name: "فواكه" },
+            { id: 2, name: "خضار" },
+            { id: 3, name: "ورقيات" },
+            { id: 4, name: "سلات الفواكه" },
+          ]);
+        }
+      } else {
+        // إنشاء التصنيفات الافتراضية
+        const defaultCategories = [
+          { id: 1, name: "فواكه" },
+          { id: 2, name: "خضار" },
+          { id: 3, name: "ورقيات" },
+          { id: 4, name: "سلات الفواكه" },
+        ];
+        setCategories(defaultCategories);
+        window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
+      }
+    }
+  };
+  
   useEffect(() => {
     if (typeof window !== "undefined") {
       const storedLogo = window.localStorage.getItem("siteLogo");
@@ -320,6 +352,7 @@ export default function Home() {
         if (e.key === "products") fetchProducts();
         if (e.key === "siteLogo") setLogo(e.newValue);
         if (e.key === "isAdmin") setIsAdmin(e.newValue === "true");
+        if (e.key === "cateringCategories") fetchCategories();
         if (e.key === "currentUser") {
           try {
             setCurrentUser(e.newValue ? JSON.parse(e.newValue) : null);
@@ -354,22 +387,15 @@ export default function Home() {
     }
   }, []);
 
-  // جلب التصنيفات (المجموعات) من localStorage كما في الإدارة
-  const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  // مراقبة التحديثات على التصنيفات
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = window.localStorage.getItem('cateringCategories');
-      if (stored) {
-        setCategories(JSON.parse(stored));
-      } else {
-        setCategories([
-          { id: 1, name: "فواكه" },
-          { id: 2, name: "خضار" },
-          { id: 3, name: "ورقيات" },
-          { id: 4, name: "سلات الفواكه" },
-        ]);
-      }
-    }
+    fetchCategories();
+    
+    const categoryObserver = setInterval(() => {
+      fetchCategories();
+    }, 1000);
+    
+    return () => clearInterval(categoryObserver);
   }, []);
 
   // تجميع المنتجات حسب التصنيف
