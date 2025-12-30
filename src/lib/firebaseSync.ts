@@ -343,70 +343,7 @@ export const syncAllDataToFirebase = async () => {
 export const loadAllDataFromFirebase = async () => {
   if (typeof window === 'undefined') return;
   
-  try {
-    // جلب فقط إذا لم توجد بيانات في localStorage
-    const hasLocalData = localStorage.getItem('products') && 
-                        localStorage.getItem('cateringCategories') &&
-                        localStorage.getItem('users');
-    
-    if (hasLocalData) {
-      console.log('البيانات موجودة محلياً - تخطي جلب Firebase');
-      return true;
-    }
-    
-    console.log('جاري جلب البيانات من Firebase...');
-    
-    // جلب المنتجات
-    const products = await getProductsFromFirebase();
-    if (products.length > 0) {
-      localStorage.setItem('products', JSON.stringify(products));
-    }
-    
-    // جلب التصنيفات
-    const categories = await getCategoriesFromFirebase();
-    if (categories.length > 0) {
-      localStorage.setItem('cateringCategories', JSON.stringify(categories));
-    }
-    
-    // جلب البانرات
-    const banners = await getBannersFromFirebase();
-    if (banners.length > 0) {
-      localStorage.setItem('banners', JSON.stringify(banners));
-    }
-    
-    // جلب الشعار
-    const logo = await getLogoFromFirebase();
-    if (logo) {
-      localStorage.setItem('siteLogo', logo);
-    }
-    
-    // جلب المستخدمين
-    const users = await getUsersFromFirebase();
-    if (users.length > 0) {
-      localStorage.setItem('users', JSON.stringify(users));
-    }
-    
-    // جلب الطلبات
-    const orders = await getOrdersFromFirebase();
-    if (orders.length > 0) {
-      localStorage.setItem('orders', JSON.stringify(orders));
-    }
-    
-    // جلب إعدادات التوصيل
-    const deliverySettings = await getDeliverySettingsFromFirebase();
-    if (deliverySettings) {
-      if (deliverySettings.deliveryPrice) {
-        localStorage.setItem('deliveryPrice', deliverySettings.deliveryPrice.toString());
-      }
-      if (deliverySettings.deliveryTime) {
-        localStorage.setItem('deliveryTime', deliverySettings.deliveryTime);
-      }
-    }
-    
-    console.log('تم تحميل البيانات من Firebase');
-    return true;
-  } catch (error) {
-    console.error('خطأ في تحميل البيانات:', error);
-    return false;
-  }
+  // لا تجلب من Firebase إلا إذا طلب المستخدم ذلك يدوياً
+  console.log('تم تخطي جلب البيانات من Firebase - الموقع هو المصدر الأساسي');
+  return true;
 };

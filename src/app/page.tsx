@@ -425,16 +425,16 @@ export default function Home() {
       const cleanup = syncData();
       
       if (typeof window !== "undefined") {
-        // تحميل البيانات من Firebase فقط عند عدم وجود بيانات محلية
-        loadAllDataFromFirebase().then(async () => {
+        // لا تحمل من Firebase تلقائياً - الموقع هو المصدر
+        // loadAllDataFromFirebase().then(async () => {
           // مزامنة الصور بعد تحميل البيانات
-          await syncProductImages();
+          // await syncProductImages();
           
           const storedLogo = window.localStorage.getItem("siteLogo");
           if (storedLogo) setLogo(storedLogo);
           fetchProducts();
           fetchCategories();
-        });
+        // });
         
         // تحقق من حالة الأدمن
         setIsAdmin(window.localStorage.getItem("isAdmin") === "true");
