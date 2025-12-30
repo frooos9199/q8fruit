@@ -96,8 +96,8 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
           <img
             src={product.images[imgIdx]}
             alt={product.name}
-            className={`block absolute inset-0 w-full h-full object-cover object-center transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
-            style={{ transition: 'opacity 0.3s, transform 0.5s', objectPosition: 'center', verticalAlign: 'bottom' }}
+            className={`block absolute inset-0 w-full h-full object-cover transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
+            style={{ transition: 'opacity 0.3s, transform 0.5s', verticalAlign: 'bottom' }}
             onError={(e) => {
               // في حالة فشل تحميل الصورة، جرب الصورة القديمة
               if (product.image) {
@@ -109,7 +109,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
           <img 
             src={product.image} 
             alt={product.name} 
-            className="block absolute inset-0 w-full h-full object-cover object-center transition-all duration-500" 
+            className="block absolute inset-0 w-full h-full object-cover transition-all duration-500" 
             style={{ objectPosition: 'center', verticalAlign: 'bottom' }}
           />
         ) : (
