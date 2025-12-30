@@ -4,8 +4,7 @@ import Link from "next/link";
 import { syncData, checkCompatibility } from "../lib/dataSync";
 import { 
   loadAllDataFromFirebase, 
-  syncAllDataToFirebase, 
-  watchProducts 
+  syncAllDataToFirebase
 } from "../lib/firebaseSync";
 import { forceLoadAllData, checkDataCompleteness, retryDataLoad } from "../lib/forceSync";
 import { syncProductImages, fullImageSync } from "../lib/imageSync";
