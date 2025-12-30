@@ -32,9 +32,18 @@ export default function DeliverySettings() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     saveDeliveryPrice(deliveryPrice);
     saveDeliveryTime(deliveryTime);
+    
+    // مزامنة فورية مع Firebase
+    try {
+      const { syncAllDataToFirebase } = await import('../../../lib/firebaseSync');
+      await syncAllDataToFirebase();
+    } catch (error) {
+      console.error('خطأ في مزامنة إعدادات التوصيل:', error);
+    }
+    
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };

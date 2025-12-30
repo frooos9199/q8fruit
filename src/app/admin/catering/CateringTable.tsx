@@ -22,10 +22,17 @@ export default function CateringTable() {
   const [editCategory, setEditCategory] = useState<CateringCategory | null>(null);
 
   // مزامنة الكاترينج مع localStorage عند أي تغيير
-  const syncCategoriesToStorage = (cats: CateringCategory[]) => {
+  const syncCategoriesToStorage = async (cats: CateringCategory[]) => {
     if (typeof window !== 'undefined') {
       // حفظ كل البيانات بما فيها الصور والمنتجات
       window.localStorage.setItem("cateringCategories", JSON.stringify(cats));
+      // مزامنة فورية مع Firebase
+      try {
+        const { syncAllDataToFirebase } = await import('../../../lib/firebaseSync');
+        await syncAllDataToFirebase();
+      } catch (error) {
+        console.error('خطأ في مزامنة الكاترينج:', error);
+      }
     }
   };
 

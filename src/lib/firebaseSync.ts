@@ -167,6 +167,45 @@ export const getLogoFromFirebase = async () => {
   }
 };
 
+// مزامنة المستخدمين مع Firebase
+export const syncUsersToFirebase = async (users: any[]) => {
+  try {
+    const usersRef = collection(db, 'users');
+    
+    for (const user of users) {
+      await setDoc(doc(usersRef, user.id.toString()), {
+        ...user,
+        updatedAt: new Date().toISOString()
+      });
+    }
+    
+    console.log('تم مزامنة المستخدمين مع Firebase');
+    return true;
+  } catch (error) {
+    console.error('خطأ في مزامنة المستخدمين:', error);
+    return false;
+  }
+};
+
+// جلب المستخدمين من Firebase
+export const getUsersFromFirebase = async () => {
+  try {
+    const usersRef = collection(db, 'users');
+    const q = query(usersRef, orderBy('id'));
+    const snapshot = await getDocs(q);
+    
+    const users = snapshot.docs.map(doc => ({
+      ...doc.data(),
+      id: parseInt(doc.id)
+    }));
+    
+    return users;
+  } catch (error) {
+    console.error('خطأ في جلب المستخدمين:', error);
+    return [];
+  }
+};
+
 // مزامنة الطلبات مع Firebase
 export const syncOrdersToFirebase = async (orders: any[]) => {
   try {
@@ -206,6 +245,38 @@ export const getOrdersFromFirebase = async () => {
   }
 };
 
+// مزامنة إعدادات التوصيل مع Firebase
+export const syncDeliverySettingsToFirebase = async (settings: any) => {
+  try {
+    await setDoc(doc(db, 'settings', 'delivery'), {
+      ...settings,
+      updatedAt: new Date().toISOString()
+    });
+    
+    console.log('تم مزامنة إعدادات التوصيل مع Firebase');
+    return true;
+  } catch (error) {
+    console.error('خطأ في مزامنة إعدادات التوصيل:', error);
+    return false;
+  }
+};
+
+// جلب إعدادات التوصيل من Firebase
+export const getDeliverySettingsFromFirebase = async () => {
+  try {
+    const docRef = doc(db, 'settings', 'delivery');
+    const docSnap = await getDoc(docRef);
+    
+    if (docSnap.exists()) {
+      return docSnap.data();
+    }
+    return null;
+  } catch (error) {
+    console.error('خطأ في جلب إعدادات التوصيل:', error);
+    return null;
+  }
+};
+
 // مزامنة شاملة لجميع البيانات
 export const syncAllDataToFirebase = async () => {
   if (typeof window === 'undefined') return;
@@ -238,11 +309,28 @@ export const syncAllDataToFirebase = async () => {
       await syncLogoToFirebase(logo);
     }
     
+    // مزامنة المستخدمين
+    const users = localStorage.getItem('users');
+    if (users) {
+      const parsedUsers = JSON.parse(users);
+      await syncUsersToFirebase(parsedUsers);
+    }
+    
     // مزامنة الطلبات
     const orders = localStorage.getItem('orders');
     if (orders) {
       const parsedOrders = JSON.parse(orders);
       await syncOrdersToFirebase(parsedOrders);
+    }
+    
+    // مزامنة إعدادات التوصيل
+    const deliveryPrice = localStorage.getItem('deliveryPrice');
+    const deliveryTime = localStorage.getItem('deliveryTime');
+    if (deliveryPrice || deliveryTime) {
+      await syncDeliverySettingsToFirebase({
+        deliveryPrice: deliveryPrice ? Number(deliveryPrice) : 2.5,
+        deliveryTime: deliveryTime || 'خلال ساعتين'
+      });
     }
     
     console.log('تم مزامنة جميع البيانات مع Firebase');
@@ -282,10 +370,27 @@ export const loadAllDataFromFirebase = async () => {
       localStorage.setItem('siteLogo', logo);
     }
     
+    // جلب المستخدمين
+    const users = await getUsersFromFirebase();
+    if (users.length > 0) {
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+    
     // جلب الطلبات
     const orders = await getOrdersFromFirebase();
     if (orders.length > 0) {
       localStorage.setItem('orders', JSON.stringify(orders));
+    }
+    
+    // جلب إعدادات التوصيل
+    const deliverySettings = await getDeliverySettingsFromFirebase();
+    if (deliverySettings) {
+      if (deliverySettings.deliveryPrice) {
+        localStorage.setItem('deliveryPrice', deliverySettings.deliveryPrice.toString());
+      }
+      if (deliverySettings.deliveryTime) {
+        localStorage.setItem('deliveryTime', deliverySettings.deliveryTime);
+      }
     }
     
     // إرسال إشعارات التحديث

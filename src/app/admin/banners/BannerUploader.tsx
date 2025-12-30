@@ -35,6 +35,10 @@ export default function BannerUploader() {
               const updated = [...prev, ...newBanners];
               if (typeof window !== "undefined") {
                 window.localStorage.setItem("banners", JSON.stringify(updated));
+                // مزامنة فورية مع Firebase
+                import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+                  syncAllDataToFirebase().catch(console.error);
+                });
               }
               return updated;
             });
@@ -45,11 +49,15 @@ export default function BannerUploader() {
     }
   };
 
-  const removeBanner = (idx: number) => {
+  const removeBanner = async (idx: number) => {
     setBanners((prev) => {
       const updated = prev.filter((_, i) => i !== idx);
       if (typeof window !== "undefined") {
         window.localStorage.setItem("banners", JSON.stringify(updated));
+        // مزامنة فورية مع Firebase
+        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+          syncAllDataToFirebase().catch(console.error);
+        });
       }
       return updated;
     });
@@ -69,7 +77,7 @@ export default function BannerUploader() {
             <div key={row} className="flex gap-2">
               {group.slice(row * 2, row * 2 + 2).map((banner, idx) => (
                 <div key={idx} className="relative w-40 h-24 border rounded overflow-hidden">
-                  <img src={banner} alt={`بانر ${groupIdx * 4 + row * 2 + idx + 1}`} className="object-cover w-full h-full" />
+                  <img src={banner} alt={`بانر ${groupIdx * 4 + row * 2 + idx + 1}`} className="product-image w-full h-full" />
                   <button
                     onClick={() => removeBanner(groupIdx * 4 + row * 2 + idx)}
                     className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center"

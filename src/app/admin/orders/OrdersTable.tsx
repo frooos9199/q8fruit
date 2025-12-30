@@ -119,11 +119,15 @@ function OrdersTable() {
     return () => window.removeEventListener("storage", updateOrders);
   }, []);
 
-  const handleEditSave = (updated: Order) => {
+  const handleEditSave = async (updated: Order) => {
     setOrders(prev => {
       const updatedOrders = prev.map((o: Order) => o.id === updated.id ? updated : o);
       if (typeof window !== "undefined") {
         window.localStorage.setItem("orders", JSON.stringify(updatedOrders));
+        // مزامنة فورية مع Firebase
+        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+          syncAllDataToFirebase().catch(console.error);
+        });
       }
       return updatedOrders;
     });
@@ -131,12 +135,16 @@ function OrdersTable() {
   };
 
   // حذف الطلب (الفاتورة) من localStorage
-  const handleDeleteOrder = (orderId: number) => {
+  const handleDeleteOrder = async (orderId: number) => {
     if (window.confirm('هل أنت متأكد من حذف الفاتورة؟')) {
       setOrders(prev => {
         const updated = prev.filter(o => o.id !== orderId);
         if (typeof window !== 'undefined') {
           window.localStorage.setItem('orders', JSON.stringify(updated));
+          // مزامنة فورية مع Firebase
+          import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+            syncAllDataToFirebase().catch(console.error);
+          });
         }
         return updated;
       });

@@ -17,10 +17,17 @@ export default function LogoUploader() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // حفظ الشعار في localStorage ليظهر في الشريط الجانبي
     if (logo) {
       window.localStorage.setItem('siteLogo', logo);
+      // مزامنة فورية مع Firebase
+      try {
+        const { syncAllDataToFirebase } = await import('../../../lib/firebaseSync');
+        await syncAllDataToFirebase();
+      } catch (error) {
+        console.error('خطأ في مزامنة الشعار:', error);
+      }
     }
     setSuccess(true);
     setTimeout(() => setSuccess(false), 2000);

@@ -62,8 +62,18 @@ export default function UsersTable() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [editUser, setEditUser] = useState<User | null>(null);
 
-  const toggleActive = (id: number) => {
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, active: !u.active } : u));
+  const toggleActive = async (id: number) => {
+    setUsers(prev => {
+      const updated = prev.map(u => u.id === id ? { ...u, active: !u.active } : u);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('users', JSON.stringify(updated));
+        // مزامنة فورية مع Firebase
+        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+          syncAllDataToFirebase().catch(console.error);
+        });
+      }
+      return updated;
+    });
   };
 
   const filteredUsers = users.filter(user => {
@@ -75,8 +85,18 @@ export default function UsersTable() {
     return nameMatch && statusMatch;
   });
 
-  const handleEditSave = (updated: User) => {
-    setUsers(prev => prev.map(u => u.id === updated.id ? updated : u));
+  const handleEditSave = async (updated: User) => {
+    setUsers(prev => {
+      const updatedUsers = prev.map(u => u.id === updated.id ? updated : u);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('users', JSON.stringify(updatedUsers));
+        // مزامنة فورية مع Firebase
+        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+          syncAllDataToFirebase().catch(console.error);
+        });
+      }
+      return updatedUsers;
+    });
     setEditUser(null);
   };
 
@@ -187,5 +207,9 @@ export default function UsersTable() {
     setUsers(updated);
     window.localStorage.setItem("users", JSON.stringify(updated));
     window.dispatchEvent(new Event("usersUpdated"));
+    // مزامنة فورية مع Firebase
+    import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+      syncAllDataToFirebase().catch(console.error);
+    });
   }
 }

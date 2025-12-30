@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { syncAllDataToFirebase, loadAllDataFromFirebase } from "../../lib/firebaseSync";
 import { syncProductImages, fullImageSync } from "../../lib/imageSync";
+import { setupFirebaseData } from "../../lib/setupFirebase";
 
 export default function AdminDashboard() {
   const initialUsers = [
@@ -96,6 +97,25 @@ export default function AdminDashboard() {
     setSyncing(false);
     setTimeout(() => setSyncMessage(''), 3000);
   };
+  
+  // دالة إعداد Firebase بالبيانات الافتراضية
+  const handleSetupFirebase = async () => {
+    setSyncing(true);
+    setSyncMessage('جاري إعداد Firebase بالبيانات الافتراضية...');
+    
+    const success = await setupFirebaseData();
+    
+    if (success) {
+      setSyncMessage('✅ تم إعداد Firebase بنجاح! جاري إعادة تحميل الصفحة...');
+      // إعادة تحميل الصفحة لعرض البيانات الجديدة
+      setTimeout(() => window.location.reload(), 2000);
+    } else {
+      setSyncMessage('❌ حدث خطأ في إعداد Firebase');
+    }
+    
+    setSyncing(false);
+    setTimeout(() => setSyncMessage(''), 5000);
+  };
 
   useEffect(() => {
     // تحديث عدد المستخدمين
@@ -111,6 +131,23 @@ export default function AdminDashboard() {
         setUserCount(initialUsers.length);
       }
     };
+    
+    // مراقبة تغييرات Firebase في الوقت الفعلي
+    import('../../lib/firebaseSync').then(({ watchProducts }) => {
+      const unsubscribe = watchProducts((firebaseProducts) => {
+        if (firebaseProducts.length > 0) {
+          // تحديث localStorage بالبيانات الجديدة
+          window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
+          // إرسال حدث لتحديث الواجهة
+          window.dispatchEvent(new Event('storage'));
+        }
+      });
+      
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    }).catch(console.error);
+    
     window.addEventListener("usersUpdated", syncCount);
     syncCount();
 
@@ -142,6 +179,8 @@ export default function AdminDashboard() {
         ? orders.reduce((sum, o) => sum + (typeof o.total === "number" ? o.total : 0), 0)
         : 0;
       setOrdersStats({ total, today, sales });
+      
+      console.log('تم تحديث إحصائيات الطلبات:', { total, today, sales });
     };
 
     // تحديث إحصائيات الكاترينج
@@ -183,6 +222,14 @@ export default function AdminDashboard() {
 
     window.addEventListener("storage", syncOrders);
     window.addEventListener("storage", syncCatering);
+    
+    // مراقبة دورية لضمان تحديث الإحصائيات
+    const statsInterval = setInterval(() => {
+      syncOrders();
+      syncCatering();
+      syncCount();
+    }, 5000); // كل 5 ثواني
+    
     syncOrders();
     syncCatering();
     
@@ -190,6 +237,7 @@ export default function AdminDashboard() {
       window.removeEventListener("usersUpdated", syncCount);
       window.removeEventListener("storage", syncOrders);
       window.removeEventListener("storage", syncCatering);
+      clearInterval(statsInterval);
     };
   }, []);
 
@@ -244,14 +292,14 @@ export default function AdminDashboard() {
           </h2>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <button
             onClick={handleSyncToFirebase}
             disabled={syncing}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
           >
             <span className="text-xl">⬆️</span>
-            <span>{syncing ? 'جاري الرفع...' : 'رفع إلى Firebase'}</span>
+            <span className="text-sm">{syncing ? 'جاري...' : 'رفع إلى Firebase'}</span>
           </button>
           
           <button
@@ -260,7 +308,7 @@ export default function AdminDashboard() {
             className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
           >
             <span className="text-xl">⬇️</span>
-            <span>{syncing ? 'جاري التحميل...' : 'تحميل من Firebase'}</span>
+            <span className="text-sm">{syncing ? 'جاري...' : 'تحميل من Firebase'}</span>
           </button>
           
           <button
@@ -269,7 +317,16 @@ export default function AdminDashboard() {
             className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
           >
             <span className="text-xl">🖼️</span>
-            <span>{syncing ? 'جاري المزامنة...' : 'مزامنة الصور'}</span>
+            <span className="text-sm">{syncing ? 'جاري...' : 'مزامنة الصور'}</span>
+          </button>
+          
+          <button
+            onClick={handleSetupFirebase}
+            disabled={syncing}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+          >
+            <span className="text-xl">⚙️</span>
+            <span className="text-sm">{syncing ? 'جاري...' : 'إعداد Firebase'}</span>
           </button>
         </div>
         
@@ -284,9 +341,15 @@ export default function AdminDashboard() {
         )}
         
         <div className="mt-4 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900 dark:to-orange-900 rounded-lg border border-yellow-200 dark:border-yellow-700">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200">
-            <span className="font-bold">⚠️ ملاحظة:</span> استخدم "رفع إلى Firebase" لحفظ البيانات المحلية في السحابة. استخدم "تحميل من Firebase" لجلب أحدث البيانات من السحابة.
+          <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
+            <span className="font-bold">⚠️ ملاحظة:</span>
           </p>
+          <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
+            <li>• <strong>إعداد Firebase:</strong> يضيف 10 منتجات افتراضية إلى Firebase (استخدمه مرة واحدة فقط)</li>
+            <li>• <strong>رفع إلى Firebase:</strong> يحفظ البيانات المحلية في السحابة</li>
+            <li>• <strong>تحميل من Firebase:</strong> يجلب أحدث البيانات من السحابة</li>
+            <li>• <strong>مزامنة الصور:</strong> يربط الصور من Firebase Storage بالمنتجات</li>
+          </ul>
         </div>
       </div>
 

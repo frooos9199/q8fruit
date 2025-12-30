@@ -32,6 +32,23 @@ export default function ProductTable() {
       } else {
         setProducts([]);
       }
+      
+      // مراقبة تغييرات localStorage
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === 'products' && e.newValue) {
+          try {
+            setProducts(JSON.parse(e.newValue));
+          } catch (error) {
+            console.error('خطأ في تحليل بيانات المنتجات:', error);
+          }
+        }
+      };
+      
+      window.addEventListener('storage', handleStorageChange);
+      
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+      };
     }
   }, []);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -66,13 +83,28 @@ export default function ProductTable() {
   const saveProductsToStorage = (prods: Product[]) => {
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('products', JSON.stringify(prods));
+      // إرسال حدث مخصص لتحديث الواجهة
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'products',
+        newValue: JSON.stringify(prods),
+        storageArea: window.localStorage
+      }));
     }
   };
 
-  const toggleActive = (id: number) => {
+  const toggleActive = async (id: number) => {
     setProducts((prev) => {
       const updated = prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p));
+      console.log(`تم تغيير حالة المنتج ${id} إلى:`, updated.find(p => p.id === id)?.active);
       saveProductsToStorage(updated);
+      
+      // مزامنة فورية مع Firebase
+      if (typeof window !== 'undefined') {
+        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+          syncAllDataToFirebase().catch(console.error);
+        });
+      }
+      
       return updated;
     });
   };
@@ -201,10 +233,14 @@ export default function ProductTable() {
               <td className="p-2 font-bold text-gray-600">{index + 1}</td>
               <td className="p-2">
                 {product.images && product.images.length > 0 ? (
-                  <img src={product.images[0]} alt={product.name} className="w-16 h-16 object-cover rounded" />
+                  <img src={product.images[0]} alt={product.name} className="w-16 h-16 product-image rounded mx-auto" />
                 ) : product.image ? (
-                  <img src={product.image} alt={product.name} className="w-16 h-16 object-cover rounded" />
-                ) : null}
+                  <img src={product.image} alt={product.name} className="w-16 h-16 product-image rounded mx-auto" />
+                ) : (
+                  <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded mx-auto flex items-center justify-center">
+                    <span className="text-gray-400 text-xs">لا توجد صورة</span>
+                  </div>
+                )}
               </td>
               <td className="p-2">{product.name}</td>
               <td className="p-2">
