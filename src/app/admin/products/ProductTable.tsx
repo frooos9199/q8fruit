@@ -15,17 +15,15 @@ interface Product {
   units: ProductUnit[];
   quantity: number;
   active: boolean;
-  images?: string[]; // صور متعددة
-  image?: string; // دعم خلفي للصورة القديمة
+  images?: string[];
+  image?: string;
   category: string;
-  categories?: string[]; // تصنيفات متعددة
+  categories?: string[];
 }
 
-// بيانات أولية لأربعة كاترينج مع صور حقيقية (يمكنك تعديل الصور لاحقاً)
 export default function ProductTable() {
   const [products, setProducts] = useState<Product[]>([]);
 
-  // عند تحميل الصفحة، استخدم المنتجات من localStorage فقط
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem('products');
@@ -40,17 +38,14 @@ export default function ProductTable() {
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [filterName, setFilterName] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
-  // جلب الكاترينج من localStorage أو من جدول الكاترينج (محلي فقط)
   const [categories, setCategories] = useStateReact<{ id: number; name: string }[]>([]);
 
   useEffect(() => {
-    // محاولة جلب الكاترينج من localStorage أو من window (محاكاة)
     try {
       const stored = window.localStorage.getItem("cateringCategories");
       if (stored) {
         setCategories(JSON.parse(stored));
       } else {
-        // fallback: أسماء افتراضية
         setCategories([
           { id: 1, name: "فواكه" },
           { id: 2, name: "خضار" },
@@ -90,7 +85,6 @@ export default function ProductTable() {
     });
   };
 
-  // دالة لتحديث تصنيفات المنتج
   const updateProductCategories = (productId: number, categoryName: string, isChecked: boolean) => {
     setProducts((prev) => {
       const updated = prev.map((product) => {
@@ -98,14 +92,11 @@ export default function ProductTable() {
           let categories = product.categories || [product.category];
           
           if (isChecked) {
-            // إضافة التصنيف إذا لم يكن موجوداً
             if (!categories.includes(categoryName)) {
               categories = [...categories, categoryName];
             }
           } else {
-            // إزالة التصنيف
             categories = categories.filter(cat => cat !== categoryName);
-            // التأكد من وجود تصنيف واحد على الأقل
             if (categories.length === 0) {
               categories = [product.category];
             }
@@ -114,7 +105,7 @@ export default function ProductTable() {
           return {
             ...product,
             categories,
-            category: categories[0] // التصنيف الرئيسي
+            category: categories[0]
           };
         }
         return product;
@@ -124,7 +115,6 @@ export default function ProductTable() {
       return updated;
     });
   };
-
 
   const handleEditSave = (updated: Product) => {
     setProducts((prev) => {
@@ -137,7 +127,6 @@ export default function ProductTable() {
 
   const handleAddSave = (newProduct: Product) => {
     setProducts((prev) => {
-      // إنشاء ID فريد جديد
       const maxId = prev.length > 0 ? Math.max(...prev.map(p => p.id)) : 0;
       const newProducts = [
         ...prev,
@@ -149,7 +138,6 @@ export default function ProductTable() {
     setAddModalOpen(false);
   };
 
-  // فلترة المنتجات
   const filteredProducts = products.filter((product) => {
     const nameMatch = product.name.includes(filterName);
     const statusMatch =
@@ -168,23 +156,6 @@ export default function ProductTable() {
         >
           + إضافة منتج
         </button>
-      {addModalOpen && (
-        <ProductEditModal
-          product={{ 
-            id: 0, 
-            name: "", 
-            units: [{ name: "", price: 0 }], 
-            quantity: 1000, 
-            active: true, 
-            image: undefined, 
-            category: categories[0]?.name || "",
-            categories: []
-          }}
-          onSave={handleAddSave}
-          onClose={() => setAddModalOpen(false)}
-          categories={categories}
-        />
-      )}
         <div>
           <label className="block text-sm font-bold mb-1">بحث بالاسم</label>
           <input
@@ -321,8 +292,7 @@ export default function ProductTable() {
             quantity: 1000, 
             active: true, 
             image: undefined, 
-            category: categories[0]?.name || "",
-            categories: []
+            category: categories[0]?.name || ""
           }}
           onSave={handleAddSave}
           onClose={() => setAddModalOpen(false)}
