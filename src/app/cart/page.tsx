@@ -74,7 +74,7 @@ export default function CartPage() {
   }, [userInfo]);
   const [showAlert, setShowAlert] = useState(false);
   const [deletedName, setDeletedName] = useState("");
-  const [deliveryPrice, setDeliveryPrice] = useState(1); // الافتراضي
+  const [deliveryPrice, setDeliveryPrice] = useState(2.5); // تحديث القيمة الافتراضية
   const [paymentType, setPaymentType] = useState("cash"); // الافتراضي نقدي
   const [deliveryNote, setDeliveryNote] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");

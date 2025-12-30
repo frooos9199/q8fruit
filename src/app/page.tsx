@@ -12,6 +12,7 @@ interface Product {
   images?: string[]; // صور متعددة
   image?: string; // دعم خلفي للصورة القديمة
   category: string;
+  categories?: string[]; // تصنيفات متعددة
 }
 
 interface ProductCardProps {
@@ -42,8 +43,8 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
     if (existingIndex > -1) {
       cart[existingIndex].quantity += quantity;
     } else {
-      // استخدم أول صورة من images إذا وجدت، وإلا image القديمة
-      let cartImage = product.image;
+      // استخدام أول صورة من images إذا وجدت، وإلا image القديمة
+      let cartImage = product.image || '';
       if (product.images && Array.isArray(product.images) && product.images.length > 0) {
         cartImage = product.images[0];
       }
@@ -79,55 +80,72 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
 
   return (
     <div
-      className={`bg-white dark:bg-gray-900 rounded-2xl shadow-md p-3 flex flex-col items-stretch border border-gray-100 dark:border-gray-800 transition-all duration-200 hover:scale-105 hover:shadow-lg group${small ? '' : ''}`}
+      className={`bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-4 flex flex-col items-stretch border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl group backdrop-blur-sm${small ? '' : ''}`}
     >
-      <div className={`${small ? 'w-36 h-36 xs:w-36 xs:h-36 sm:w-40 sm:h-40 mb-2' : 'w-40 h-40 mb-3'} mx-auto rounded-xl overflow-hidden bg-white flex items-center justify-center`}>
+      <div className={`${small ? 'w-36 h-36 xs:w-36 xs:h-36 sm:w-40 sm:h-40 mb-3' : 'w-40 h-40 mb-4'} mx-auto rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center relative`}>
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[imgIdx]}
             alt={product.name}
-            className={`w-full h-full object-cover group-hover:scale-110 transition-all duration-300 ${fade ? 'opacity-100' : 'opacity-0'}`}
-            style={{ transition: 'opacity 0.2s' }}
+            className={`w-full h-full object-cover group-hover:scale-110 transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
+            style={{ transition: 'opacity 0.3s, transform 0.5s' }}
+            onError={(e) => {
+              // في حالة فشل تحميل الصورة، جرب الصورة القديمة
+              if (product.image) {
+                (e.target as HTMLImageElement).src = product.image;
+              }
+            }}
           />
         ) : product.image ? (
-          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-300" />
-        ) : null}
+          <img 
+            src={product.image} 
+            alt={product.name} 
+            className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500" 
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
-      <div className={`font-bold ${small ? 'text-sm xs:text-base mb-1' : 'text-base mb-2'} text-gray-800 dark:text-gray-100 text-center`}>{product.name}</div>
+      <div className={`font-bold ${small ? 'text-sm xs:text-base mb-2' : 'text-lg mb-3'} text-gray-800 dark:text-gray-100 text-center`}>{product.name}</div>
       {/* اختيار الوحدة */}
-      <div className="flex items-center justify-center gap-2 mb-2">
+      <div className="flex items-center justify-center gap-2 mb-3">
         {product.units.map((unit, idx) => (
           <button
             key={unit.name}
             type="button"
-            className={`flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border transition-all duration-150 focus:outline-none shadow-sm min-w-[48px] justify-center
+            className={`flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all duration-200 focus:outline-none shadow-sm min-w-[52px] justify-center
               ${idx === selectedUnitIdx
-                ? 'border-green-500 bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-200'
-                : 'border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-green-100 dark:hover:bg-green-900'}
+                ? 'border-green-500 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 text-green-700 dark:text-green-200 shadow-md'
+                : 'border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:border-green-300 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900'}
             `}
             onClick={() => setSelectedUnitIdx(idx)}
           >
             {idx === selectedUnitIdx && (
-              <svg width="11" height="11" viewBox="0 0 20 20" fill="currentColor" className="text-green-500"><circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.13"/><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
+              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" className="text-green-500"><circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.2"/><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
             )}
             <span>{unit.name}</span>
           </button>
         ))}
       </div>
       {/* اختيار العدد */}
-      <div className="flex items-center justify-center gap-2 mb-3 select-none">
+      <div className="flex items-center justify-center gap-3 mb-4 select-none">
         <button
           type="button"
-          className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-lg font-bold hover:bg-pink-200 dark:hover:bg-pink-700 transition"
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-lg font-bold hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl"
           onClick={() => handleQuantityChange(product.id, Math.max(1, quantity - 1))}
           aria-label="نقص العدد"
         >
           -
         </button>
-        <span className="w-8 text-center font-bold text-lg">{quantity}</span>
+        <span className="w-10 text-center font-bold text-xl text-gray-800 dark:text-gray-100">{quantity}</span>
         <button
           type="button"
-          className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-lg font-bold hover:bg-green-200 dark:hover:bg-green-700 transition"
+          className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-lg font-bold hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl"
           onClick={() => handleQuantityChange(product.id, Math.min(product.quantity, quantity + 1))}
           aria-label="زيادة العدد"
         >
@@ -135,23 +153,23 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
         </button>
       </div>
       {/* صف السعر والوحدة */}
-      <div className="flex items-center justify-between gap-2 mb-3 px-2">
-        <span className="text-lg font-bold text-green-700 dark:text-green-300 flex items-center">
+      <div className="flex items-center justify-between gap-2 mb-4 px-1">
+        <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent flex items-center">
           د.ك<span className="mx-1" />{(selectedUnit?.price * quantity).toFixed(3)}
           {quantity > 1 && (
-            <span className="text-xs text-gray-500 ml-2">({selectedUnit?.price} × {quantity})</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">({selectedUnit?.price} × {quantity})</span>
           )}
         </span>
         {selectedUnit?.name && (
-          <span className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border border-green-400 bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-200 shadow-sm transition-all">
-            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" className="text-green-500"><circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.13"/><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
+          <span className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full border-2 border-green-400 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 text-green-700 dark:text-green-200 shadow-sm transition-all">
+            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" className="text-green-500"><circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.2"/><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
             <span>{selectedUnit.name}</span>
           </span>
         )}
       </div>
-      <button onClick={handleAddToCart} className={`mt-auto ${small ? 'px-2 py-1 xs:px-4 xs:py-2 text-xs xs:text-sm gap-1 xs:gap-2' : 'px-4 py-2 text-sm gap-2'} bg-green-500 hover:bg-pink-500 text-white rounded-full font-bold shadow transition-all flex items-center justify-center`}>
-        <span className="ml-4">أضف للسلة</span>
-        <svg width={small ? "18" : "20"} height={small ? "18" : "20"} fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
+      <button onClick={handleAddToCart} className={`mt-auto ${small ? 'px-3 py-2 xs:px-4 xs:py-2.5 text-sm xs:text-base gap-2 xs:gap-3' : 'px-5 py-3 text-base gap-3'} bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group`}>
+        <span className="ml-2">أضف للسلة</span>
+        <svg width={small ? "20" : "22"} height={small ? "20" : "22"} fill="none" viewBox="0 0 24 24" className="group-hover:scale-110 transition-transform duration-200"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
       </button>
     </div>
   );
@@ -163,7 +181,7 @@ export default function Home() {
   const [logo, setLogo] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{name?: string} | null>(null);
+  const [currentUser, setCurrentUser] = useState<{uid?: string; name?: string; email?: string} | null>(null);
   // البنرات
   const [banners, setBanners] = useState<string[]>([]);
 
@@ -245,9 +263,14 @@ export default function Home() {
   // دالة تسجيل الخروج
   function handleLogout() {
     if (typeof window !== "undefined") {
-      window.localStorage.removeItem("currentUser");
-      window.localStorage.removeItem("isAdmin");
-      window.location.href = "/";
+      // استخدام Firebase Auth للخروج
+      import('../lib/auth').then(({ logoutUser }) => {
+        logoutUser().then(() => {
+          window.localStorage.removeItem("currentUser");
+          window.localStorage.removeItem("isAdmin");
+          window.location.href = "/";
+        }).catch(console.error);
+      });
     }
   }
   
@@ -260,25 +283,38 @@ export default function Home() {
       const stored = window.localStorage.getItem('cateringCategories');
       if (stored) {
         try {
-          setCategories(JSON.parse(stored));
+          const parsed = JSON.parse(stored);
+          // استخراج فقط id و name من البيانات الكاملة
+          const simplifiedCategories = parsed.map((cat: any) => ({
+            id: cat.id,
+            name: cat.name
+          }));
+          setCategories(simplifiedCategories);
         } catch {
-          setCategories([
-            { id: 1, name: "فواكه" },
-            { id: 2, name: "خضار" },
-            { id: 3, name: "ورقيات" },
-            { id: 4, name: "سلات الفواكه" },
-          ]);
+          // في حالة الخطأ، إنشاء التصنيفات الافتراضية الكاملة
+          const defaultCategories = [
+            { id: 1, name: "فواكه", products: [], image: undefined },
+            { id: 2, name: "خضار", products: [], image: undefined },
+            { id: 3, name: "ورقيات", products: [], image: undefined },
+            { id: 4, name: "سلات الفواكه", products: [], image: undefined },
+          ];
+          // حفظ البيانات الكاملة في localStorage
+          window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
+          // عرض البيانات المبسطة في الصفحة الرئيسية
+          setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
         }
       } else {
-        // إنشاء التصنيفات الافتراضية
+        // إنشاء التصنيفات الافتراضية الكاملة
         const defaultCategories = [
-          { id: 1, name: "فواكه" },
-          { id: 2, name: "خضار" },
-          { id: 3, name: "ورقيات" },
-          { id: 4, name: "سلات الفواكه" },
+          { id: 1, name: "فواكه", products: [], image: undefined },
+          { id: 2, name: "خضار", products: [], image: undefined },
+          { id: 3, name: "ورقيات", products: [], image: undefined },
+          { id: 4, name: "سلات الفواكه", products: [], image: undefined },
         ];
-        setCategories(defaultCategories);
+        // حفظ البيانات الكاملة في localStorage
         window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
+        // عرض البيانات المبسطة في الصفحة الرئيسية
+        setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
       }
     }
   };
@@ -402,34 +438,56 @@ export default function Home() {
   const grouped: Record<string, Product[]> = {};
   (products.length > 0 ? products : defaultProducts).forEach((product) => {
     if (!product.active) return;
-    if (!grouped[product.category]) grouped[product.category] = [];
-    grouped[product.category].push(product);
+    
+    // إضافة المنتج لجميع التصنيفات المختارة
+    const productCategories = product.categories || [product.category];
+    productCategories.forEach(categoryName => {
+      if (!grouped[categoryName]) grouped[categoryName] = [];
+      // تجنب التكرار
+      if (!grouped[categoryName].find(p => p.id === product.id)) {
+        grouped[categoryName].push(product);
+      }
+    });
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-400 via-cyan-400 to-blue-500 dark:from-green-700 dark:via-cyan-800 dark:to-blue-900 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-slate-900 dark:via-blue-900 dark:to-green-900 font-sans">
       {/* رسالة ترحيبية */}
       {currentUser?.name && (
-        <div className="w-full text-center py-3 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 font-bold text-lg">
-          أهلاً: {currentUser.name}
+        <div className="w-full text-center py-4 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold text-lg shadow-lg">
+          <span className="inline-flex items-center gap-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+            </svg>
+            أهلاً وسهلاً: {currentUser.name}
+          </span>
         </div>
       )}
       {/* منيو جانبي والهيدر كما هو ... */}
       {menuOpen && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex">
-          <div className="w-64 bg-white dark:bg-gray-900 h-full shadow-xl p-6 flex flex-col gap-4 animate-slideInRight">
-            <button onClick={() => setMenuOpen(false)} className="self-end text-gray-500 hover:text-pink-500 text-2xl mb-4">&times;</button>
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex">
+          <div className="w-72 bg-white dark:bg-slate-800 h-full shadow-2xl p-6 flex flex-col gap-4 animate-slideInRight border-r-4 border-green-500">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-800 dark:text-white">القائمة</h3>
+              <button onClick={() => setMenuOpen(false)} className="text-gray-500 hover:text-blue-500 text-3xl transition-colors">&times;</button>
+            </div>
             {menuLinks.map((link) => (
               link.onClick ? (
                 <button
                   key={link.label}
                   onClick={link.onClick}
-                  className="block w-full text-right px-4 py-2 rounded-lg text-lg font-bold text-green-700 dark:text-green-200 hover:bg-green-50 dark:hover:bg-gray-800 transition"
+                  className="flex items-center gap-3 w-full text-right px-4 py-3 rounded-xl text-lg font-semibold text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900 hover:text-green-600 transition-all duration-200 border border-transparent hover:border-green-200"
                 >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+                  </svg>
                   {link.label}
                 </button>
               ) : (
-                <Link key={link.href} href={link.href} className="block px-4 py-2 rounded-lg text-lg font-bold text-green-700 dark:text-green-200 hover:bg-green-50 dark:hover:bg-gray-800 transition">
+                <Link key={link.href} href={link.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-lg font-semibold text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900 hover:text-green-600 transition-all duration-200 border border-transparent hover:border-green-200">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
                   {link.label}
                 </Link>
               )
@@ -438,33 +496,46 @@ export default function Home() {
           <div className="flex-1" onClick={() => setMenuOpen(false)} />
         </div>
       )}
-      <header className="w-full flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-gray-900/80 shadow-sm sticky top-0 z-30">
-        <div className="flex items-center gap-3">
-          <button onClick={() => setMenuOpen(true)} className="text-green-700 dark:text-green-200 text-2xl md:text-3xl mr-2 md:mr-4">
-            <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+      <header className="w-full flex items-center justify-between px-6 py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg sticky top-0 z-30 border-b border-green-100 dark:border-green-900">
+        <div className="flex items-center gap-4">
+          <button onClick={() => setMenuOpen(true)} className="p-2 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
           {/* أيقونة موبايل ورقم التواصل */}
-          <span className="flex items-center gap-1 text-green-700 dark:text-green-200 font-bold text-lg mr-2">
-            <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4h4l2 5-1.5 1.5a7 7 0 0 0 7 7L17 17l5 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
+          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4h4l2 5-1.5 1.5a7 7 0 0 0 7 7L17 17l5 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
             <span dir="ltr">98899426</span>
-          </span>
+          </div>
         </div>
         <div className="flex-1 flex justify-center">
           {logo ? (
-            <img src={logo} alt="شعار الموقع" className="w-16 h-16 object-contain rounded-full shadow border-2 border-green-200 bg-white" />
+            <div className="relative">
+              <img src={logo} alt="شعار الموقع" className="w-16 h-16 object-contain rounded-full shadow-xl border-4 border-white bg-white" />
+              <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-full blur opacity-25"></div>
+            </div>
           ) : (
-            <span className="text-2xl font-extrabold text-green-700">فكهاني الكويت</span>
+            <div className="text-center">
+              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">فكهاني الكويت</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">طازج • طبيعي • صحي</p>
+            </div>
           )}
         </div>
-        <div className="flex items-center gap-2 relative ml-2 md:ml-4">
+        <div className="flex items-center gap-3">
           {/* زر الإدارة يظهر فقط للأدمن */}
           {isAdmin && (
-            <Link href="/admin" className="text-xs md:text-base font-bold px-3 py-1 rounded-full bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-200 border border-green-400 hover:bg-green-200 dark:hover:bg-green-800 transition mr-2">الإدارة</Link>
+            <Link href="/admin" className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-sm hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+              <span className="flex items-center gap-2">
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                </svg>
+                الإدارة
+              </span>
+            </Link>
           )}
-          <Link href="/cart" className="text-green-700 dark:text-green-200 text-2xl md:text-3xl hover:text-pink-500 transition relative">
-            <svg width="28" height="28" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
+          <Link href="/cart" className="relative p-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+            <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-pink-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white">{cartCount}</span>
+              <span className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white animate-pulse">{cartCount}</span>
             )}
           </Link>
         </div>
@@ -472,19 +543,29 @@ export default function Home() {
 
       {/* بانر ديناميكي */}
       {banners.length > 0 && (
-        <div className="max-w-4xl mx-auto my-10 rounded-2xl overflow-hidden shadow-xl">
-          <img src={banners[0]} alt="بانر رئيسي" className="w-full h-32 md:h-44 object-cover object-center" />
+        <div className="max-w-6xl mx-auto my-12 px-4">
+          <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+            <img src={banners[0]} alt="بانر رئيسي" className="w-full h-40 md:h-56 object-cover object-center" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
+            <div className="absolute bottom-4 left-4 text-white">
+              <h2 className="text-xl md:text-2xl font-bold mb-1">أطيب الفواكه والخضار</h2>
+              <p className="text-sm md:text-base opacity-90">طازج يومياً من المزرعة إلى بيتك</p>
+            </div>
+          </div>
         </div>
       )}
 
       {/* عرض المجموعات (التصنيفات) من localStorage */}
-      <div className="max-w-6xl mx-auto px-4 mt-12">
+      <div className="max-w-7xl mx-auto px-4 mt-16">
         {categories.map((cat) => (
-          <section key={cat.name} className="mb-12">
-            <h2 className="text-2xl font-bold text-green-800 dark:text-green-200 mb-6 text-center">
-              {cat.name}
-            </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          <section key={cat.name} className="mb-16">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                {cat.name}
+              </h2>
+              <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-blue-500 mx-auto rounded-full"></div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {(grouped[cat.name] && grouped[cat.name].length > 0) ? (
                 grouped[cat.name].map((product) => (
                   <ProductCard
@@ -503,20 +584,50 @@ export default function Home() {
       </div>
 
 
-      <footer className="mt-20 py-8 text-center text-gray-500 dark:text-gray-400 border-t bg-white/60 dark:bg-gray-900/60">
-        جميع الحقوق محفوظة &copy; {new Date().getFullYear()} فكهاني الكويت
-        <br />
-        <span className="text-sm mt-2 inline-block">
-          المطور:
-          <a
-            href="https://nexdev-portfolio-one.vercel.app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-green-700 dark:text-green-300 font-bold hover:underline ml-1"
-          >
-            NexDev
-          </a>
-        </span>
+      <footer className="mt-24 py-12 bg-gradient-to-r from-green-800 to-blue-900 text-white">
+        <div className="max-w-6xl mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div className="text-center md:text-right">
+              <h3 className="text-xl font-bold mb-4 text-green-300">فكهاني الكويت</h3>
+              <p className="text-gray-200 text-sm leading-relaxed">
+                متجرك المفضل للفواكه والخضار الطازجة
+                <br />
+                جودة عالية وأسعار منافسة
+              </p>
+            </div>
+            <div className="text-center">
+              <h4 className="text-lg font-semibold mb-4 text-blue-300">تواصل معنا</h4>
+              <div className="flex items-center justify-center gap-2 text-cyan-300 font-bold">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4h4l2 5-1.5 1.5a7 7 0 0 0 7 7L17 17l5 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
+                <span dir="ltr">98899426</span>
+              </div>
+            </div>
+            <div className="text-center md:text-left">
+              <h4 className="text-lg font-semibold mb-4 text-green-300">روابط سريعة</h4>
+              <div className="space-y-2">
+                <Link href="/" className="block text-gray-200 hover:text-white transition-colors">الرئيسية</Link>
+                <Link href="/cart" className="block text-gray-200 hover:text-white transition-colors">السلة</Link>
+                <Link href="/login" className="block text-gray-200 hover:text-white transition-colors">تسجيل الدخول</Link>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-green-700 pt-6 text-center">
+            <p className="text-gray-200 mb-2">
+              جميع الحقوق محفوظة &copy; {new Date().getFullYear()} فكهاني الكويت
+            </p>
+            <p className="text-sm text-gray-300">
+              تطوير:
+              <a
+                href="https://nexdev-portfolio-one.vercel.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-300 font-bold hover:text-blue-200 transition-colors ml-1"
+              >
+                NexDev
+              </a>
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );

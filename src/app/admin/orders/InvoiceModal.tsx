@@ -29,7 +29,6 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
   const invoiceRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (autoPrint && invoiceRef.current) {
-      // بناء HTML الفاتورة فقط بدون أي عناصر جانبية
       const invoiceHtml = invoiceRef.current.innerHTML;
       const printWindow = window.open('', '_blank', 'width=800,height=900');
       if (printWindow) {
@@ -38,64 +37,34 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
             <head>
               <title>فاتورة الطلب</title>
               <style>
-                html, body { background: #fff !important; margin: 0; padding: 0; height: 100%; }
-                body { display: flex; align-items: flex-start; justify-content: center; min-height: 100vh; }
-                * { box-sizing: border-box; }
-                .print-container {
-                  font-family: Tahoma, Arial, sans-serif;
-                  margin: 0 auto;
-                  padding: 0;
-                  width: 420px;
-                  max-width: 100vw;
-                  background: #fff;
-                  border-radius: 16px;
-                  box-shadow: 0 0 0.5rem #eee;
-                  border: 1.5px solid #e5e7eb;
-                  margin-top: 24px;
-                }
-                .print-container img { display: block; margin: 0 auto 8px auto; }
-                .print-container h3, .print-container h2 { text-align: center; }
-                .print-container table { margin: 0 auto; }
-                .print-container .text-center { text-align: center; }
-                .print-container .text-left { text-align: left; }
-                .print-container .text-right { text-align: right; }
-                .print-container .font-bold { font-weight: bold; }
-                .print-container .mb-2 { margin-bottom: 0.5rem; }
-                .print-container .mb-6 { margin-bottom: 1.5rem; }
-                .print-container .mt-1 { margin-top: 0.25rem; }
-                .print-container .rounded-full { border-radius: 9999px; }
-                .print-container .border { border: 1px solid #e5e7eb; }
-                .print-container .bg-white { background: #fff; }
-                .print-container .bg-yellow-50 { background: #fefce8; }
-                .print-container .bg-green-50 { background: #f0fdf4; }
-                .print-container .bg-gray-50 { background: #f9fafb; }
-                .print-container .bg-gray-100 { background: #f3f4f6; }
-                .print-container .text-black { color: #222; }
-                .print-container .text-pink-700 { color: #be185d; }
-                .print-container .bg-pink-100 { background: #fce7f3; }
-                .print-container .p-2 { padding: 0.5rem; }
-                .print-container .p-6 { padding: 1.5rem; }
-                .print-container .shadow-lg { box-shadow: 0 2px 8px #e5e7eb; }
-                .print-container .border-gray-300 { border-color: #d1d5db; }
-                .print-container .min-w-\[340px\] { min-width: 340px; }
-                .print-container .max-w-full { max-width: 100vw; }
-                .print-container .relative { position: relative; }
-                .print-container .w-20 { width: 80px; }
-                .print-container .h-20 { height: 80px; }
-                .print-container .px-3 { padding-left: 0.75rem; padding-right: 0.75rem; }
-                .print-container .py-1 { padding-top: 0.25rem; padding-bottom: 0.25rem; }
-                .print-container .font-normal { font-weight: normal; }
-                .print-container .my-4 { margin-top: 1rem; margin-bottom: 1rem; }
-                .print-container hr { border: none; border-top: 1px solid #e5e7eb; margin: 0.5rem 0; }
-                @media print {
-                  html, body { background: #fff !important; }
-                  body { min-height: unset; }
-                  .print-container { box-shadow: none !important; border: none !important; }
-                }
+                * { box-sizing: border-box; margin: 0; padding: 0; }
+                body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f8fafc; padding: 20px; }
+                .invoice { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+                .logo { width: 80px; height: 80px; border-radius: 50%; border: 4px solid white; margin: 0 auto 15px; }
+                .invoice-title { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+                .invoice-number { background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 25px; display: inline-block; }
+                .customer-info { padding: 30px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+                .customer-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+                .customer-details { font-size: 16px; opacity: 0.9; }
+                .products-section { padding: 30px; }
+                .products-title { text-align: center; font-size: 22px; font-weight: bold; color: #4a5568; margin-bottom: 20px; }
+                .products-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+                .products-table th { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px; font-weight: bold; }
+                .products-table td { padding: 15px; border-bottom: 1px solid #e2e8f0; }
+                .products-table tr:nth-child(even) { background: #f7fafc; }
+                .products-table tr:hover { background: #edf2f7; }
+                .delivery-row { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important; }
+                .total-row { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important; font-weight: bold; font-size: 18px; }
+                .footer { background: #2d3748; color: white; padding: 25px; text-align: center; }
+                .footer-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+                .footer-contact { font-size: 14px; opacity: 0.8; }
+                .payment-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+                @media print { body { background: white; padding: 0; } .invoice { box-shadow: none; } }
               </style>
             </head>
             <body>
-              <div class="print-container">${invoiceHtml}</div>
+              <div class="invoice">${invoiceHtml}</div>
             </body>
           </html>
         `);
@@ -109,106 +78,102 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
       }
     }
   }, [autoPrint, onClose]);
+  
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 print:bg-white print:bg-opacity-100 print:relative print:inset-auto print:block">
-      <div ref={invoiceRef} id="invoice-print-root" className="bg-white rounded-lg shadow-lg p-6 min-w-[340px] max-w-full relative border-2 border-gray-300 print:shadow-none">
-        {/* رقم الفاتورة أعلى الصفحة */}
-        <div className="flex justify-between items-center mb-2">
-          <span className="text-xs font-bold text-pink-700 bg-pink-100 rounded-full px-3 py-1" style={{fontSize:'1rem'}}>
-            #{1000 + (order.id ? Number(order.id) : 0)}
-          </span>
-          {/* نوع الدفع */}
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div ref={invoiceRef} className="invoice max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="header">
+          <img src="/images/fruits.png" alt="شعار المتجر" className="logo" />
+          <div className="invoice-title">🍎 متجر الفواكه والخضار</div>
+          <div className="invoice-number">فاتورة رقم #{1000 + (order.id ? Number(order.id) : 0)}</div>
+          <div style={{marginTop: '15px', fontSize: '14px'}}>📅 {order.date}</div>
           {order.paymentType && (
-            <span className="text-xs font-bold text-blue-700 bg-blue-100 rounded-full px-3 py-1 ml-2" style={{fontSize:'1rem'}}>
-              نوع الدفع: {order.paymentType === "knet" ? "رابط أونلاين" : "نقدي عند الاستلام"}
-            </span>
+            <div className="payment-badge" style={{marginTop: '10px'}}>
+              💳 {order.paymentType === "knet" ? "دفع أونلاين" : "نقدي عند الاستلام"}
+            </div>
           )}
         </div>
-        {/* شعار الموقع */}
-        <div className="flex justify-center mb-2">
-          <img src="/images/fruits.png" alt="شعار المتجر" className="h-20 w-20 rounded-full border-2 border-gray-300 bg-white shadow" />
+
+        {/* Customer Info */}
+        <div className="customer-info">
+          <div className="customer-name">👤 {order.customer}</div>
+          <div className="customer-details">
+            {order.phone && <div>📱 {order.phone}</div>}
+            {order.address && <div>📍 {order.address}</div>}
+          </div>
         </div>
-        {/* بيانات العميل */}
-        <div className="mb-6 flex flex-col items-end text-black">
-          <div className="font-bold text-base">{order.customer}</div>
-          {order.phone && <div className="text-sm">{order.phone}</div>}
-          {order.address && order.phone && <div className="text-sm">{order.address}</div>}
-          {order.address && !order.phone && <div className="text-sm mt-1">{order.address}</div>}
-        </div>
-        <div className="absolute top-2 left-2 flex gap-2">
-          <button
-            className="text-gray-500 hover:text-red-600 font-bold border border-gray-300 rounded-full w-8 h-8 flex items-center justify-center"
-            onClick={onClose}
-            title="إغلاق"
-          >
-            ×
-          </button>
-          <button
-            className="text-gray-500 hover:text-green-600 font-bold border border-gray-300 rounded-full w-8 h-8 flex items-center justify-center print:hidden"
-            onClick={() => window.print()}
-            title="طباعة الفاتورة"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25M3 18.75A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75M3 18.75V16.5A2.25 2.25 0 0 1 5.25 14.25h13.5A2.25 2.25 0 0 1 21 16.5v2.25" />
-            </svg>
-          </button>
-        </div>
-        {/* حذف رقم الفاتورة من هنا */}
-        <div className="mb-2 flex justify-between text-black font-bold">
-          <span>التاريخ:</span>
-          <span className="font-normal text-black">{order.date}</span>
-        </div>
-        {/* تم حذف الحالة من الفاتورة */}
-        <div className="my-4">
-          <h3 className="font-bold mb-2 text-black text-center">تفاصيل المنتجات:</h3>
-          <table className="w-full border text-center text-sm bg-white rounded-lg overflow-hidden shadow">
+
+        {/* Products */}
+        <div className="products-section">
+          <div className="products-title">📦 تفاصيل المنتجات</div>
+          <table className="products-table">
             <thead>
-              <tr className="bg-gray-100 text-black">
-                <th className="p-2 border">المنتج</th>
-                <th className="p-2 border">الوحدة</th>
-                <th className="p-2 border">السعر</th>
-                <th className="p-2 border">الكمية</th>
-                <th className="p-2 border">الإجمالي</th>
+              <tr>
+                <th>المنتج</th>
+                <th>الوحدة</th>
+                <th>السعر</th>
+                <th>الكمية</th>
+                <th>الإجمالي</th>
               </tr>
             </thead>
             <tbody>
               {Array.isArray(order.products) && order.products.length > 0 ? (
                 <>
                   {order.products.map((prod, idx) => (
-                    <tr key={idx} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                      <td className="border p-2 font-bold text-black">{prod.name}</td>
-                      <td className="border p-2 text-black">{prod.unit}</td>
-                      <td className="border p-2 text-black">{prod.price} د.ك</td>
-                      <td className="border p-2 text-black">{prod.quantity}</td>
-                      <td className="border p-2 font-bold text-black">{(prod.price * prod.quantity).toFixed(3)} د.ك</td>
+                    <tr key={idx}>
+                      <td style={{fontWeight: 'bold'}}>{prod.name}</td>
+                      <td style={{textAlign: 'center'}}>{prod.unit}</td>
+                      <td style={{textAlign: 'center', color: '#4299e1'}}>{prod.price.toFixed(3)} د.ك</td>
+                      <td style={{textAlign: 'center', fontWeight: 'bold'}}>{prod.quantity}</td>
+                      <td style={{textAlign: 'center', fontWeight: 'bold', color: '#48bb78'}}>{(prod.price * prod.quantity).toFixed(3)} د.ك</td>
                     </tr>
                   ))}
-                  {/* صف سعر التوصيل */}
-                  <tr className="bg-yellow-50">
-                    <td colSpan={3} className="border p-2 text-left font-bold text-black">سعر التوصيل</td>
-                    <td className="border p-2 font-bold text-black">-</td>
-                    <td className="border p-2 font-bold text-black">{order.deliveryFee ? order.deliveryFee.toFixed(3) : '0.000'} د.ك</td>
+                  <tr className="delivery-row">
+                    <td colSpan={3} style={{textAlign: 'left', fontWeight: 'bold'}}>🚚 رسوم التوصيل</td>
+                    <td style={{textAlign: 'center', fontWeight: 'bold'}}>-</td>
+                    <td style={{textAlign: 'center', fontWeight: 'bold'}}>{order.deliveryFee ? order.deliveryFee.toFixed(3) : '0.000'} د.ك</td>
                   </tr>
-                  {/* خط فاصل */}
-                  <tr>
-                    <td colSpan={5} className="p-0"><hr className="border-gray-300 my-0" /></td>
-                  </tr>
-                  {/* صف المجموع */}
-                  <tr className="bg-green-50">
-                    <td colSpan={3} className="border p-2 text-left font-bold text-black">المجموع</td>
-                    <td className="border p-2 font-bold text-black">{order.products.reduce((sum, p) => sum + (p.quantity || 0), 0)}</td>
-                    <td className="border p-2 font-bold text-black">{((order.total || 0) + (order.deliveryFee || 0)).toFixed(3)} د.ك</td>
+                  <tr className="total-row">
+                    <td colSpan={3} style={{textAlign: 'left'}}>💰 المجموع الكلي</td>
+                    <td style={{textAlign: 'center'}}>{order.products.reduce((sum, p) => sum + (p.quantity || 0), 0)}</td>
+                    <td style={{textAlign: 'center'}}>{((order.total || 0) + (order.deliveryFee || 0)).toFixed(3)} د.ك</td>
                   </tr>
                 </>
               ) : (
                 <tr>
-                  <td colSpan={5} className="border p-2 text-center text-gray-400">لا توجد منتجات</td>
+                  <td colSpan={5} style={{textAlign: 'center', color: '#a0aec0'}}>لا توجد منتجات</td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        {/* ...تم حذف قسم سعر التوصيل تحت الجدول... */}
+
+        {/* Footer */}
+        <div className="footer">
+          <div className="footer-title">شكراً لتسوقكم معنا! 🌟</div>
+          <div className="footer-contact">
+            📱 للاستفسار: 98899426 | 🌐 متجر الفواكه والخضار الكويت
+          </div>
+        </div>
+      </div>
+      
+      {/* Control Buttons */}
+      <div className="absolute top-4 right-4 flex gap-2">
+        <button
+          onClick={() => window.print()}
+          className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-all"
+          title="طباعة"
+        >
+          🖨️
+        </button>
+        <button
+          onClick={onClose}
+          className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-all"
+          title="إغلاق"
+        >
+          ✕
+        </button>
       </div>
     </div>
   );

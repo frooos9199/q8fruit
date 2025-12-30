@@ -18,6 +18,7 @@ interface Product {
   images?: string[]; // صور متعددة
   image?: string; // دعم خلفي للصورة القديمة
   category: string;
+  categories?: string[]; // تصنيفات متعددة
 }
 
 // بيانات أولية لأربعة كاترينج مع صور حقيقية (يمكنك تعديل الصور لاحقاً)
@@ -89,6 +90,41 @@ export default function ProductTable() {
     });
   };
 
+  // دالة لتحديث تصنيفات المنتج
+  const updateProductCategories = (productId: number, categoryName: string, isChecked: boolean) => {
+    setProducts((prev) => {
+      const updated = prev.map((product) => {
+        if (product.id === productId) {
+          let categories = product.categories || [product.category];
+          
+          if (isChecked) {
+            // إضافة التصنيف إذا لم يكن موجوداً
+            if (!categories.includes(categoryName)) {
+              categories = [...categories, categoryName];
+            }
+          } else {
+            // إزالة التصنيف
+            categories = categories.filter(cat => cat !== categoryName);
+            // التأكد من وجود تصنيف واحد على الأقل
+            if (categories.length === 0) {
+              categories = [product.category];
+            }
+          }
+          
+          return {
+            ...product,
+            categories,
+            category: categories[0] // التصنيف الرئيسي
+          };
+        }
+        return product;
+      });
+      
+      saveProductsToStorage(updated);
+      return updated;
+    });
+  };
+
 
   const handleEditSave = (updated: Product) => {
     setProducts((prev) => {
@@ -101,9 +137,11 @@ export default function ProductTable() {
 
   const handleAddSave = (newProduct: Product) => {
     setProducts((prev) => {
+      // إنشاء ID فريد جديد
+      const maxId = prev.length > 0 ? Math.max(...prev.map(p => p.id)) : 0;
       const newProducts = [
         ...prev,
-        { ...newProduct, id: prev.length ? Math.max(...prev.map(p => p.id)) + 1 : 1 }
+        { ...newProduct, id: maxId + 1 }
       ];
       saveProductsToStorage(newProducts);
       return newProducts;
@@ -132,7 +170,16 @@ export default function ProductTable() {
         </button>
       {addModalOpen && (
         <ProductEditModal
-          product={{ id: 0, name: "", units: [{ name: "", price: 0 }], quantity: 1000, active: true, image: undefined, category: categories[0]?.name || "" }}
+          product={{ 
+            id: 0, 
+            name: "", 
+            units: [{ name: "", price: 0 }], 
+            quantity: 1000, 
+            active: true, 
+            image: undefined, 
+            category: categories[0]?.name || "",
+            categories: []
+          }}
           onSave={handleAddSave}
           onClose={() => setAddModalOpen(false)}
           categories={categories}
@@ -165,10 +212,12 @@ export default function ProductTable() {
       <table className="min-w-full border text-center">
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-800">
+            <th className="p-2">#</th>
             <th className="p-2">الصورة</th>
             <th className="p-2">اسم المنتج</th>
             <th className="p-2">الوحدات والأسعار</th>
             <th className="p-2">الكمية</th>
+            <th className="p-2">الكاترينج</th>
             <th className="p-2">الحالة</th>
             <th className="p-2">تفعيل/إيقاف</th>
             <th className="p-2">تعديل</th>
@@ -176,8 +225,9 @@ export default function ProductTable() {
           </tr>
         </thead>
         <tbody>
-          {filteredProducts.map((product) => (
-            <tr key={product.id} className="border-b">
+          {filteredProducts.map((product, index) => (
+            <tr key={`product-${product.id}-${index}`} className="border-b">
+              <td className="p-2 font-bold text-gray-600">{index + 1}</td>
               <td className="p-2">
                 {product.images && product.images.length > 0 ? (
                   <img src={product.images[0]} alt={product.name} className="w-16 h-16 object-cover rounded" />
@@ -195,6 +245,30 @@ export default function ProductTable() {
                 ))}
               </td>
               <td className="p-2">{product.quantity}</td>
+              <td className="p-2">
+                <div className="flex flex-wrap gap-1 max-w-48">
+                  {categories.map((category) => {
+                    const isSelected = (product.categories || [product.category]).includes(category.name);
+                    return (
+                      <label key={category.id} className="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => updateProductCategories(product.id, category.name, e.target.checked)}
+                          className="w-3 h-3 text-green-600 rounded focus:ring-green-500"
+                        />
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          isSelected 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                        }`}>
+                          {category.name}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </td>
               <td className="p-2">
                 {product.active ? (
                   <span className="text-green-600 font-bold">مفعل</span>
@@ -240,7 +314,16 @@ export default function ProductTable() {
       )}
       {addModalOpen && (
         <ProductEditModal
-          product={{ id: 0, name: "", units: [{ name: "", price: 0 }], quantity: 1000, active: true, image: undefined, category: categories[0]?.name || "" }}
+          product={{ 
+            id: 0, 
+            name: "", 
+            units: [{ name: "", price: 0 }], 
+            quantity: 1000, 
+            active: true, 
+            image: undefined, 
+            category: categories[0]?.name || "",
+            categories: []
+          }}
           onSave={handleAddSave}
           onClose={() => setAddModalOpen(false)}
           categories={categories}

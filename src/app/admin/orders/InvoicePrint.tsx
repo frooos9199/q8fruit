@@ -16,7 +16,7 @@ interface InvoiceProps {
   products?: InvoiceProduct[];
   deliveryFee?: number;
   total: number;
-  paymentType?: string; // "cash" | "knet"
+  paymentType?: string;
 }
 
 const InvoicePrint: React.FC<InvoiceProps> = ({
@@ -30,111 +30,117 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
   total,
   paymentType,
 }) => {
-  // تحويل قيمة الدفع لنص عربي واضح
-  const paymentTypeLabel = paymentType === "knet" ? "رابط أونلاين" : "نقدي عند الاستلام";
+  const paymentTypeLabel = paymentType === "knet" ? "دفع أونلاين" : "نقدي عند الاستلام";
+  
   return (
     <div style={{
       width: '100%',
-      maxWidth: 800,
-      margin: '40px auto',
-      background: 'linear-gradient(to bottom, #ffffff, #f9fafb)',
-      borderRadius: 20,
-      border: '3px solid #10b981',
-      boxShadow: '0 10px 40px rgba(16, 185, 129, 0.2)',
-      fontFamily: 'Tahoma, Arial, sans-serif',
-      padding: 40,
-      color: '#1f2937',
+      maxWidth: 900,
+      margin: '0 auto',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      borderRadius: 25,
+      overflow: 'hidden',
+      boxShadow: '0 25px 80px rgba(102, 126, 234, 0.3)',
+      fontFamily: 'Segoe UI, Tahoma, Arial, sans-serif',
+      color: '#1a202c',
       direction: 'rtl'
     }}>
       {/* Header */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: 30,
-        paddingBottom: 20,
-        borderBottom: '3px solid #10b981'
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        color: 'white',
+        padding: 40,
+        textAlign: 'center',
+        position: 'relative'
       }}>
-        <div>
-          <h1 style={{ 
-            fontSize: 32, 
-            fontWeight: 'bold', 
-            color: '#10b981',
-            margin: 0,
-            marginBottom: 8
-          }}>
-            فاتورة مبيعات
-          </h1>
-          <div style={{ 
-            fontSize: 18, 
-            color: '#6b7280',
-            fontWeight: 'bold'
-          }}>
-            رقم الفاتورة: <span style={{ 
-              color: '#10b981',
-              background: '#d1fae5',
-              padding: '6px 16px',
-              borderRadius: 8,
-              fontSize: 20
-            }}>#{invoiceNumber}</span>
-          </div>
-        </div>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.1"%3E%3Ccircle cx="30" cy="30" r="4"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
+          opacity: 0.3
+        }} />
         <img 
           src="/images/fruits.png" 
           alt="شعار المتجر" 
           style={{ 
-            height: 100, 
             width: 100, 
+            height: 100, 
             borderRadius: '50%', 
-            border: '4px solid #10b981',
+            border: '5px solid white',
             background: '#fff',
-            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            margin: '0 auto 20px',
+            position: 'relative',
+            zIndex: 1
           }} 
         />
+        <h1 style={{ 
+          fontSize: 36, 
+          fontWeight: 'bold', 
+          margin: '0 0 15px 0',
+          textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          🍎 متجر الفواكه والخضار
+        </h1>
+        <div style={{ 
+          background: 'rgba(255,255,255,0.2)',
+          padding: '12px 25px',
+          borderRadius: 30,
+          display: 'inline-block',
+          fontSize: 18,
+          fontWeight: 'bold',
+          backdropFilter: 'blur(10px)',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          فاتورة رقم #{invoiceNumber}
+        </div>
       </div>
 
-      {/* معلومات العميل والتاريخ */}
+      {/* Customer & Date Info */}
       <div style={{
+        background: 'white',
+        padding: 30,
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
-        gap: 20,
-        marginBottom: 30,
-        background: '#f0fdf4',
-        padding: 20,
-        borderRadius: 12,
-        border: '2px solid #d1fae5'
+        gap: 30
       }}>
-        <div>
-          <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>معلومات العميل:</div>
-          <div style={{ fontSize: 18, fontWeight: 'bold', color: '#059669', marginBottom: 4 }}>
-            👤 {customer}
-          </div>
-          {phone && (
-            <div style={{ fontSize: 16, color: '#374151', marginBottom: 4 }}>
-              📱 {phone}
-            </div>
-          )}
-          {address && (
-            <div style={{ fontSize: 16, color: '#374151' }}>
-              📍 {address}
-            </div>
-          )}
+        <div style={{
+          background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+          padding: 25,
+          borderRadius: 20,
+          color: 'white',
+          boxShadow: '0 10px 30px rgba(240, 147, 251, 0.3)'
+        }}>
+          <h3 style={{ margin: '0 0 15px 0', fontSize: 20, fontWeight: 'bold' }}>👤 معلومات العميل</h3>
+          <div style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 8 }}>{customer}</div>
+          {phone && <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 5 }}>📱 {phone}</div>}
+          {address && <div style={{ fontSize: 16, opacity: 0.9 }}>📍 {address}</div>}
         </div>
-        <div style={{ textAlign: 'left' }}>
-          <div style={{ fontSize: 14, color: '#6b7280', marginBottom: 8 }}>تفاصيل الفاتورة:</div>
-          <div style={{ fontSize: 16, color: '#374151', marginBottom: 4 }}>
-            📅 {date}
-          </div>
+        
+        <div style={{
+          background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+          padding: 25,
+          borderRadius: 20,
+          color: 'white',
+          boxShadow: '0 10px 30px rgba(79, 172, 254, 0.3)'
+        }}>
+          <h3 style={{ margin: '0 0 15px 0', fontSize: 20, fontWeight: 'bold' }}>📋 تفاصيل الفاتورة</h3>
+          <div style={{ fontSize: 18, marginBottom: 8 }}>📅 {date}</div>
           {paymentType && (
-            <div style={{ 
-              fontSize: 16, 
-              fontWeight: 'bold',
-              color: paymentType === "knet" ? '#2563eb' : '#059669',
-              background: paymentType === "knet" ? '#dbeafe' : '#d1fae5',
+            <div style={{
+              background: 'rgba(255,255,255,0.2)',
               padding: '8px 16px',
-              borderRadius: 8,
-              marginTop: 8,
-              display: 'inline-block'
+              borderRadius: 15,
+              fontSize: 16,
+              fontWeight: 'bold',
+              marginTop: 10,
+              backdropFilter: 'blur(10px)'
             }}>
               💳 {paymentTypeLabel}
             </div>
@@ -142,112 +148,123 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
         </div>
       </div>
 
-      {/* جدول المنتجات */}
-      <div style={{ marginBottom: 30 }}>
-        <h3 style={{ 
-          textAlign: 'center', 
-          fontWeight: 'bold', 
-          margin: '0 0 20px 0',
-          fontSize: 22,
-          color: '#059669',
-          background: '#f0fdf4',
-          padding: 12,
-          borderRadius: 10,
-          border: '2px solid #d1fae5'
+      {/* Products Table */}
+      <div style={{ background: 'white', padding: 30 }}>
+        <h2 style={{
+          textAlign: 'center',
+          fontSize: 28,
+          fontWeight: 'bold',
+          margin: '0 0 25px 0',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
         }}>
           📦 تفاصيل المنتجات
-        </h3>
-        <table style={{ 
-          width: '100%', 
-          borderCollapse: 'separate',
-          borderSpacing: 0,
-          fontSize: 16,
+        </h2>
+        
+        <div style={{
+          borderRadius: 20,
           overflow: 'hidden',
-          borderRadius: 12,
-          border: '2px solid #d1fae5'
+          boxShadow: '0 15px 50px rgba(0,0,0,0.1)',
+          border: '3px solid #e2e8f0'
         }}>
-          <thead>
-            <tr style={{ background: 'linear-gradient(to right, #10b981, #059669)', color: '#fff' }}>
-              <th style={{ padding: 14, textAlign: 'center', borderBottom: '2px solid #10b981' }}>المنتج</th>
-              <th style={{ padding: 14, textAlign: 'center', borderBottom: '2px solid #10b981' }}>الوحدة</th>
-              <th style={{ padding: 14, textAlign: 'center', borderBottom: '2px solid #10b981' }}>السعر</th>
-              <th style={{ padding: 14, textAlign: 'center', borderBottom: '2px solid #10b981' }}>الكمية</th>
-              <th style={{ padding: 14, textAlign: 'center', borderBottom: '2px solid #10b981' }}>الإجمالي</th>
-            </tr>
-          </thead>
-          <tbody>
-            {products?.map((prod, idx) => (
-              <tr key={idx} style={{ 
-                background: idx % 2 === 0 ? '#ffffff' : '#f9fafb',
-                transition: 'all 0.2s'
+          <table style={{ 
+            width: '100%', 
+            borderCollapse: 'collapse',
+            fontSize: 16
+          }}>
+            <thead>
+              <tr style={{ 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                color: 'white' 
               }}>
-                <td style={{ padding: 12, fontWeight: 'bold', color: '#1f2937', borderBottom: '1px solid #e5e7eb' }}>{prod.name}</td>
-                <td style={{ padding: 12, textAlign: 'center', color: '#6b7280', borderBottom: '1px solid #e5e7eb' }}>{prod.unit}</td>
-                <td style={{ padding: 12, textAlign: 'center', color: '#059669', fontWeight: 'bold', borderBottom: '1px solid #e5e7eb' }}>{prod.price.toFixed(3)} د.ك</td>
-                <td style={{ padding: 12, textAlign: 'center', fontWeight: 'bold', borderBottom: '1px solid #e5e7eb' }}>{prod.quantity}</td>
-                <td style={{ padding: 12, textAlign: 'center', fontWeight: 'bold', color: '#10b981', fontSize: 17, borderBottom: '1px solid #e5e7eb' }}>{(prod.price * prod.quantity).toFixed(3)} د.ك</td>
+                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>المنتج</th>
+                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>الوحدة</th>
+                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>السعر</th>
+                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>الكمية</th>
+                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>الإجمالي</th>
               </tr>
-            ))}
-            
-            {/* التوصيل */}
-            <tr style={{ background: '#fffbeb' }}>
-              <td colSpan={3} style={{ padding: 14, textAlign: 'left', fontWeight: 'bold', color: '#92400e', borderBottom: '2px solid #fde68a' }}>
-                🚚 سعر التوصيل
-              </td>
-              <td style={{ padding: 14, textAlign: 'center', fontWeight: 'bold', borderBottom: '2px solid #fde68a' }}>-</td>
-              <td style={{ padding: 14, textAlign: 'center', fontWeight: 'bold', color: '#d97706', fontSize: 17, borderBottom: '2px solid #fde68a' }}>{deliveryFee.toFixed(3)} د.ك</td>
-            </tr>
-            
-            {/* المجموع النهائي */}
-            <tr style={{ background: 'linear-gradient(to right, #d1fae5, #a7f3d0)' }}>
-              <td colSpan={3} style={{ 
-                padding: 16, 
-                textAlign: 'left', 
-                fontWeight: 'bold', 
-                fontSize: 20,
-                color: '#065f46'
-              }}>
-                💰 المجموع الكلي
-              </td>
-              <td style={{ 
-                padding: 16, 
-                textAlign: 'center', 
-                fontWeight: 'bold',
-                fontSize: 18,
-                color: '#065f46'
-              }}>
-                {products?.reduce((sum, p) => sum + (p.quantity || 0), 0)}
-              </td>
-              <td style={{ 
-                padding: 16, 
-                textAlign: 'center', 
-                fontWeight: 'bold', 
-                fontSize: 22,
-                color: '#065f46'
-              }}>
-                {(total + deliveryFee).toFixed(3)} د.ك
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {products?.map((prod, idx) => (
+                <tr key={idx} style={{ 
+                  background: idx % 2 === 0 ? '#f8fafc' : '#ffffff',
+                  borderBottom: '1px solid #e2e8f0',
+                  transition: 'all 0.3s ease'
+                }}>
+                  <td style={{ padding: 15, fontWeight: 'bold', color: '#2d3748' }}>{prod.name}</td>
+                  <td style={{ padding: 15, textAlign: 'center', color: '#4a5568' }}>{prod.unit}</td>
+                  <td style={{ padding: 15, textAlign: 'center', color: '#3182ce', fontWeight: 'bold' }}>{prod.price.toFixed(3)} د.ك</td>
+                  <td style={{ padding: 15, textAlign: 'center', fontWeight: 'bold', color: '#2d3748' }}>{prod.quantity}</td>
+                  <td style={{ padding: 15, textAlign: 'center', fontWeight: 'bold', color: '#38a169', fontSize: 17 }}>{(prod.price * prod.quantity).toFixed(3)} د.ك</td>
+                </tr>
+              ))}
+              
+              {/* Delivery Row */}
+              <tr style={{ background: 'linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%)' }}>
+                <td colSpan={3} style={{ 
+                  padding: 18, 
+                  textAlign: 'left', 
+                  fontWeight: 'bold', 
+                  color: '#2d3748',
+                  fontSize: 18
+                }}>
+                  🚚 رسوم التوصيل
+                </td>
+                <td style={{ padding: 18, textAlign: 'center', fontWeight: 'bold', fontSize: 18 }}>-</td>
+                <td style={{ padding: 18, textAlign: 'center', fontWeight: 'bold', color: '#e17055', fontSize: 18 }}>
+                  {deliveryFee.toFixed(3)} د.ك
+                </td>
+              </tr>
+              
+              {/* Total Row */}
+              <tr style={{ background: 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)', color: 'white' }}>
+                <td colSpan={3} style={{ 
+                  padding: 20, 
+                  textAlign: 'left', 
+                  fontWeight: 'bold',
+                  fontSize: 22
+                }}>
+                  💰 المجموع الكلي
+                </td>
+                <td style={{ 
+                  padding: 20, 
+                  textAlign: 'center', 
+                  fontWeight: 'bold',
+                  fontSize: 20
+                }}>
+                  {products?.reduce((sum, p) => sum + (p.quantity || 0), 0)}
+                </td>
+                <td style={{ 
+                  padding: 20, 
+                  textAlign: 'center', 
+                  fontWeight: 'bold',
+                  fontSize: 24
+                }}>
+                  {(total + deliveryFee).toFixed(3)} د.ك
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Footer */}
       <div style={{
-        textAlign: 'center',
-        marginTop: 40,
-        paddingTop: 20,
-        borderTop: '3px solid #10b981',
-        color: '#6b7280'
+        background: 'linear-gradient(135deg, #2d3436 0%, #636e72 100%)',
+        color: 'white',
+        padding: 30,
+        textAlign: 'center'
       }}>
-        <div style={{ fontSize: 18, fontWeight: 'bold', color: '#10b981', marginBottom: 8 }}>
+        <div style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 15 }}>
           شكراً لتسوقكم معنا! 🌟
         </div>
-        <div style={{ fontSize: 14 }}>
-          📱 للاستفسار: 98899426 | 🌐 www.q8fruit.com
+        <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 10 }}>
+          📱 للاستفسار: 98899426 | 🌐 متجر الفواكه والخضار الكويت
         </div>
-        <div style={{ fontSize: 12, color: '#9ca3af', marginTop: 12 }}>
-          تم إنشاء الفاتورة بواسطة نظام Q8 Fruit
+        <div style={{ fontSize: 14, opacity: 0.7 }}>
+          تم إنشاء الفاتورة بواسطة نظام Q8 Fruit المتطور
         </div>
       </div>
     </div>

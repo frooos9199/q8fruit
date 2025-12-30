@@ -49,11 +49,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <a href="/admin/orders" className="py-2 px-4 rounded hover:bg-green-100 dark:hover:bg-green-900">الطلبات</a>
           <a href="/admin/users" className="py-2 px-4 rounded hover:bg-green-100 dark:hover:bg-green-900">المستخدمين</a>
           <a href="/admin/products" className="py-2 px-4 rounded hover:bg-green-100 dark:hover:bg-green-900">المنتجات</a>
+          <a href="/add-products" className="py-2 px-4 rounded hover:bg-orange-100 dark:hover:bg-orange-900 text-orange-600 dark:text-orange-400 font-semibold">🍎 إضافة فواكه</a>
           <a href="/admin/delivery" className="py-2 px-4 rounded hover:bg-green-100 dark:hover:bg-green-900">التوصيل</a>
           <a href="/admin/catering" className="py-2 px-4 rounded hover:bg-green-100 dark:hover:bg-green-900">الكَاتِرِينج</a>
           <a href="/admin/bulk-message" className="py-2 px-4 rounded hover:bg-green-100 dark:hover:bg-green-900">رسائل جماعية</a>
           <a href="/admin/settings" className="py-2 px-4 rounded hover:bg-green-100 dark:hover:bg-green-900">الإعدادات</a>
+          <a href="/storage-viewer" className="py-2 px-4 rounded hover:bg-blue-100 dark:hover:bg-blue-900 text-blue-600 dark:text-blue-400 font-semibold">عارض البيانات</a>
         </nav>
+        
+        {/* زر العودة للموقع */}
+        <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+          <a 
+            href="/" 
+            className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-xl font-bold text-center transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+            العودة للموقع
+          </a>
+        </div>
       </aside>
       <main className="flex-1 p-6">
         {children}

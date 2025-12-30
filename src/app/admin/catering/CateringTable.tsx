@@ -81,61 +81,114 @@ export default function CateringTable() {
   };
 
   const removeCategory = (id: number) => {
-    setCategories(prev => {
-      const newCats = prev.filter(c => c.id !== id);
-      syncCategoriesToStorage(newCats);
-      return newCats;
-    });
+    const categoryToDelete = categories.find(c => c.id === id);
+    if (categoryToDelete && window.confirm(`هل أنت متأكد من حذف تصنيف "${categoryToDelete.name}"؟`)) {
+      setCategories(prev => {
+        const newCats = prev.filter(c => c.id !== id);
+        syncCategoriesToStorage(newCats);
+        return newCats;
+      });
+    }
   };
 
   return (
-    <div>
-      <div className="flex gap-2 mb-4">
-        <input
-          type="text"
-          value={newCategory}
-          onChange={e => setNewCategory(e.target.value)}
-          onKeyPress={e => e.key === 'Enter' && addCategory()}
-          placeholder="اسم التصنيف الجديد"
-          className="border rounded p-2 bg-gray-800 text-white placeholder-gray-400"
-        />
-        <button
-          onClick={addCategory}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded font-bold shadow transition"
-        >
-          إضافة تصنيف
-        </button>
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6">
+      <div className="mb-6">
+        <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">إضافة تصنيف جديد</h3>
+        <div className="flex gap-3">
+          <input
+            type="text"
+            value={newCategory}
+            onChange={e => setNewCategory(e.target.value)}
+            onKeyPress={e => e.key === 'Enter' && addCategory()}
+            placeholder="اسم التصنيف الجديد"
+            className="flex-1 rounded-xl p-3 border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 focus:outline-none transition-colors"
+          />
+          <button
+            onClick={addCategory}
+            className="px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            إضافة
+          </button>
+        </div>
       </div>
-      <table className="min-w-full border text-center">
-        <thead>
-          <tr className="bg-gray-100 dark:bg-gray-800">
-            <th className="p-2">الصورة</th>
-            <th className="p-2">اسم التصنيف</th>
-            <th className="p-2">تعديل</th>
-            <th className="p-2">حذف</th>
-          </tr>
-        </thead>
-        <tbody>
-          {categories.map((cat) => (
-            <tr key={cat.id} className="border-b">
-              <td className="p-2">
-                {cat.image ? (
-                  <img src={cat.image} alt={cat.name} className="w-16 h-12 object-cover rounded border mx-auto" />
-                ) : (
-                  <span className="text-gray-400">لا يوجد صورة</span>
-                )}
-              </td>
-              <td className="p-2 font-bold">{cat.name}</td>
-              <td className="p-2">
-                <button onClick={() => handleEdit(cat)} className="px-3 py-1 rounded bg-blue-600 text-white">تعديل</button>
-              </td>
-              <td className="p-2">
-                <button onClick={() => removeCategory(cat.id)} className="px-3 py-1 rounded bg-red-600 text-white">حذف</button>
-              </td>
+      
+      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-600">
+        <table className="min-w-full">
+          <thead>
+            <tr className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900">
+              <th className="p-4 text-right font-bold text-gray-800 dark:text-gray-200">الصورة</th>
+              <th className="p-4 text-right font-bold text-gray-800 dark:text-gray-200">اسم التصنيف</th>
+              <th className="p-4 text-center font-bold text-gray-800 dark:text-gray-200">عدد المنتجات</th>
+              <th className="p-4 text-center font-bold text-gray-800 dark:text-gray-200">الإجراءات</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {categories.map((cat, index) => (
+              <tr key={cat.id} className={`border-b border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors ${index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-gray-50 dark:bg-slate-750'}`}>
+                <td className="p-4">
+                  <div className="w-16 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-slate-600 flex items-center justify-center">
+                    {cat.image ? (
+                      <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <svg className="w-6 h-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                    )}
+                  </div>
+                </td>
+                <td className="p-4">
+                  <span className="font-bold text-lg text-gray-800 dark:text-gray-200">{cat.name}</span>
+                </td>
+                <td className="p-4 text-center">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                    {cat.products?.length || 0} منتج
+                  </span>
+                </td>
+                <td className="p-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <button 
+                      onClick={() => handleEdit(cat)} 
+                      className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      تعديل
+                    </button>
+                    <button 
+                      onClick={() => removeCategory(cat.id)} 
+                      className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white rounded-lg font-semibold transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      حذف
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {categories.length === 0 && (
+              <tr>
+                <td colSpan={4} className="p-8 text-center text-gray-500 dark:text-gray-400">
+                  <div className="flex flex-col items-center gap-3">
+                    <svg className="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <p className="text-lg font-medium">لا توجد تصنيفات حالياً</p>
+                    <p className="text-sm">قم بإضافة تصنيف جديد للبدء</p>
+                  </div>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      
       {editCategory && (
         <CateringEditModal
           category={editCategory}

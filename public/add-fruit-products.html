@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة منتجات الفواكه</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        button { background: #22c55e; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        button:hover { background: #16a34a; }
+        .success { color: #22c55e; font-weight: bold; margin: 10px 0; }
+        .product { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .product img { width: 60px; height: 60px; object-fit: cover; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>إضافة منتجات الفواكه 🍎</h1>
+        <p>اضغط على الأزرار لإضافة المنتجات مع صور حقيقية وأسعار واقعية:</p>
+        
+        <button onclick="addFruitProducts()">إضافة جميع منتجات الفواكه</button>
+        <button onclick="clearProducts()">مسح جميع المنتجات</button>
+        <button onclick="showProducts()">عرض المنتجات الحالية</button>
+        
+        <div id="result"></div>
+        <div id="products-list"></div>
+    </div>
+
+    <script>
+        const fruitProducts = [
+            {
+                name: "تفاح أحمر",
+                category: "فواكه",
+                units: [
+                    { name: "كيلو", price: 1.250 },
+                    { name: "حبة", price: 0.150 }
+                ],
+                quantity: 500,
+                active: true,
+                images: [
+                    "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?w=400&h=400&fit=crop"
+                ]
+            },
+            {
+                name: "موز",
+                category: "فواكه",
+                units: [
+                    { name: "كيلو", price: 0.800 },
+                    { name: "حبة", price: 0.100 }
+                ],
+                quantity: 300,
+                active: true,
+                images: [
+                    "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=400&h=400&fit=crop"
+                ]
+            },
+            {
+                name: "برتقال",
+                category: "فواكه",
+                units: [
+                    { name: "كيلو", price: 1.000 },
+                    { name: "حبة", price: 0.120 }
+                ],
+                quantity: 400,
+                active: true,
+                images: [
+                    "https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1580052614034-c55d20bfee3b?w=400&h=400&fit=crop"
+                ]
+            },
+            {
+                name: "فراولة",
+                category: "فواكه",
+                units: [
+                    { name: "كيلو", price: 3.500 },
+                    { name: "علبة", price: 1.750 }
+                ],
+                quantity: 150,
+                active: true,
+                images: [
+                    "https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1518635017498-87f514b751ba?w=400&h=400&fit=crop"
+                ]
+            },
+            {
+                name: "عنب أحمر",
+                category: "فواكه",
+                units: [
+                    { name: "كيلو", price: 2.250 },
+                    { name: "عنقود", price: 1.500 }
+                ],
+                quantity: 200,
+                active: true,
+                images: [
+                    "https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1423483641154-5411ec9c0ddf?w=400&h=400&fit=crop"
+                ]
+            },
+            {
+                name: "مانجو",
+                category: "فواكه",
+                units: [
+                    { name: "كيلو", price: 2.750 },
+                    { name: "حبة", price: 0.750 }
+                ],
+                quantity: 180,
+                active: true,
+                images: [
+                    "https://images.unsplash.com/photo-1553279768-865429fa0078?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1605027990121-cbae9e0642df?w=400&h=400&fit=crop"
+                ]
+            },
+            {
+                name: "أناناس",
+                category: "فواكه",
+                units: [
+                    { name: "حبة", price: 2.500 },
+                    { name: "شرائح", price: 1.250 }
+                ],
+                quantity: 100,
+                active: true,
+                images: [
+                    "https://images.unsplash.com/photo-1550258987-190a2d41a8ba?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1589820296156-2454bb8a6ad1?w=400&h=400&fit=crop"
+                ]
+            },
+            {
+                name: "كيوي",
+                category: "فواكه",
+                units: [
+                    { name: "كيلو", price: 3.000 },
+                    { name: "حبة", price: 0.200 }
+                ],
+                quantity: 120,
+                active: true,
+                images: [
+                    "https://images.unsplash.com/photo-1585059895524-72359e06133a?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1601004890684-d8cbf643f5f2?w=400&h=400&fit=crop"
+                ]
+            },
+            {
+                name: "رمان",
+                category: "فواكه",
+                units: [
+                    { name: "كيلو", price: 2.500 },
+                    { name: "حبة", price: 0.500 }
+                ],
+                quantity: 150,
+                active: true,
+                images: [
+                    "https://images.unsplash.com/photo-1553575992-6b7dc0e44e8e?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&h=400&fit=crop"
+                ]
+            },
+            {
+                name: "بطيخ",
+                category: "فواكه",
+                units: [
+                    { name: "حبة", price: 3.000 },
+                    { name: "كيلو", price: 0.750 }
+                ],
+                quantity: 80,
+                active: true,
+                images: [
+                    "https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=400&h=400&fit=crop",
+                    "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=400&fit=crop"
+                ]
+            }
+        ];
+
+        function addFruitProducts() {
+            try {
+                // جلب المنتجات الحالية
+                let existingProducts = [];
+                const stored = localStorage.getItem('products');
+                if (stored) {
+                    existingProducts = JSON.parse(stored);
+                }
+
+                // إضافة معرف فريد لكل منتج
+                const newProducts = fruitProducts.map((product, index) => ({
+                    ...product,
+                    id: existingProducts.length + index + 1
+                }));
+
+                // دمج المنتجات
+                const allProducts = [...existingProducts, ...newProducts];
+                
+                // حفظ في localStorage
+                localStorage.setItem('products', JSON.stringify(allProducts));
+                
+                document.getElementById('result').innerHTML = 
+                    `<div class="success">✅ تم إضافة ${newProducts.length} منتج فواكه بنجاح!</div>`;
+                
+                showProducts();
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    `<div style="color: red;">❌ خطأ: ${error.message}</div>`;
+            }
+        }
+
+        function clearProducts() {
+            if (confirm('هل أنت متأكد من حذف جميع المنتجات؟')) {
+                localStorage.removeItem('products');
+                document.getElementById('result').innerHTML = 
+                    '<div class="success">🗑️ تم حذف جميع المنتجات</div>';
+                document.getElementById('products-list').innerHTML = '';
+            }
+        }
+
+        function showProducts() {
+            const stored = localStorage.getItem('products');
+            if (!stored) {
+                document.getElementById('products-list').innerHTML = '<p>لا توجد منتجات محفوظة</p>';
+                return;
+            }
+
+            const products = JSON.parse(stored);
+            let html = `<h3>المنتجات المحفوظة (${products.length}):</h3>`;
+            
+            products.forEach(product => {
+                const imageUrl = product.images && product.images[0] ? product.images[0] : 
+                               (product.image || 'https://via.placeholder.com/60x60?text=صورة');
+                
+                html += `
+                    <div class="product">
+                        <img src="${imageUrl}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/60x60?text=صورة'">
+                        <strong>${product.name}</strong> - ${product.category}
+                        <br>الأسعار: ${product.units.map(u => `${u.name}: ${u.price} د.ك`).join(', ')}
+                        <br>الكمية: ${product.quantity} | الحالة: ${product.active ? 'مفعل' : 'موقوف'}
+                    </div>
+                `;
+            });
+            
+            document.getElementById('products-list').innerHTML = html;
+        }
+
+        // عرض المنتجات عند تحميل الصفحة
+        window.onload = function() {
+            showProducts();
+        };
+    </script>
+</body>
+</html>
