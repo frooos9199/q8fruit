@@ -86,6 +86,7 @@
         </div>
 
         <button onclick="createAdmin()">إنشاء حساب الأدمن</button>
+        <button onclick="createTestAdmin()">إنشاء أدمن تجريبي</button>
         <button onclick="window.location.href='/'">العودة للموقع</button>
         
         <div id="result"></div>
@@ -157,6 +158,55 @@
                     errorMessage = 'البريد الإلكتروني غير صحيح';
                 } else if (error.code === 'auth/weak-password') {
                     errorMessage = 'كلمة المرور ضعيفة';
+                }
+
+                resultDiv.innerHTML = `<div class="result error">❌ ${errorMessage}</div>`;
+                console.error('خطأ:', error);
+            }
+        };
+
+        // إنشاء أدمن تجريبي بكلمة مرور أقوى
+        window.createTestAdmin = async function() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>جاري إنشاء الأدمن التجريبي...</p>';
+
+            try {
+                const adminData = {
+                    name: "مدير النظام",
+                    email: "summit_kw@hotmail.com",
+                    password: "admin123456", // كلمة مرور أقوى
+                    phone: "98899426"
+                };
+
+                const userCredential = await createUserWithEmailAndPassword(
+                    auth,
+                    adminData.email,
+                    adminData.password
+                );
+
+                await updateProfile(userCredential.user, {
+                    displayName: adminData.name
+                });
+
+                const userProfile = {
+                    uid: userCredential.user.uid,
+                    name: adminData.name,
+                    email: adminData.email,
+                    phone: adminData.phone,
+                    role: 'admin',
+                    active: true,
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                };
+
+                await setDoc(doc(db, 'users', userCredential.user.uid), userProfile);
+
+                resultDiv.innerHTML = '<div class="result success">✅ تم إنشاء الأدمن بنجاح!<br><strong>كلمة المرور الجديدة: admin123456</strong></div>';
+            } catch (error) {
+                let errorMessage = 'حدث خطأ غير متوقع';
+                
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = 'البريد الإلكتروني مستخدم بالفعل - الحساب موجود';
                 }
 
                 resultDiv.innerHTML = `<div class="result error">❌ ${errorMessage}</div>`;
