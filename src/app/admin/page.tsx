@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { syncAllDataToFirebase, loadAllDataFromFirebase } from "../../lib/firebaseSync";
 
 export default function AdminDashboard() {
   const initialUsers = [
@@ -35,6 +36,46 @@ export default function AdminDashboard() {
     totalProducts: 0,
     details: [] as { name: string; productCount: number }[]
   });
+  
+  // حالة المزامنة
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
+  
+  // دالة المزامنة اليدوية
+  const handleSyncToFirebase = async () => {
+    setSyncing(true);
+    setSyncMessage('جاري رفع البيانات إلى Firebase...');
+    
+    const success = await syncAllDataToFirebase();
+    
+    if (success) {
+      setSyncMessage('✅ تم رفع جميع البيانات بنجاح!');
+    } else {
+      setSyncMessage('❌ حدث خطأ في رفع البيانات');
+    }
+    
+    setSyncing(false);
+    setTimeout(() => setSyncMessage(''), 3000);
+  };
+  
+  // دالة تحميل من Firebase
+  const handleLoadFromFirebase = async () => {
+    setSyncing(true);
+    setSyncMessage('جاري تحميل البيانات من Firebase...');
+    
+    const success = await loadAllDataFromFirebase();
+    
+    if (success) {
+      setSyncMessage('✅ تم تحميل جميع البيانات بنجاح!');
+      // إعادة تحميل الصفحة لعرض البيانات الجديدة
+      window.location.reload();
+    } else {
+      setSyncMessage('❌ حدث خطأ في تحميل البيانات');
+    }
+    
+    setSyncing(false);
+    setTimeout(() => setSyncMessage(''), 3000);
+  };
 
   useEffect(() => {
     // تحديث عدد المستخدمين
@@ -172,6 +213,52 @@ export default function AdminDashboard() {
           color="from-purple-500 to-purple-600"
           bgColor="from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800"
         />
+      </div>
+
+      {/* أزرار مزامنة Firebase */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-700">
+        <div className="flex items-center gap-3 mb-4">
+          <span className="text-3xl">🔄</span>
+          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            مزامنة Firebase
+          </h2>
+        </div>
+        
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <button
+            onClick={handleSyncToFirebase}
+            disabled={syncing}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+          >
+            <span className="text-xl">⬆️</span>
+            <span>{syncing ? 'جاري الرفع...' : 'رفع إلى Firebase'}</span>
+          </button>
+          
+          <button
+            onClick={handleLoadFromFirebase}
+            disabled={syncing}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+          >
+            <span className="text-xl">⬇️</span>
+            <span>{syncing ? 'جاري التحميل...' : 'تحميل من Firebase'}</span>
+          </button>
+        </div>
+        
+        {syncMessage && (
+          <div className={`p-3 rounded-lg text-center font-medium ${
+            syncMessage.includes('✅') ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+            syncMessage.includes('❌') ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
+            'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+          }`}>
+            {syncMessage}
+          </div>
+        )}
+        
+        <div className="mt-4 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900 dark:to-orange-900 rounded-lg border border-yellow-200 dark:border-yellow-700">
+          <p className="text-sm text-yellow-800 dark:text-yellow-200">
+            <span className="font-bold">⚠️ ملاحظة:</span> استخدم "رفع إلى Firebase" لحفظ البيانات المحلية في السحابة. استخدم "تحميل من Firebase" لجلب أحدث البيانات من السحابة.
+          </p>
+        </div>
       </div>
 
       {/* إحصائيات الكاترينج */}

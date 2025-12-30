@@ -2,6 +2,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { syncData, checkCompatibility } from "../lib/dataSync";
+import { 
+  loadAllDataFromFirebase, 
+  syncAllDataToFirebase, 
+  watchProducts 
+} from "../lib/firebaseSync";
 
 // تعريفات TypeScript أعلى الملف
 interface Product {
@@ -251,8 +256,16 @@ export default function Home() {
     }
   ];
 
-  const fetchProducts = () => {
+  const fetchProducts = async () => {
     if (typeof window !== "undefined") {
+      // أولاً: جلب من Firebase
+      try {
+        await loadAllDataFromFirebase();
+      } catch (error) {
+        console.log('استخدام البيانات المحلية:', error);
+      }
+      
+      // ثانياً: جلب من localStorage
       const storedProducts = window.localStorage.getItem("products");
       let safeProducts: Product[] = [];
       if (storedProducts) {
@@ -280,9 +293,16 @@ export default function Home() {
           safeProducts = [];
         }
       }
-      // إذا لم يوجد أي منتج في الإدارة، اعرض الافتراضي
+      // إذا لم يوجد أي منتج، اعرض الافتراضي ومزامنه مع Firebase
       if (!safeProducts || safeProducts.length === 0) {
         setProducts(defaultProducts);
+        // مزامنة المنتجات الافتراضية مع Firebase
+        try {
+          window.localStorage.setItem('products', JSON.stringify(defaultProducts));
+          await syncAllDataToFirebase();
+        } catch (error) {
+          console.log('خطأ في المزامنة:', error);
+        }
       } else {
         setProducts(safeProducts);
       }
@@ -336,8 +356,15 @@ export default function Home() {
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   
   // دالة لجلب التصنيفات
-  const fetchCategories = () => {
+  const fetchCategories = async () => {
     if (typeof window !== 'undefined') {
+      // جلب من Firebase أولاً
+      try {
+        await loadAllDataFromFirebase();
+      } catch (error) {
+        console.log('استخدام البيانات المحلية:', error);
+      }
+      
       const stored = window.localStorage.getItem('cateringCategories');
       if (stored) {
         try {
@@ -356,8 +383,9 @@ export default function Home() {
             { id: 3, name: "ورقيات", products: [], image: undefined },
             { id: 4, name: "سلات الفواكه", products: [], image: undefined },
           ];
-          // حفظ البيانات الكاملة في localStorage
+          // حفظ البيانات الكاملة في localStorage وFirebase
           window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
+          syncAllDataToFirebase();
           // عرض البيانات المبسطة في الصفحة الرئيسية
           setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
         }
@@ -369,8 +397,9 @@ export default function Home() {
           { id: 3, name: "ورقيات", products: [], image: undefined },
           { id: 4, name: "سلات الفواكه", products: [], image: undefined },
         ];
-        // حفظ البيانات الكاملة في localStorage
+        // حفظ البيانات الكاملة في localStorage وFirebase
         window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
+        syncAllDataToFirebase();
         // عرض البيانات المبسطة في الصفحة الرئيسية
         setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
       }
@@ -382,10 +411,26 @@ export default function Home() {
     if (checkCompatibility()) {
       const cleanup = syncData();
       
+      // مراقبة تغييرات Firebase في الوقت الفعلي
+      const unsubscribeProducts = watchProducts((firebaseProducts) => {
+        if (firebaseProducts.length > 0) {
+          setProducts(firebaseProducts);
+          // حفظ في localStorage أيضاً
+          if (typeof window !== 'undefined') {
+            window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
+          }
+        }
+      });
+      
       if (typeof window !== "undefined") {
-        const storedLogo = window.localStorage.getItem("siteLogo");
-        if (storedLogo) setLogo(storedLogo);
-        fetchProducts();
+        // تحميل البيانات من Firebase أولاً
+        loadAllDataFromFirebase().then(() => {
+          const storedLogo = window.localStorage.getItem("siteLogo");
+          if (storedLogo) setLogo(storedLogo);
+          fetchProducts();
+          fetchCategories();
+        });
+        
         // تحقق من حالة الأدمن
         setIsAdmin(window.localStorage.getItem("isAdmin") === "true");
         // جلب المستخدم الحالي
@@ -444,13 +489,22 @@ export default function Home() {
         // مراقبة التغييرات على cart أو البنرات أو المنتجات في localStorage بشكل مباشر
         const cartObserver = setInterval(() => {
           updateCartCount();
-          fetchProducts();
         }, 1000); // تحديث أسرع للموبايل
         const onStorage = (e: StorageEvent) => {
-          if (e.key === "products") fetchProducts();
-          if (e.key === "siteLogo") setLogo(e.newValue);
+          if (e.key === "products") {
+            fetchProducts();
+            // مزامنة مع Firebase عند تغيير المنتجات
+            syncAllDataToFirebase();
+          }
+          if (e.key === "siteLogo") {
+            setLogo(e.newValue);
+            syncAllDataToFirebase();
+          }
           if (e.key === "isAdmin") setIsAdmin(e.newValue === "true");
-          if (e.key === "cateringCategories") fetchCategories();
+          if (e.key === "cateringCategories") {
+            fetchCategories();
+            syncAllDataToFirebase();
+          }
           if (e.key === "currentUser") {
             try {
               setCurrentUser(e.newValue ? JSON.parse(e.newValue) : null);
@@ -467,6 +521,7 @@ export default function Home() {
                 '/banners/banner3.jpg',
                 '/banners/banner4.jpg',
               ]);
+              syncAllDataToFirebase();
             } catch {
               setBanners([
                 '/banners/banner1.jpg',
@@ -482,6 +537,7 @@ export default function Home() {
           clearInterval(cartObserver);
           window.removeEventListener("storage", onStorage);
           if (cleanup) cleanup();
+          if (unsubscribeProducts) unsubscribeProducts();
         };
       }
     }
