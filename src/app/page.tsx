@@ -195,27 +195,6 @@ export default function Home() {
   const [currentUser, setCurrentUser] = useState<{uid?: string; name?: string; email?: string} | null>(null);
   // البنرات
   const [banners, setBanners] = useState<string[]>([]);
-  // إخفاء/إظهار الهيدر
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
-
-  // مراقب التمرير لإخفاء/إظهار الهيدر
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
-        setHeaderVisible(false);
-      } else {
-        setHeaderVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY]);
 
   // دالة لتغيير كمية منتج معين
   const handleQuantityChange = (productId: number, value: number) => {
@@ -641,7 +620,7 @@ export default function Home() {
           <div className="flex-1" onClick={() => setMenuOpen(false)} />
         </div>
       )}
-      <header className={`w-full flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg sticky top-0 z-30 border-b border-green-100 dark:border-green-900 transition-transform duration-300 ${headerVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+      <header className="w-full flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg sticky top-0 z-30 border-b border-green-100 dark:border-green-900">
         <div className="flex items-center gap-2 sm:gap-4">
           <button onClick={() => setMenuOpen(true)} className="p-2 sm:p-2 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation">
             <svg width="18" height="18" className="sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
