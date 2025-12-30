@@ -190,8 +190,63 @@ export default function Home() {
     setQuantities((prev) => ({ ...prev, [productId]: value }));
   };
 
-  // لا تعرض أي منتجات افتراضية إذا لم يوجد منتجات في localStorage
-  const defaultProducts: Product[] = [];
+  // منتجات افتراضية تظهر عند عدم وجود منتجات في localStorage
+  const defaultProducts: Product[] = [
+    {
+      id: 1,
+      name: "تفاح أحمر",
+      units: [{ name: "كيلو", price: 1.250 }, { name: "حبة", price: 0.150 }],
+      quantity: 100,
+      active: true,
+      category: "فواكه",
+      images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop&crop=center"]
+    },
+    {
+      id: 2,
+      name: "موز",
+      units: [{ name: "كيلو", price: 0.750 }, { name: "حبة", price: 0.100 }],
+      quantity: 150,
+      active: true,
+      category: "فواكه",
+      images: ["https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop&crop=center"]
+    },
+    {
+      id: 3,
+      name: "برتقال",
+      units: [{ name: "كيلو", price: 1.000 }, { name: "حبة", price: 0.120 }],
+      quantity: 120,
+      active: true,
+      category: "فواكه",
+      images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=400&fit=crop&crop=center"]
+    },
+    {
+      id: 4,
+      name: "خس",
+      units: [{ name: "حبة", price: 0.500 }],
+      quantity: 80,
+      active: true,
+      category: "ورقيات",
+      images: ["https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&h=400&fit=crop&crop=center"]
+    },
+    {
+      id: 5,
+      name: "طماطم",
+      units: [{ name: "كيلو", price: 0.800 }],
+      quantity: 200,
+      active: true,
+      category: "خضار",
+      images: ["https://images.unsplash.com/photo-1546470427-e5380b6d0b66?w=400&h=400&fit=crop&crop=center"]
+    },
+    {
+      id: 6,
+      name: "خيار",
+      units: [{ name: "كيلو", price: 0.600 }],
+      quantity: 150,
+      active: true,
+      category: "خضار",
+      images: ["https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=400&h=400&fit=crop&crop=center"]
+    }
+  ];
 
   const fetchProducts = () => {
     if (typeof window !== "undefined") {
