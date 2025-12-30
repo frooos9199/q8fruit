@@ -171,7 +171,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
       </div>
       <button onClick={handleAddToCart} className={`mt-auto px-3 sm:px-5 py-2 sm:py-3 text-sm sm:text-base gap-2 sm:gap-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-xl sm:rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group`}>
         <span className="ml-1 sm:ml-2">أضف للسلة</span>
-        <svg width="18" height="18" className="sm:w-[22px] sm:h-[22px]" fill="none" viewBox="0 0 24 24" className="group-hover:scale-110 transition-transform duration-200"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
+        <svg width="18" height="18" className="sm:w-[22px] sm:h-[22px] group-hover:scale-110 transition-transform duration-200" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
       </button>
     </div>
   );
