@@ -132,21 +132,8 @@ export default function AdminDashboard() {
       }
     };
     
-    // مراقبة تغييرات Firebase في الوقت الفعلي
-    import('../../lib/firebaseSync').then(({ watchProducts }) => {
-      const unsubscribe = watchProducts((firebaseProducts) => {
-        if (firebaseProducts.length > 0) {
-          // تحديث localStorage بالبيانات الجديدة
-          window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
-          // إرسال حدث لتحديث الواجهة
-          window.dispatchEvent(new Event('storage'));
-        }
-      });
-      
-      return () => {
-        if (unsubscribe) unsubscribe();
-      };
-    }).catch(console.error);
+    // مراقبة تغييرات localStorage فقط - لا حاجة لمراقبة Firebase
+    // Firebase هو نسخة احتياطية فقط
     
     window.addEventListener("usersUpdated", syncCount);
     syncCount();
