@@ -90,12 +90,13 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
     <div
       className={`bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 flex flex-col items-stretch border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl group backdrop-blur-sm`}
     >
-      <div className={`relative aspect-square ${small ? 'w-full mb-2 sm:mb-3' : 'w-40 mb-4'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center`}>
+  <div className={`relative aspect-square ${small ? 'w-full' : 'w-40'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center border-2 border-red-400`}>
+        {/* صورة المنتج */}
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[imgIdx]}
             alt={product.name}
-            className={`absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
+            className={`absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl transition-all duration-500 border-2 border-blue-400 ${fade ? 'opacity-100' : 'opacity-0'}`}
             style={{ transition: 'opacity 0.3s, transform 0.5s', objectPosition: 'center' }}
             onError={(e) => {
               // في حالة فشل تحميل الصورة، جرب الصورة القديمة
@@ -108,7 +109,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
           <img 
             src={product.image} 
             alt={product.name} 
-            className="absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl transition-all duration-500" 
+            className="absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl transition-all duration-500 border-2 border-blue-400" 
             style={{ objectPosition: 'center' }}
           />
         ) : (
