@@ -90,7 +90,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
     <div
       className={`bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 flex flex-col items-stretch border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl group backdrop-blur-sm`}
     >
-      <div className={`${small ? 'w-full h-32 xs:h-36 sm:h-40 mb-2 sm:mb-3' : 'w-40 h-40 mb-4'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center relative`}>
+  <div className={`relative aspect-square ${small ? 'w-full mb-2 sm:mb-3' : 'w-40 mb-4'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center`}>
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[imgIdx]}
