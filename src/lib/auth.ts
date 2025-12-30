@@ -106,10 +106,19 @@ export const loginUser = async (email: string, password: string) => {
 
     return { user: userCredential.user, profile };
   } catch (error: any) {
-    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+    // معالجة أخطاء تسجيل الدخول
+    if (error.code === 'auth/user-not-found') {
+      throw new Error('المستخدم غير موجود');
+    } else if (error.code === 'auth/wrong-password') {
+      throw new Error('كلمة المرور غير صحيحة');
+    } else if (error.code === 'auth/invalid-credential') {
       throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
     } else if (error.code === 'auth/invalid-email') {
       throw new Error('البريد الإلكتروني غير صحيح');
+    } else if (error.code === 'auth/user-disabled') {
+      throw new Error('هذا الحساب معطل');
+    } else if (error.code === 'auth/too-many-requests') {
+      throw new Error('محاولات كثيرة، حاول مرة أخرى لاحقاً');
     }
     throw error;
   }
