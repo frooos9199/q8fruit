@@ -1,6 +1,18 @@
+// دالة للحصول على الرقم الرئيسي من الإعدادات
+const getPrimaryWhatsAppNumber = () => {
+  if (typeof window !== "undefined") {
+    const saved = localStorage.getItem("whatsappNumbers");
+    if (saved) {
+      const numbers = JSON.parse(saved);
+      return numbers[0] || "96550540999";
+    }
+  }
+  return "96550540999";
+};
+
 // دالة لإرسال الفاتورة عبر الواتساب
 export const sendInvoiceToWhatsApp = (invoice: any) => {
-  const whatsappNumber = "96598899426"; // رقم الواتساب (مع كود الكويت)
+  const whatsappNumber = getPrimaryWhatsAppNumber();
   
   // تنسيق رسالة الفاتورة
   const message = `
@@ -43,7 +55,7 @@ ${invoice.userNote ? `📝 ملاحظات العميل: ${invoice.userNote}` : '
 // دالة لإرسال الفاتورة من لوحة الإدارة
 export const sendInvoiceViaWhatsApp = async (order: any, recipient: 'admin' | 'customer') => {
   try {
-    const adminNumber = "96598899426"; // رقم الإدارة
+    const adminNumber = getPrimaryWhatsAppNumber();
     const customerNumber = order.phone ? `965${order.phone.replace(/^\+?965/, '')}` : null;
     
     if (recipient === 'customer' && !customerNumber) {
