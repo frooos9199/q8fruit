@@ -95,8 +95,8 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
           <img
             src={product.images[imgIdx]}
             alt={product.name}
-            className={`absolute inset-0 w-full h-full object-cover rounded-xl sm:rounded-2xl group-hover:scale-105 transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
-            style={{ transition: 'opacity 0.3s, transform 0.5s' }}
+            className={`absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl group-hover:scale-105 transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
+            style={{ transition: 'opacity 0.3s, transform 0.5s', objectPosition: 'center' }}
             onError={(e) => {
               // في حالة فشل تحميل الصورة، جرب الصورة القديمة
               if (product.image) {
@@ -108,7 +108,8 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
           <img 
             src={product.image} 
             alt={product.name} 
-            className="absolute inset-0 w-full h-full object-cover rounded-xl sm:rounded-2xl group-hover:scale-105 transition-all duration-500" 
+            className="absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl group-hover:scale-105 transition-all duration-500" 
+            style={{ objectPosition: 'center' }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
