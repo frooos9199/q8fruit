@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { syncData, checkCompatibility } from "../lib/dataSync";
 
 // تعريفات TypeScript أعلى الملف
 interface Product {
@@ -377,85 +378,32 @@ export default function Home() {
   };
   
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedLogo = window.localStorage.getItem("siteLogo");
-      if (storedLogo) setLogo(storedLogo);
-      fetchProducts();
-      // تحقق من حالة الأدمن
-      setIsAdmin(window.localStorage.getItem("isAdmin") === "true");
-      // جلب المستخدم الحالي
-      const userStr = window.localStorage.getItem("currentUser");
-      if (userStr) {
-        try {
-          setCurrentUser(JSON.parse(userStr));
-        } catch {
-          setCurrentUser(null);
-        }
-      } else {
-        setCurrentUser(null);
-      }
-      // البنرات
-      const storedBanners = window.localStorage.getItem("banners");
-      if (storedBanners) {
-        try {
-          const parsed = JSON.parse(storedBanners);
-          setBanners(Array.isArray(parsed) && parsed.length > 0 ? parsed : [
-            '/banners/banner1.jpg',
-            '/banners/banner2.jpg',
-            '/banners/banner3.jpg',
-            '/banners/banner4.jpg',
-          ]);
-        } catch {
-          setBanners([
-            '/banners/banner1.jpg',
-            '/banners/banner2.jpg',
-            '/banners/banner3.jpg',
-            '/banners/banner4.jpg',
-          ]);
-        }
-      } else {
-        setBanners([
-          '/banners/banner1.jpg',
-          '/banners/banner2.jpg',
-          '/banners/banner3.jpg',
-          '/banners/banner4.jpg',
-        ]);
-      }
-      // تحديث رقم السلة مباشرة عند كل تغيير في localStorage (cart)
-      const updateCartCount = () => {
-        const cartRaw = window.localStorage.getItem("cart");
-        if (cartRaw) {
-          try {
-            const cart = JSON.parse(cartRaw);
-            setCartCount(Array.isArray(cart) ? cart.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0);
-          } catch {
-            setCartCount(0);
-          }
-        } else {
-          setCartCount(0);
-        }
-      };
-      updateCartCount();
-      // مراقبة التغييرات على cart أو البنرات أو المنتجات في localStorage بشكل مباشر
-      const cartObserver = setInterval(() => {
-        updateCartCount();
+    // تحقق من التوافق وبدء التزامن
+    if (checkCompatibility()) {
+      const cleanup = syncData();
+      
+      if (typeof window !== "undefined") {
+        const storedLogo = window.localStorage.getItem("siteLogo");
+        if (storedLogo) setLogo(storedLogo);
         fetchProducts();
-      }, 500);
-      const onStorage = (e: StorageEvent) => {
-        if (e.key === "products") fetchProducts();
-        if (e.key === "siteLogo") setLogo(e.newValue);
-        if (e.key === "isAdmin") setIsAdmin(e.newValue === "true");
-        if (e.key === "cateringCategories") fetchCategories();
-        if (e.key === "currentUser") {
+        // تحقق من حالة الأدمن
+        setIsAdmin(window.localStorage.getItem("isAdmin") === "true");
+        // جلب المستخدم الحالي
+        const userStr = window.localStorage.getItem("currentUser");
+        if (userStr) {
           try {
-            setCurrentUser(e.newValue ? JSON.parse(e.newValue) : null);
+            setCurrentUser(JSON.parse(userStr));
           } catch {
             setCurrentUser(null);
           }
+        } else {
+          setCurrentUser(null);
         }
-        if (e.key === "banners") {
+        // البنرات
+        const storedBanners = window.localStorage.getItem("banners");
+        if (storedBanners) {
           try {
-            const parsed = e.newValue ? JSON.parse(e.newValue) : [];
+            const parsed = JSON.parse(storedBanners);
             setBanners(Array.isArray(parsed) && parsed.length > 0 ? parsed : [
               '/banners/banner1.jpg',
               '/banners/banner2.jpg',
@@ -470,13 +418,72 @@ export default function Home() {
               '/banners/banner4.jpg',
             ]);
           }
+        } else {
+          setBanners([
+            '/banners/banner1.jpg',
+            '/banners/banner2.jpg',
+            '/banners/banner3.jpg',
+            '/banners/banner4.jpg',
+          ]);
         }
-      };
-      window.addEventListener("storage", onStorage);
-      return () => {
-        clearInterval(cartObserver);
-        window.removeEventListener("storage", onStorage);
-      };
+        // تحديث رقم السلة مباشرة عند كل تغيير في localStorage (cart)
+        const updateCartCount = () => {
+          const cartRaw = window.localStorage.getItem("cart");
+          if (cartRaw) {
+            try {
+              const cart = JSON.parse(cartRaw);
+              setCartCount(Array.isArray(cart) ? cart.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0);
+            } catch {
+              setCartCount(0);
+            }
+          } else {
+            setCartCount(0);
+          }
+        };
+        updateCartCount();
+        // مراقبة التغييرات على cart أو البنرات أو المنتجات في localStorage بشكل مباشر
+        const cartObserver = setInterval(() => {
+          updateCartCount();
+          fetchProducts();
+        }, 1000); // تحديث أسرع للموبايل
+        const onStorage = (e: StorageEvent) => {
+          if (e.key === "products") fetchProducts();
+          if (e.key === "siteLogo") setLogo(e.newValue);
+          if (e.key === "isAdmin") setIsAdmin(e.newValue === "true");
+          if (e.key === "cateringCategories") fetchCategories();
+          if (e.key === "currentUser") {
+            try {
+              setCurrentUser(e.newValue ? JSON.parse(e.newValue) : null);
+            } catch {
+              setCurrentUser(null);
+            }
+          }
+          if (e.key === "banners") {
+            try {
+              const parsed = e.newValue ? JSON.parse(e.newValue) : [];
+              setBanners(Array.isArray(parsed) && parsed.length > 0 ? parsed : [
+                '/banners/banner1.jpg',
+                '/banners/banner2.jpg',
+                '/banners/banner3.jpg',
+                '/banners/banner4.jpg',
+              ]);
+            } catch {
+              setBanners([
+                '/banners/banner1.jpg',
+                '/banners/banner2.jpg',
+                '/banners/banner3.jpg',
+                '/banners/banner4.jpg',
+              ]);
+            }
+          }
+        };
+        window.addEventListener("storage", onStorage);
+        return () => {
+          clearInterval(cartObserver);
+          window.removeEventListener("storage", onStorage);
+          if (cleanup) cleanup();
+        };
+      }
     }
   }, []);
 
