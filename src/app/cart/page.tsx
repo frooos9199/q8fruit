@@ -9,6 +9,7 @@ interface UserInfo {
 import BackToHome from "../../components/BackToHome";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { sendInvoiceToWhatsApp } from "../../lib/whatsappInvoice";
 
 interface CartItem {
   id: number;
@@ -213,13 +214,18 @@ export default function CartPage() {
         syncAllDataToFirebase().catch(console.error);
       });
 
-      // إرسال الفاتورة إلى إيميل المستخدم (mock فقط)
-      const email = (window.localStorage.getItem("currentUser") && JSON.parse(window.localStorage.getItem("currentUser") || '{}').email) || "";
-      if (email) {
-        alert(`تم إرسال الفاتورة إلى بريدك الإلكتروني: ${email}`);
-      } else {
-        alert(`شكراً ${userInfo.name}! تم استلام طلبك بنجاح 🎉\nسنتواصل معك على رقم ${userInfo.phone} قريباً`);
-      }
+      // إرسال الفاتورة عبر الواتساب
+      const invoiceWithNote = {
+        ...invoice,
+        userNote: userNote.trim() || undefined
+      };
+      
+      setTimeout(() => {
+        sendInvoiceToWhatsApp(invoiceWithNote);
+      }, 1000);
+
+      // رسالة تأكيد للمستخدم
+      alert(`شكراً ${userInfo.name}! تم استلام طلبك بنجاح 🎉\nسيتم إرسال الفاتورة عبر الواتساب الآن`);
     }
     handleClear();
   };
