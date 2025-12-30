@@ -109,15 +109,21 @@ export default function ProductTable() {
     });
   };
 
-  const removeProduct = (id: number) => {
+  const removeProduct = async (id: number) => {
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== id);
       saveProductsToStorage(updated);
+      
+      // مزامنة فورية مع Firebase عند حذف منتج
+      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+        syncAllDataToFirebase().catch(console.error);
+      });
+      
       return updated;
     });
   };
 
-  const updateProductCategories = (productId: number, categoryName: string, isChecked: boolean) => {
+  const updateProductCategories = async (productId: number, categoryName: string, isChecked: boolean) => {
     setProducts((prev) => {
       const updated = prev.map((product) => {
         if (product.id === productId) {
@@ -144,20 +150,32 @@ export default function ProductTable() {
       });
       
       saveProductsToStorage(updated);
+      
+      // مزامنة فورية مع Firebase عند تغيير التصنيفات
+      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+        syncAllDataToFirebase().catch(console.error);
+      });
+      
       return updated;
     });
   };
 
-  const handleEditSave = (updated: Product) => {
+  const handleEditSave = async (updated: Product) => {
     setProducts((prev) => {
       const newProducts = prev.map((p) => (p.id === updated.id ? updated : p));
       saveProductsToStorage(newProducts);
+      
+      // مزامنة فورية مع Firebase عند تعديل المنتج
+      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+        syncAllDataToFirebase().catch(console.error);
+      });
+      
       return newProducts;
     });
     setEditProduct(null);
   };
 
-  const handleAddSave = (newProduct: Product) => {
+  const handleAddSave = async (newProduct: Product) => {
     setProducts((prev) => {
       const maxId = prev.length > 0 ? Math.max(...prev.map(p => p.id)) : 0;
       const newProducts = [
@@ -165,6 +183,12 @@ export default function ProductTable() {
         { ...newProduct, id: maxId + 1 }
       ];
       saveProductsToStorage(newProducts);
+      
+      // مزامنة فورية مع Firebase عند إضافة منتج
+      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+        syncAllDataToFirebase().catch(console.error);
+      });
+      
       return newProducts;
     });
     setAddModalOpen(false);
