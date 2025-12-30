@@ -41,82 +41,32 @@ function OrdersTable() {
         const stored = window.localStorage.getItem("orders");
         if (stored) {
           try {
-            return JSON.parse(stored);
+            const parsed = JSON.parse(stored);
+            return Array.isArray(parsed) ? parsed : [];
           } catch {}
         }
       }
-      // بيانات افتراضية فقط إذا لم يوجد أي طلبات
-      return [
-        {
-          id: 1,
-          customer: "محمد أحمد",
-          phone: "55512345",
-          address: "الكويت - السالمية",
-          total: 12.5,
-          status: "جديد",
-          date: "2025-11-28",
-          deliveryFee: 1.5,
-          paymentType: "cash",
-          products: [
-            { name: "تفاح أحمر", unit: "كيلو", price: 3.5, quantity: 2 },
-            { name: "موز", unit: "كيلو", price: 2.5, quantity: 1 },
-            { name: "برتقال", unit: "كيلو", price: 4, quantity: 1 },
-          ],
-        },
-        {
-          id: 2,
-          customer: "سارة علي",
-          phone: "55567890",
-          address: "الكويت - حولي",
-          total: 8.0,
-          status: "قيد التنفيذ",
-          date: "2025-11-27",
-          deliveryFee: 1.0,
-          paymentType: "knet",
-          products: [
-            { name: "تفاح أخضر", unit: "كيلو", price: 4, quantity: 1 },
-            { name: "عنب", unit: "كيلو", price: 4, quantity: 1 },
-          ],
-        },
-        {
-          id: 3,
-          customer: "خالد يوسف",
-          phone: "55522222",
-          address: "الكويت - الفروانية",
-          total: 15.2,
-          status: "مكتمل",
-          date: "2025-11-26",
-          deliveryFee: 2.0,
-          paymentType: "cash",
-          products: [
-            { name: "بطيخ", unit: "حبة", price: 7, quantity: 1 },
-            { name: "مانجو", unit: "كيلو", price: 8.2, quantity: 1 },
-          ],
-        },
-        {
-          id: 4,
-          customer: "أحمد سالم",
-          phone: "55533333",
-          address: "الكويت - الجهراء",
-          total: 5.5,
-          status: "ملغي",
-          date: "2025-11-25",
-          deliveryFee: 1.5,
-          paymentType: "cash",
-          products: [
-            { name: "خيار", unit: "كيلو", price: 2.5, quantity: 1 },
-            { name: "طماطم", unit: "كيلو", price: 3, quantity: 1 },
-          ],
-        },
-      ];
+      return [];
     }
+    
     function updateOrders() {
-      setOrders(getOrdersFromStorage());
+      const newOrders = getOrdersFromStorage();
+      setOrders(newOrders);
     }
-    window.addEventListener("storage", updateOrders);
-    // تحديث عند الدخول للصفحة أيضاً
+    
+    // تحديث فوري عند التحميل
     updateOrders();
-    return () => window.removeEventListener("storage", updateOrders);
+    
+    // مراقب للتغييرات في localStorage
+    window.addEventListener("storage", updateOrders);
+    
+    // مراقب دوري كل ثانية للتأكد من التحديث
+    const interval = setInterval(updateOrders, 1000);
+    
+    return () => {
+      window.removeEventListener("storage", updateOrders);
+      clearInterval(interval);
+    };
   }, []);
 
   const handleEditSave = async (updated: Order) => {

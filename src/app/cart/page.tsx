@@ -209,20 +209,34 @@ export default function CartPage() {
       orders.push(order);
       window.localStorage.setItem("orders", JSON.stringify(orders));
       
+      // حفظ العنوان في بيانات المستخدم إذا كان مسجل دخول
+      if (userEmail && userInfo.address.trim()) {
+        const currentUserData = JSON.parse(currentUser);
+        currentUserData.address = userInfo.address.trim();
+        window.localStorage.setItem("currentUser", JSON.stringify(currentUserData));
+        
+        // تحديث قاعدة بيانات المستخدمين
+        const users = JSON.parse(window.localStorage.getItem("users") || "[]");
+        const userIndex = users.findIndex((u: any) => u.email === userEmail);
+        if (userIndex !== -1) {
+          users[userIndex].address = userInfo.address.trim();
+          window.localStorage.setItem("users", JSON.stringify(users));
+        }
+      }
+      
       // مزامنة فورية مع Firebase
       import('../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
         syncAllDataToFirebase().catch(console.error);
       });
 
-      // إرسال الفاتورة عبر الواتساب
+      // إرسال الفاتورة عبر الواتساب تلقائياً
       const invoiceWithNote = {
         ...invoice,
         userNote: userNote.trim() || undefined
       };
       
-      setTimeout(() => {
-        sendInvoiceToWhatsApp(invoiceWithNote);
-      }, 1000);
+      // إرسال فوري بدون تأخير
+      sendInvoiceToWhatsApp(invoiceWithNote);
 
       // رسالة تأكيد للمستخدم
       alert(`شكراً ${userInfo.name}! تم استلام طلبك بنجاح 🎉\nسيتم إرسال الفاتورة عبر الواتساب الآن`);
