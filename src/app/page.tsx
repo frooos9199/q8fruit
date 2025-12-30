@@ -90,12 +90,12 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
     <div
       className={`bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 flex flex-col items-stretch border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl group backdrop-blur-sm`}
     >
-      <div className={`${small ? 'w-full h-32 xs:h-36 sm:h-40 mb-2 sm:mb-3' : 'w-40 h-40 mb-4'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 image-container relative`}>
+      <div className={`${small ? 'w-full h-32 xs:h-36 sm:h-40 mb-2 sm:mb-3' : 'w-40 h-40 mb-4'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center relative`}>
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[imgIdx]}
             alt={product.name}
-            className={`product-image product-card-image transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
+            className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
             style={{ transition: 'opacity 0.3s, transform 0.5s' }}
             onError={(e) => {
               // في حالة فشل تحميل الصورة، جرب الصورة القديمة
@@ -108,7 +108,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
           <img 
             src={product.image} 
             alt={product.name} 
-            className="product-image product-card-image transition-all duration-500" 
+            className="w-full h-full object-cover group-hover:scale-105 transition-all duration-500" 
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">

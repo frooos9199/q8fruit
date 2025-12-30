@@ -233,9 +233,9 @@ export default function ProductTable() {
               <td className="p-2 font-bold text-gray-600">{index + 1}</td>
               <td className="p-2">
                 {product.images && product.images.length > 0 ? (
-                  <img src={product.images[0]} alt={product.name} className="w-16 h-16 product-image rounded mx-auto" />
+                  <img src={product.images[0]} alt={product.name} className="w-16 h-16 object-cover rounded mx-auto" />
                 ) : product.image ? (
-                  <img src={product.image} alt={product.name} className="w-16 h-16 product-image rounded mx-auto" />
+                  <img src={product.image} alt={product.name} className="w-16 h-16 object-cover rounded mx-auto" />
                 ) : (
                   <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded mx-auto flex items-center justify-center">
                     <span className="text-gray-400 text-xs">لا توجد صورة</span>

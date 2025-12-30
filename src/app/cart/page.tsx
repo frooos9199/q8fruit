@@ -315,7 +315,7 @@ export default function CartPage() {
             <div className="space-y-4">
               {cart.map((item) => (
                 <div key={item.id} className="flex items-center bg-gray-900 rounded-2xl shadow-lg p-4 gap-4 border-2 border-gray-700 relative group">
-                  <img src={item.image} alt={item.name} className="w-16 h-16 product-image rounded-full border-2 border-green-400 shadow-md" />
+                  <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-full border-2 border-green-400 shadow-md" />
                   <div className="flex-1 flex flex-col gap-1">
                     <div className="font-bold text-lg text-white">{item.name}</div>
                     <div className="text-sm text-gray-300">{item.unit}</div>
