@@ -80,9 +80,9 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
 
   return (
     <div
-      className={`bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-4 flex flex-col items-stretch border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl group backdrop-blur-sm${small ? '' : ''}`}
+      className={`bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 flex flex-col items-stretch border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl group backdrop-blur-sm`}
     >
-      <div className={`${small ? 'w-36 h-36 xs:w-36 xs:h-36 sm:w-40 sm:h-40 mb-3' : 'w-40 h-40 mb-4'} mx-auto rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center relative`}>
+      <div className={`${small ? 'w-full h-32 xs:h-36 sm:h-40 mb-2 sm:mb-3' : 'w-40 h-40 mb-4'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center relative`}>
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[imgIdx]}
@@ -104,21 +104,21 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
-            <svg className="w-12 h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-8 h-8 sm:w-12 sm:h-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
-      <div className={`font-bold ${small ? 'text-sm xs:text-base mb-2' : 'text-lg mb-3'} text-gray-800 dark:text-gray-100 text-center`}>{product.name}</div>
+      <div className={`font-bold ${small ? 'text-sm sm:text-base mb-2' : 'text-lg mb-3'} text-gray-800 dark:text-gray-100 text-center line-clamp-2`}>{product.name}</div>
       {/* اختيار الوحدة */}
-      <div className="flex items-center justify-center gap-2 mb-3">
+      <div className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-3 flex-wrap">
         {product.units.map((unit, idx) => (
           <button
             key={unit.name}
             type="button"
-            className={`flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all duration-200 focus:outline-none shadow-sm min-w-[52px] justify-center
+            className={`flex items-center gap-1 text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border-2 transition-all duration-200 focus:outline-none shadow-sm min-w-[44px] sm:min-w-[52px] justify-center
               ${idx === selectedUnitIdx
                 ? 'border-green-500 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 text-green-700 dark:text-green-200 shadow-md'
                 : 'border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:border-green-300 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900'}
@@ -126,26 +126,26 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
             onClick={() => setSelectedUnitIdx(idx)}
           >
             {idx === selectedUnitIdx && (
-              <svg width="12" height="12" viewBox="0 0 20 20" fill="currentColor" className="text-green-500"><circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.2"/><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
+              <svg width="10" height="10" className="sm:w-3 sm:h-3" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.2"/><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
             )}
-            <span>{unit.name}</span>
+            <span className="text-xs">{unit.name}</span>
           </button>
         ))}
       </div>
       {/* اختيار العدد */}
-      <div className="flex items-center justify-center gap-3 mb-4 select-none">
+      <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4 select-none">
         <button
           type="button"
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-lg font-bold hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-base sm:text-lg font-bold hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 shadow-lg hover:shadow-xl"
           onClick={() => handleQuantityChange(product.id, Math.max(1, quantity - 1))}
           aria-label="نقص العدد"
         >
           -
         </button>
-        <span className="w-10 text-center font-bold text-xl text-gray-800 dark:text-gray-100">{quantity}</span>
+        <span className="w-8 sm:w-10 text-center font-bold text-lg sm:text-xl text-gray-800 dark:text-gray-100">{quantity}</span>
         <button
           type="button"
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-lg font-bold hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+          className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-base sm:text-lg font-bold hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl"
           onClick={() => handleQuantityChange(product.id, Math.min(product.quantity, quantity + 1))}
           aria-label="زيادة العدد"
         >
@@ -153,23 +153,25 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
         </button>
       </div>
       {/* صف السعر والوحدة */}
-      <div className="flex items-center justify-between gap-2 mb-4 px-1">
-        <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent flex items-center">
-          د.ك<span className="mx-1" />{(selectedUnit?.price * quantity).toFixed(3)}
+      <div className="flex items-center justify-between gap-1 sm:gap-2 mb-3 sm:mb-4 px-1">
+        <span className="text-base sm:text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent flex items-center flex-wrap">
+          <span className="text-sm sm:text-base">د.ك</span>
+          <span className="mx-1" />
+          <span>{(selectedUnit?.price * quantity).toFixed(3)}</span>
           {quantity > 1 && (
-            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded-full">({selectedUnit?.price} × {quantity})</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 sm:ml-2 bg-gray-100 dark:bg-slate-700 px-1 sm:px-2 py-0.5 rounded-full whitespace-nowrap">({selectedUnit?.price} × {quantity})</span>
           )}
         </span>
         {selectedUnit?.name && (
-          <span className="flex items-center gap-1 text-xs font-bold px-3 py-1 rounded-full border-2 border-green-400 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 text-green-700 dark:text-green-200 shadow-sm transition-all">
-            <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" className="text-green-500"><circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.2"/><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
-            <span>{selectedUnit.name}</span>
+          <span className="flex items-center gap-1 text-xs font-bold px-2 sm:px-3 py-1 rounded-full border-2 border-green-400 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 text-green-700 dark:text-green-200 shadow-sm transition-all">
+            <svg width="10" height="10" className="sm:w-3 sm:h-3" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.2"/><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
+            <span className="text-xs">{selectedUnit.name}</span>
           </span>
         )}
       </div>
-      <button onClick={handleAddToCart} className={`mt-auto ${small ? 'px-3 py-2 xs:px-4 xs:py-2.5 text-sm xs:text-base gap-2 xs:gap-3' : 'px-5 py-3 text-base gap-3'} bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group`}>
-        <span className="ml-2">أضف للسلة</span>
-        <svg width={small ? "20" : "22"} height={small ? "20" : "22"} fill="none" viewBox="0 0 24 24" className="group-hover:scale-110 transition-transform duration-200"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
+      <button onClick={handleAddToCart} className={`mt-auto px-3 sm:px-5 py-2 sm:py-3 text-sm sm:text-base gap-2 sm:gap-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-xl sm:rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center group`}>
+        <span className="ml-1 sm:ml-2">أضف للسلة</span>
+        <svg width="18" height="18" className="sm:w-[22px] sm:h-[22px]" fill="none" viewBox="0 0 24 24" className="group-hover:scale-110 transition-transform duration-200"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
       </button>
     </div>
   );
@@ -551,46 +553,46 @@ export default function Home() {
           <div className="flex-1" onClick={() => setMenuOpen(false)} />
         </div>
       )}
-      <header className="w-full flex items-center justify-between px-6 py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg sticky top-0 z-30 border-b border-green-100 dark:border-green-900">
-        <div className="flex items-center gap-4">
+      <header className="w-full flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg sticky top-0 z-30 border-b border-green-100 dark:border-green-900">
+        <div className="flex items-center gap-2 sm:gap-4">
           <button onClick={() => setMenuOpen(true)} className="p-2 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl">
-            <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
           {/* أيقونة موبايل ورقم التواصل */}
-          <div className="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4h4l2 5-1.5 1.5a7 7 0 0 0 7 7L17 17l5 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
-            <span dir="ltr">98899426</span>
+          <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm shadow-lg">
+            <svg width="14" height="14" className="sm:w-[18px] sm:h-[18px]" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4h4l2 5-1.5 1.5a7 7 0 0 0 7 7L17 17l5 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
+            <span dir="ltr" className="text-xs sm:text-sm">98899426</span>
           </div>
         </div>
         <div className="flex-1 flex justify-center">
           {logo ? (
             <div className="relative">
-              <img src={logo} alt="شعار الموقع" className="w-16 h-16 object-contain rounded-full shadow-xl border-4 border-white bg-white" />
+              <img src={logo} alt="شعار الموقع" className="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded-full shadow-xl border-4 border-white bg-white" />
               <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-full blur opacity-25"></div>
             </div>
           ) : (
             <div className="text-center">
-              <h1 className="text-2xl font-extrabold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">فكهاني الكويت</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">طازج • طبيعي • صحي</p>
+              <h1 className="text-lg sm:text-2xl font-extrabold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">فكهاني الكويت</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium hidden sm:block">طازج • طبيعي • صحي</p>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           {/* زر الإدارة يظهر فقط للأدمن */}
           {isAdmin && (
-            <Link href="/admin" className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-sm hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl">
-              <span className="flex items-center gap-2">
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <Link href="/admin" className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-xs sm:text-sm hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+              <span className="flex items-center gap-1 sm:gap-2">
+                <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                 </svg>
-                الإدارة
+                <span className="hidden sm:inline">الإدارة</span>
               </span>
             </Link>
           )}
-          <Link href="/cart" className="relative p-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl">
-            <svg width="24" height="24" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
+          <Link href="/cart" className="relative p-2 sm:p-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+            <svg width="20" height="20" className="sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
             {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white animate-pulse">{cartCount}</span>
+              <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-blue-500 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white animate-pulse">{cartCount}</span>
             )}
           </Link>
         </div>
@@ -598,29 +600,29 @@ export default function Home() {
 
       {/* بانر ديناميكي */}
       {banners.length > 0 && (
-        <div className="max-w-6xl mx-auto my-12 px-4">
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-            <img src={banners[0]} alt="بانر رئيسي" className="w-full h-40 md:h-56 object-cover object-center" />
+        <div className="max-w-6xl mx-auto my-6 sm:my-12 px-2 sm:px-4">
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl">
+            <img src={banners[0]} alt="بانر رئيسي" className="w-full h-32 sm:h-40 md:h-56 object-cover object-center" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
-            <div className="absolute bottom-4 left-4 text-white">
-              <h2 className="text-xl md:text-2xl font-bold mb-1">أطيب الفواكه والخضار</h2>
-              <p className="text-sm md:text-base opacity-90">طازج يومياً من المزرعة إلى بيتك</p>
+            <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 text-white">
+              <h2 className="text-base sm:text-xl md:text-2xl font-bold mb-1">أطيب الفواكه والخضار</h2>
+              <p className="text-xs sm:text-sm md:text-base opacity-90">طازج يومياً من المزرعة إلى بيتك</p>
             </div>
           </div>
         </div>
       )}
 
       {/* عرض المجموعات (التصنيفات) من localStorage */}
-      <div className="max-w-7xl mx-auto px-4 mt-16">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 mt-8 sm:mt-16">
         {categories.map((cat) => (
-          <section key={cat.name} className="mb-16">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          <section key={cat.name} className="mb-8 sm:mb-16">
+            <div className="text-center mb-4 sm:mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
                 {cat.name}
               </h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-green-500 to-blue-500 mx-auto rounded-full"></div>
+              <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-green-500 to-blue-500 mx-auto rounded-full"></div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
               {(grouped[cat.name] && grouped[cat.name].length > 0) ? (
                 grouped[cat.name].map((product) => (
                   <ProductCard
@@ -628,6 +630,7 @@ export default function Home() {
                     product={product}
                     quantities={quantities}
                     handleQuantityChange={handleQuantityChange}
+                    small={true}
                   />
                 ))
               ) : (

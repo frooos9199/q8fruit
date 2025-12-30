@@ -220,16 +220,16 @@ export default function CartPage() {
   };
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-8 px-2 flex flex-col items-center" dir="rtl">
+  <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-4 sm:py-8 px-2 flex flex-col items-center" dir="rtl">
       {/* زر إغلاق الصفحة */}
       <button
         onClick={() => router.push("/")}
-        className="absolute top-4 right-4 z-10 text-white bg-green-600 hover:bg-green-800 rounded-full w-10 h-10 flex items-center justify-center text-2xl font-bold shadow-lg focus:outline-none"
+        className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10 text-white bg-green-600 hover:bg-green-800 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-xl sm:text-2xl font-bold shadow-lg focus:outline-none"
         aria-label="إغلاق الصفحة"
       >
         &times;
       </button>
-  <h1 className="text-3xl font-extrabold text-green-500 mb-6 text-center tracking-tight drop-shadow-lg">سلة المشتريات</h1>
+  <h1 className="text-2xl sm:text-3xl font-extrabold text-green-500 mb-4 sm:mb-6 text-center tracking-tight drop-shadow-lg">سلة المشتريات</h1>
       
       {/* خطوات الشراء */}
       {cart.length > 0 && (
