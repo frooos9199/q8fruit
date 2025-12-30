@@ -91,25 +91,12 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
       className={`bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 flex flex-col items-stretch border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl group backdrop-blur-sm`}
     >
       <div className={`relative aspect-square ${small ? 'w-full mb-2 sm:mb-3' : 'w-40 mb-4'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center`}>
-        {/* خلفية بلور للصورة */}
-        {product.images && product.images.length > 0 && (
-          <img
-            src={product.images[imgIdx]}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-cover blur-lg scale-110 opacity-40 select-none pointer-events-none"
-            draggable={false}
-            tabIndex={-1}
-            style={{ zIndex: 0 }}
-          />
-        )}
-        {/* الصورة الرئيسية */}
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[imgIdx]}
             alt={product.name}
-            className={`absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl group-hover:scale-105 transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
-            style={{ zIndex: 1, transition: 'opacity 0.3s, transform 0.5s', objectPosition: 'center' }}
+            className={`absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
+            style={{ transition: 'opacity 0.3s, transform 0.5s', objectPosition: 'center' }}
             onError={(e) => {
               // في حالة فشل تحميل الصورة، جرب الصورة القديمة
               if (product.image) {
@@ -121,8 +108,8 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
           <img 
             src={product.image} 
             alt={product.name} 
-            className="absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl group-hover:scale-105 transition-all duration-500" 
-            style={{ zIndex: 1, objectPosition: 'center' }}
+            className="absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl transition-all duration-500" 
+            style={{ objectPosition: 'center' }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
