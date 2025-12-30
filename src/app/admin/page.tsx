@@ -107,7 +107,7 @@ export default function AdminDashboard() {
               };
             });
             
-            const totalProducts = details.reduce((sum, cat) => sum + cat.productCount, 0);
+            const totalProducts = details.reduce((sum: number, cat) => sum + cat.productCount, 0);
             setCateringStats({
               categories: categories.length,
               totalProducts,
