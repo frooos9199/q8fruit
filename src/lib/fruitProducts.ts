@@ -183,7 +183,7 @@ function addFruitProducts() {
 
 // تصدير الدالة للاستخدام
 if (typeof window !== 'undefined') {
-  window.addFruitProducts = addFruitProducts;
+  (window as any).addFruitProducts = addFruitProducts;
 }
 
 export { fruitProducts, addFruitProducts };
