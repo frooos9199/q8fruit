@@ -4,6 +4,9 @@ import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { getAuth, Auth } from 'firebase/auth';
 import { getAnalytics, Analytics } from 'firebase/analytics';
 
+// استيراد دالة إنشاء الأدمن
+import './createAdmin';
+
 // إعدادات Firebase
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyBW2-EDd8K8Nq5Uj5fJFaeAzQnchjcdbJU",
