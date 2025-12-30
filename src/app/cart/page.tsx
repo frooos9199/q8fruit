@@ -210,7 +210,7 @@ export default function CartPage() {
       window.localStorage.setItem("orders", JSON.stringify(orders));
       
       // حفظ العنوان في بيانات المستخدم إذا كان مسجل دخول
-      if (userEmail && userInfo.address.trim()) {
+      if (userEmail && userInfo.address.trim() && currentUser) {
         const currentUserData = JSON.parse(currentUser);
         currentUserData.address = userInfo.address.trim();
         window.localStorage.setItem("currentUser", JSON.stringify(currentUserData));
