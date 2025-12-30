@@ -7,6 +7,8 @@ import {
   syncAllDataToFirebase, 
   watchProducts 
 } from "../lib/firebaseSync";
+import { forceLoadAllData, checkDataCompleteness, retryDataLoad } from "../lib/forceSync";
+import { syncProductImages, fullImageSync } from "../lib/imageSync";
 
 // تعريفات TypeScript أعلى الملف
 interface Product {
@@ -258,14 +260,20 @@ export default function Home() {
 
   const fetchProducts = async () => {
     if (typeof window !== "undefined") {
-      // أولاً: جلب من Firebase
-      try {
-        await loadAllDataFromFirebase();
-      } catch (error) {
-        console.log('استخدام البيانات المحلية:', error);
+      // التحقق من اكتمال البيانات أولاً
+      if (!checkDataCompleteness()) {
+        console.log('البيانات غير مكتملة، جاري إعادة التحميل...');
+        const success = await retryDataLoad();
+        if (!success) {
+          // استخدام البيانات الافتراضية كحل أخير
+          setProducts(defaultProducts);
+          window.localStorage.setItem('products', JSON.stringify(defaultProducts));
+          await syncAllDataToFirebase();
+          return;
+        }
       }
       
-      // ثانياً: جلب من localStorage
+      // جلب من localStorage بعد التأكد من اكتمال البيانات
       const storedProducts = window.localStorage.getItem("products");
       let safeProducts: Product[] = [];
       if (storedProducts) {
@@ -293,16 +301,12 @@ export default function Home() {
           safeProducts = [];
         }
       }
-      // إذا لم يوجد أي منتج، اعرض الافتراضي ومزامنه مع Firebase
+      
+      // إذا لم يوجد أي منتج، استخدم الافتراضي ومزامنه مع Firebase
       if (!safeProducts || safeProducts.length === 0) {
         setProducts(defaultProducts);
-        // مزامنة المنتجات الافتراضية مع Firebase
-        try {
-          window.localStorage.setItem('products', JSON.stringify(defaultProducts));
-          await syncAllDataToFirebase();
-        } catch (error) {
-          console.log('خطأ في المزامنة:', error);
-        }
+        window.localStorage.setItem('products', JSON.stringify(defaultProducts));
+        await syncAllDataToFirebase();
       } else {
         setProducts(safeProducts);
       }
@@ -352,55 +356,63 @@ export default function Home() {
     }
   }
   
+  // دالة إعادة تحميل البيانات يدوياً
+  const handleForceReload = async () => {
+    setDataLoading(true);
+    
+    // مزامنة شاملة للبيانات والصور
+    const dataSuccess = await forceLoadAllData();
+    const imageSuccess = await fullImageSync();
+    
+    if (dataSuccess || imageSuccess) {
+      await fetchProducts();
+      await fetchCategories();
+    }
+    
+    setDataLoading(false);
+  };
+  
   const [cartCount, setCartCount] = useState(0);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
+  const [dataLoading, setDataLoading] = useState(false);
   
   // دالة لجلب التصنيفات
   const fetchCategories = async () => {
     if (typeof window !== 'undefined') {
-      // جلب من Firebase أولاً
-      try {
-        await loadAllDataFromFirebase();
-      } catch (error) {
-        console.log('استخدام البيانات المحلية:', error);
+      // التحقق من اكتمال البيانات
+      if (!checkDataCompleteness()) {
+        await retryDataLoad();
       }
       
       const stored = window.localStorage.getItem('cateringCategories');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          // استخراج فقط id و name من البيانات الكاملة
           const simplifiedCategories = parsed.map((cat: any) => ({
             id: cat.id,
             name: cat.name
           }));
           setCategories(simplifiedCategories);
         } catch {
-          // في حالة الخطأ، إنشاء التصنيفات الافتراضية الكاملة
           const defaultCategories = [
             { id: 1, name: "فواكه", products: [], image: undefined },
             { id: 2, name: "خضار", products: [], image: undefined },
             { id: 3, name: "ورقيات", products: [], image: undefined },
             { id: 4, name: "سلات الفواكه", products: [], image: undefined },
           ];
-          // حفظ البيانات الكاملة في localStorage وFirebase
           window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
           syncAllDataToFirebase();
-          // عرض البيانات المبسطة في الصفحة الرئيسية
           setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
         }
       } else {
-        // إنشاء التصنيفات الافتراضية الكاملة
         const defaultCategories = [
           { id: 1, name: "فواكه", products: [], image: undefined },
           { id: 2, name: "خضار", products: [], image: undefined },
           { id: 3, name: "ورقيات", products: [], image: undefined },
           { id: 4, name: "سلات الفواكه", products: [], image: undefined },
         ];
-        // حفظ البيانات الكاملة في localStorage وFirebase
         window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
         syncAllDataToFirebase();
-        // عرض البيانات المبسطة في الصفحة الرئيسية
         setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
       }
     }
@@ -424,7 +436,10 @@ export default function Home() {
       
       if (typeof window !== "undefined") {
         // تحميل البيانات من Firebase أولاً
-        loadAllDataFromFirebase().then(() => {
+        loadAllDataFromFirebase().then(async () => {
+          // مزامنة الصور بعد تحميل البيانات
+          await syncProductImages();
+          
           const storedLogo = window.localStorage.getItem("siteLogo");
           if (storedLogo) setLogo(storedLogo);
           fetchProducts();
@@ -641,6 +656,18 @@ export default function Home() {
           )}
         </div>
         <div className="flex items-center gap-1 sm:gap-3">
+          {/* زر إعادة تحميل البيانات للموبايل */}
+          <button
+            onClick={handleForceReload}
+            disabled={dataLoading}
+            className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation lg:hidden"
+            title="إعادة تحميل البيانات"
+          >
+            <svg width="18" height="18" className={`${dataLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </button>
+          
           {/* زر الإدارة يظهر فقط للأدمن */}
           {isAdmin && (
             <Link href="/admin" className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-xs sm:text-sm hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation">

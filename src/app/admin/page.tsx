@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { syncAllDataToFirebase, loadAllDataFromFirebase } from "../../lib/firebaseSync";
+import { syncProductImages, fullImageSync } from "../../lib/imageSync";
 
 export default function AdminDashboard() {
   const initialUsers = [
@@ -71,6 +72,25 @@ export default function AdminDashboard() {
       window.location.reload();
     } else {
       setSyncMessage('❌ حدث خطأ في تحميل البيانات');
+    }
+    
+    setSyncing(false);
+    setTimeout(() => setSyncMessage(''), 3000);
+  };
+  
+  // دالة مزامنة الصور
+  const handleSyncImages = async () => {
+    setSyncing(true);
+    setSyncMessage('جاري مزامنة الصور مع Firebase Storage...');
+    
+    const success = await fullImageSync();
+    
+    if (success) {
+      setSyncMessage('✅ تم مزامنة جميع الصور بنجاح!');
+      // إعادة تحميل الصفحة لعرض الصور الجديدة
+      setTimeout(() => window.location.reload(), 1000);
+    } else {
+      setSyncMessage('❌ حدث خطأ في مزامنة الصور');
     }
     
     setSyncing(false);
@@ -224,7 +244,7 @@ export default function AdminDashboard() {
           </h2>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <button
             onClick={handleSyncToFirebase}
             disabled={syncing}
@@ -241,6 +261,15 @@ export default function AdminDashboard() {
           >
             <span className="text-xl">⬇️</span>
             <span>{syncing ? 'جاري التحميل...' : 'تحميل من Firebase'}</span>
+          </button>
+          
+          <button
+            onClick={handleSyncImages}
+            disabled={syncing}
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+          >
+            <span className="text-xl">🖼️</span>
+            <span>{syncing ? 'جاري المزامنة...' : 'مزامنة الصور'}</span>
           </button>
         </div>
         
