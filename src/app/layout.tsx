@@ -17,7 +17,14 @@ export const metadata: Metadata = {
   description: "متجرك المفضل للفواكه والخضار الطازجة في الكويت. جودة عالية وأسعار منافسة مع خدمة توصيل سريعة",
   keywords: "فواكه، خضار، الكويت، توصيل، طازج، صحي",
   authors: [{ name: "NexDev" }],
-  viewport: "width=device-width, initial-scale=1",
+  viewport: {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
+  themeColor: "#10b981",
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -28,11 +35,19 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        <meta name="theme-color" content="#10b981" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="icon" href="/favicon.ico" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-blue-50 to-green-50 dark:from-slate-900 dark:to-blue-900`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-blue-50 to-green-50 dark:from-slate-900 dark:to-blue-900 overflow-x-hidden`}
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         {children}
       </body>

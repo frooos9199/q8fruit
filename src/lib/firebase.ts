@@ -19,38 +19,43 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app: FirebaseApp | undefined;
-let db: Firestore | undefined;
-let storage: FirebaseStorage | undefined;
-let auth: Auth | undefined;
+let app: FirebaseApp;
+let db: Firestore;
+let storage: FirebaseStorage;
+let auth: Auth;
 let analytics: Analytics | null = null;
 
-// تهيئة Firebase فقط في المتصفح
-if (typeof window !== 'undefined') {
-  try {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-    db = getFirestore(app);
-    storage = getStorage(app);
-    
-    // تهيئة Auth مع معالجة الأخطاء
-    try {
-      auth = getAuth(app);
-    } catch (authError) {
-      console.warn('Authentication not configured:', authError);
-      auth = undefined;
-    }
-    
-    // Analytics يعمل فقط بعد تحميل الصفحة
+// تهيئة Firebase
+try {
+  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+  db = getFirestore(app);
+  storage = getStorage(app);
+  auth = getAuth(app);
+  
+  // Analytics يعمل فقط في المتصفح
+  if (typeof window !== 'undefined') {
     try {
       analytics = getAnalytics(app);
     } catch (analyticsError) {
       console.warn('Analytics not available:', analyticsError);
       analytics = null;
     }
-  } catch (error) {
-    console.error('خطأ في تهيئة Firebase:', error);
   }
+} catch (error) {
+  console.error('خطأ في تهيئة Firebase:', error);
+  throw error;
 }
 
-// تصدير مع قيم افتراضية للسيرفر
 export { app, db, storage, auth, analytics };
+
+// دوال مساعدة للتحقق من حالة Firebase
+export const isFirebaseInitialized = () => {
+  return !!(app && db && storage && auth);
+};
+
+export const getFirebaseServices = () => {
+  if (!isFirebaseInitialized()) {
+    throw new Error('Firebase غير مُهيأ بشكل صحيح');
+  }
+  return { app, db, storage, auth, analytics };
+};

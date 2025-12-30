@@ -1,7 +1,5 @@
 "use client";
 import { useState, useEffect } from "react";
-import UsersTable from "./users/UsersTable";
-
 
 export default function AdminDashboard() {
   const initialUsers = [
@@ -135,51 +133,84 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-4">لوحة تحكم الإدارة</h1>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-gray-800 rounded shadow p-4 text-center">
-          <div className="text-lg font-semibold">عدد المستخدمين</div>
-          <div className="text-3xl font-bold text-green-600">{userCount}</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded shadow p-4 text-center">
-          <div className="text-lg font-semibold">عدد الطلبات الإجمالية</div>
-          <div className="text-3xl font-bold text-green-600">{ordersStats.total}</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded shadow p-4 text-center">
-          <div className="text-lg font-semibold">طلبات اليوم</div>
-          <div className="text-3xl font-bold text-green-600">{ordersStats.today}</div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded shadow p-4 text-center">
-          <div className="text-lg font-semibold">مجموع المبيعات</div>
-          <div className="text-3xl font-bold text-green-600">{ordersStats.sales.toFixed(3)} د.ك</div>
-        </div>
+    <div className="space-y-6">
+      {/* العنوان الرئيسي */}
+      <div className="text-center lg:text-right">
+        <h1 className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          🏠 لوحة تحكم الإدارة
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400">مرحباً بك في لوحة إدارة متجر الفواكه والخضار</p>
+      </div>
+
+      {/* الإحصائيات الرئيسية */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard 
+          icon="👥" 
+          title="المستخدمين" 
+          value={userCount.toString()} 
+          color="from-blue-500 to-blue-600"
+          bgColor="from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800"
+        />
+        <StatCard 
+          icon="📦" 
+          title="إجمالي الطلبات" 
+          value={ordersStats.total.toString()} 
+          color="from-green-500 to-green-600"
+          bgColor="from-green-50 to-green-100 dark:from-green-900 dark:to-green-800"
+        />
+        <StatCard 
+          icon="🕐" 
+          title="طلبات اليوم" 
+          value={ordersStats.today.toString()} 
+          color="from-orange-500 to-orange-600"
+          bgColor="from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800"
+        />
+        <StatCard 
+          icon="💰" 
+          title="المبيعات" 
+          value={`${ordersStats.sales.toFixed(3)} د.ك`} 
+          color="from-purple-500 to-purple-600"
+          bgColor="from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800"
+        />
       </div>
 
       {/* إحصائيات الكاترينج */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">إحصائيات الكاترينج</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-700">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="text-3xl">🍽️</span>
+          <h2 className="text-xl lg:text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+            إحصائيات الكاترينج
+          </h2>
+        </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 rounded-xl p-4 text-center">
-            <div className="text-lg font-semibold text-gray-700 dark:text-gray-200">عدد التصنيفات</div>
-            <div className="text-3xl font-bold text-green-600">{cateringStats.categories}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900 dark:to-emerald-900 rounded-xl p-4 text-center border border-green-200 dark:border-green-700">
+            <div className="text-3xl mb-2">📂</div>
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">عدد التصنيفات</div>
+            <div className="text-2xl font-bold text-green-600 dark:text-green-400">{cateringStats.categories}</div>
           </div>
-          <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900 dark:to-green-900 rounded-xl p-4 text-center">
-            <div className="text-lg font-semibold text-gray-700 dark:text-gray-200">إجمالي المنتجات</div>
-            <div className="text-3xl font-bold text-blue-600">{cateringStats.totalProducts}</div>
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900 dark:to-cyan-900 rounded-xl p-4 text-center border border-blue-200 dark:border-blue-700">
+            <div className="text-3xl mb-2">🛒</div>
+            <div className="text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">إجمالي المنتجات</div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{cateringStats.totalProducts}</div>
           </div>
         </div>
 
         {cateringStats.details.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold mb-3 text-gray-700 dark:text-gray-200">تفاصيل التصنيفات:</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <h3 className="text-lg font-semibold mb-4 text-gray-700 dark:text-gray-200 flex items-center gap-2">
+              <span>📊</span>
+              تفاصيل التصنيفات:
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {cateringStats.details.map((category, index) => (
-                <div key={index} className="bg-gray-50 dark:bg-slate-700 rounded-lg p-3 flex items-center justify-between">
-                  <span className="font-medium text-gray-800 dark:text-gray-200">{category.name}</span>
-                  <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-2 py-1 rounded-full text-sm font-bold">
-                    {category.productCount} منتج
+                <div key={index} className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-lg p-3 flex items-center justify-between border border-gray-200 dark:border-gray-600 hover:shadow-md transition-all">
+                  <span className="font-medium text-gray-800 dark:text-gray-200 flex items-center gap-2">
+                    <span className="text-lg">🏷️</span>
+                    {category.name}
+                  </span>
+                  <span className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-sm">
+                    {category.productCount}
                   </span>
                 </div>
               ))}
@@ -187,6 +218,52 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* روابط سريعة */}
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-700">
+        <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          <span>⚡</span>
+          روابط سريعة
+        </h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <QuickLink href="/admin/orders" icon="📦" text="الطلبات" />
+          <QuickLink href="/admin/products" icon="🛒" text="المنتجات" />
+          <QuickLink href="/admin/users" icon="👥" text="المستخدمين" />
+          <QuickLink href="/admin/settings" icon="⚙️" text="الإعدادات" />
+        </div>
+      </div>
     </div>
+  );
+}
+
+// مكون بطاقة الإحصائيات
+function StatCard({ icon, title, value, color, bgColor }: {
+  icon: string;
+  title: string;
+  value: string;
+  color: string;
+  bgColor: string;
+}) {
+  return (
+    <div className={`bg-gradient-to-br ${bgColor} rounded-xl p-4 text-center border border-gray-200 dark:border-gray-600 hover:shadow-lg transition-all transform hover:scale-105`}>
+      <div className="text-2xl mb-2">{icon}</div>
+      <div className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{title}</div>
+      <div className={`text-lg lg:text-xl font-bold bg-gradient-to-r ${color} bg-clip-text text-transparent`}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+// مكون الرابط السريع
+function QuickLink({ href, icon, text }: { href: string; icon: string; text: string }) {
+  return (
+    <a 
+      href={href}
+      className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-lg p-3 text-center hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900 transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-600 hover:shadow-md"
+    >
+      <div className="text-xl mb-1">{icon}</div>
+      <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{text}</div>
+    </a>
   );
 }

@@ -511,9 +511,9 @@ export default function Home() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-slate-900 dark:via-blue-900 dark:to-green-900 font-sans">
       {/* رسالة ترحيبية */}
       {currentUser?.name && (
-        <div className="w-full text-center py-4 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold text-lg shadow-lg">
+        <div className="w-full text-center py-3 sm:py-4 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold text-sm sm:text-lg shadow-lg">
           <span className="inline-flex items-center gap-2">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
             </svg>
             أهلاً وسهلاً: {currentUser.name}
@@ -555,32 +555,32 @@ export default function Home() {
       )}
       <header className="w-full flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg sticky top-0 z-30 border-b border-green-100 dark:border-green-900">
         <div className="flex items-center gap-2 sm:gap-4">
-          <button onClick={() => setMenuOpen(true)} className="p-2 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl">
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          <button onClick={() => setMenuOpen(true)} className="p-2 sm:p-2 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation">
+            <svg width="18" height="18" className="sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
           </button>
           {/* أيقونة موبايل ورقم التواصل */}
-          <div className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm shadow-lg">
-            <svg width="14" height="14" className="sm:w-[18px] sm:h-[18px]" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4h4l2 5-1.5 1.5a7 7 0 0 0 7 7L17 17l5 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
+          <a href="tel:+96598899426" className="flex items-center gap-1 sm:gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm shadow-lg hover:shadow-xl transition-all touch-manipulation">
+            <svg width="12" height="12" className="sm:w-[16px] sm:h-[16px]" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4h4l2 5-1.5 1.5a7 7 0 0 0 7 7L17 17l5 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
             <span dir="ltr" className="text-xs sm:text-sm">98899426</span>
-          </div>
+          </a>
         </div>
         <div className="flex-1 flex justify-center">
           {logo ? (
             <div className="relative">
-              <img src={logo} alt="شعار الموقع" className="w-12 h-12 sm:w-16 sm:h-16 object-contain rounded-full shadow-xl border-4 border-white bg-white" />
+              <img src={logo} alt="شعار الموقع" className="w-10 h-10 sm:w-16 sm:h-16 object-contain rounded-full shadow-xl border-2 sm:border-4 border-white bg-white" />
               <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-full blur opacity-25"></div>
             </div>
           ) : (
             <div className="text-center">
-              <h1 className="text-lg sm:text-2xl font-extrabold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">فكهاني الكويت</h1>
+              <h1 className="text-base sm:text-2xl font-extrabold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">فكهاني الكويت</h1>
               <p className="text-xs text-gray-500 dark:text-gray-400 font-medium hidden sm:block">طازج • طبيعي • صحي</p>
             </div>
           )}
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1 sm:gap-3">
           {/* زر الإدارة يظهر فقط للأدمن */}
           {isAdmin && (
-            <Link href="/admin" className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-xs sm:text-sm hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl">
+            <Link href="/admin" className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-xs sm:text-sm hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation">
               <span className="flex items-center gap-1 sm:gap-2">
                 <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
@@ -589,10 +589,10 @@ export default function Home() {
               </span>
             </Link>
           )}
-          <Link href="/cart" className="relative p-2 sm:p-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl">
-            <svg width="20" height="20" className="sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
+          <Link href="/cart" className="relative p-2 sm:p-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation">
+            <svg width="18" height="18" className="sm:w-6 sm:h-6" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M6 6h15l-1.5 9h-13z"/><circle cx="9" cy="21" r="1" fill="currentColor"/><circle cx="18" cy="21" r="1" fill="currentColor"/></svg>
             {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-blue-500 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white animate-pulse">{cartCount}</span>
+              <span className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 bg-red-500 text-white rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center text-xs font-bold shadow-lg border-2 border-white animate-pulse">{cartCount > 99 ? '99+' : cartCount}</span>
             )}
           </Link>
         </div>
@@ -600,12 +600,12 @@ export default function Home() {
 
       {/* بانر ديناميكي */}
       {banners.length > 0 && (
-        <div className="max-w-6xl mx-auto my-6 sm:my-12 px-2 sm:px-4">
-          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl">
-            <img src={banners[0]} alt="بانر رئيسي" className="w-full h-32 sm:h-40 md:h-56 object-cover object-center" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
+        <div className="max-w-6xl mx-auto my-4 sm:my-12 px-2 sm:px-4">
+          <div className="relative rounded-xl sm:rounded-3xl overflow-hidden shadow-2xl">
+            <img src={banners[0]} alt="بانر رئيسي" className="w-full h-28 sm:h-40 md:h-56 object-cover object-center" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
             <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 text-white">
-              <h2 className="text-base sm:text-xl md:text-2xl font-bold mb-1">أطيب الفواكه والخضار</h2>
+              <h2 className="text-sm sm:text-xl md:text-2xl font-bold mb-1">أطيب الفواكه والخضار</h2>
               <p className="text-xs sm:text-sm md:text-base opacity-90">طازج يومياً من المزرعة إلى بيتك</p>
             </div>
           </div>
@@ -613,16 +613,16 @@ export default function Home() {
       )}
 
       {/* عرض المجموعات (التصنيفات) من localStorage */}
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 mt-8 sm:mt-16">
+      <div className="max-w-7xl mx-auto px-2 sm:px-4 mt-6 sm:mt-16">
         {categories.map((cat) => (
-          <section key={cat.name} className="mb-8 sm:mb-16">
-            <div className="text-center mb-4 sm:mb-8">
-              <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
+          <section key={cat.name} className="mb-6 sm:mb-16">
+            <div className="text-center mb-3 sm:mb-8">
+              <h2 className="text-xl sm:text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
                 {cat.name}
               </h2>
-              <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-green-500 to-blue-500 mx-auto rounded-full"></div>
+              <div className="w-12 sm:w-24 h-1 bg-gradient-to-r from-green-500 to-blue-500 mx-auto rounded-full"></div>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-6">
               {(grouped[cat.name] && grouped[cat.name].length > 0) ? (
                 grouped[cat.name].map((product) => (
                   <ProductCard
@@ -634,7 +634,10 @@ export default function Home() {
                   />
                 ))
               ) : (
-                <div className="col-span-full text-center text-gray-400 py-8">لا توجد منتجات في هذا القسم حالياً.</div>
+                <div className="col-span-full text-center text-gray-400 py-6 sm:py-8">
+                  <div className="text-4xl sm:text-6xl mb-2">😢</div>
+                  <p className="text-sm sm:text-base">لا توجد منتجات في هذا القسم حالياً.</p>
+                </div>
               )}
             </div>
           </section>
@@ -642,11 +645,11 @@ export default function Home() {
       </div>
 
 
-      <footer className="mt-24 py-12 bg-gradient-to-r from-green-800 to-blue-900 text-white">
+      <footer className="mt-16 sm:mt-24 py-8 sm:py-12 bg-gradient-to-r from-green-800 to-blue-900 text-white">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
             <div className="text-center md:text-right">
-              <h3 className="text-xl font-bold mb-4 text-green-300">فكهاني الكويت</h3>
+              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-green-300">فكهاني الكويت</h3>
               <p className="text-gray-200 text-sm leading-relaxed">
                 متجرك المفضل للفواكه والخضار الطازجة
                 <br />
@@ -654,26 +657,26 @@ export default function Home() {
               </p>
             </div>
             <div className="text-center">
-              <h4 className="text-lg font-semibold mb-4 text-blue-300">تواصل معنا</h4>
-              <div className="flex items-center justify-center gap-2 text-cyan-300 font-bold">
-                <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4h4l2 5-1.5 1.5a7 7 0 0 0 7 7L17 17l5 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
-                <span dir="ltr">98899426</span>
-              </div>
+              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-blue-300">تواصل معنا</h4>
+              <a href="tel:+96598899426" className="inline-flex items-center justify-center gap-2 text-cyan-300 font-bold bg-white/10 px-4 py-2 rounded-full hover:bg-white/20 transition-all touch-manipulation">
+                <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4h4l2 5-1.5 1.5a7 7 0 0 0 7 7L17 17l5 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
+                <span dir="ltr" className="text-sm sm:text-base">98899426</span>
+              </a>
             </div>
             <div className="text-center md:text-left">
-              <h4 className="text-lg font-semibold mb-4 text-green-300">روابط سريعة</h4>
+              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-green-300">روابط سريعة</h4>
               <div className="space-y-2">
-                <Link href="/" className="block text-gray-200 hover:text-white transition-colors">الرئيسية</Link>
-                <Link href="/cart" className="block text-gray-200 hover:text-white transition-colors">السلة</Link>
-                <Link href="/login" className="block text-gray-200 hover:text-white transition-colors">تسجيل الدخول</Link>
+                <Link href="/" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">الرئيسية</Link>
+                <Link href="/cart" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">السلة</Link>
+                <Link href="/login" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">تسجيل الدخول</Link>
               </div>
             </div>
           </div>
-          <div className="border-t border-green-700 pt-6 text-center">
-            <p className="text-gray-200 mb-2">
+          <div className="border-t border-green-700 pt-4 sm:pt-6 text-center">
+            <p className="text-gray-200 mb-2 text-sm sm:text-base">
               جميع الحقوق محفوظة &copy; {new Date().getFullYear()} فكهاني الكويت
             </p>
-            <p className="text-sm text-gray-300">
+            <p className="text-xs sm:text-sm text-gray-300">
               تطوير:
               <a
                 href="https://nexdev-portfolio-one.vercel.app"
