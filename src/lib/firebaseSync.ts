@@ -12,12 +12,26 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-// مزامنة المنتجات مع Firebase
+// مزامنة المنتجات مع Firebase (الموقع هو المصدر)
 export const syncProductsToFirebase = async (products: any[]) => {
   try {
     const productsRef = collection(db, 'products');
     
-    // حذف المنتجات القديمة وإضافة الجديدة
+    // حذف جميع المنتجات القديمة من Firebase
+    const existingDocs = await getDocs(productsRef);
+    for (const docSnap of existingDocs.docs) {
+      await deleteDoc(docSnap.ref);
+    }
+    
+    // تنظيف الصور القديمة من Storage
+    try {
+      const { cleanupOldImages } = await import('./storageCleanup');
+      await cleanupOldImages();
+    } catch (error) {
+      console.warn('خطأ في تنظيف الصور:', error);
+    }
+    
+    // إضافة المنتجات الجديدة
     for (const product of products) {
       await setDoc(doc(productsRef, product.id.toString()), {
         ...product,
@@ -33,7 +47,7 @@ export const syncProductsToFirebase = async (products: any[]) => {
   }
 };
 
-// جلب المنتجات من Firebase
+// جلب المنتجات من Firebase (فقط عند الحاجة للاستعادة)
 export const getProductsFromFirebase = async () => {
   try {
     const productsRef = collection(db, 'products');
@@ -52,24 +66,8 @@ export const getProductsFromFirebase = async () => {
   }
 };
 
-// مراقبة تغييرات المنتجات في الوقت الفعلي
-export const watchProducts = (callback: (products: any[]) => void) => {
-  try {
-    const productsRef = collection(db, 'products');
-    const q = query(productsRef, orderBy('id'));
-    
-    return onSnapshot(q, (snapshot) => {
-      const products = snapshot.docs.map(doc => ({
-        ...doc.data(),
-        id: parseInt(doc.id)
-      }));
-      callback(products);
-    });
-  } catch (error) {
-    console.error('خطأ في مراقبة المنتجات:', error);
-    return () => {};
-  }
-};
+// إزالة مراقب التغييرات التلقائية - الموقع هو المصدر
+// export const watchProducts = (callback: (products: any[]) => void) => { ... }
 
 // مزامنة التصنيفات مع Firebase
 export const syncCategoriesToFirebase = async (categories: any[]) => {
@@ -341,11 +339,23 @@ export const syncAllDataToFirebase = async () => {
   }
 };
 
-// جلب جميع البيانات من Firebase وحفظها في localStorage
+// جلب جميع البيانات من Firebase (فقط عند الحاجة للاستعادة)
 export const loadAllDataFromFirebase = async () => {
   if (typeof window === 'undefined') return;
   
   try {
+    // جلب فقط إذا لم توجد بيانات في localStorage
+    const hasLocalData = localStorage.getItem('products') && 
+                        localStorage.getItem('cateringCategories') &&
+                        localStorage.getItem('users');
+    
+    if (hasLocalData) {
+      console.log('البيانات موجودة محلياً - تخطي جلب Firebase');
+      return true;
+    }
+    
+    console.log('جاري جلب البيانات من Firebase...');
+    
     // جلب المنتجات
     const products = await getProductsFromFirebase();
     if (products.length > 0) {
@@ -393,10 +403,7 @@ export const loadAllDataFromFirebase = async () => {
       }
     }
     
-    // إرسال إشعارات التحديث
-    window.dispatchEvent(new Event('storage'));
-    
-    console.log('تم تحميل جميع البيانات من Firebase');
+    console.log('تم تحميل البيانات من Firebase');
     return true;
   } catch (error) {
     console.error('خطأ في تحميل البيانات:', error);

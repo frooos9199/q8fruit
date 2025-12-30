@@ -446,19 +446,8 @@ export default function Home() {
     if (checkCompatibility()) {
       const cleanup = syncData();
       
-      // مراقبة تغييرات Firebase في الوقت الفعلي
-      const unsubscribeProducts = watchProducts((firebaseProducts) => {
-        if (firebaseProducts.length > 0) {
-          setProducts(firebaseProducts);
-          // حفظ في localStorage أيضاً
-          if (typeof window !== 'undefined') {
-            window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
-          }
-        }
-      });
-      
       if (typeof window !== "undefined") {
-        // تحميل البيانات من Firebase أولاً
+        // تحميل البيانات من Firebase فقط عند عدم وجود بيانات محلية
         loadAllDataFromFirebase().then(async () => {
           // مزامنة الصور بعد تحميل البيانات
           await syncProductImages();
@@ -575,7 +564,6 @@ export default function Home() {
           clearInterval(cartObserver);
           window.removeEventListener("storage", onStorage);
           if (cleanup) cleanup();
-          if (unsubscribeProducts) unsubscribeProducts();
         };
       }
     }
