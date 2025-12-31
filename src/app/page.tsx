@@ -442,16 +442,21 @@ export default function Home() {
       const cleanup = syncData();
       
       if (typeof window !== "undefined") {
-        // لا تحمل من Firebase تلقائياً - الموقع هو المصدر
-        // loadAllDataFromFirebase().then(async () => {
+        // مزامنة فورية مع Firebase عند تحميل الصفحة
+        syncAllDataToFirebase().then(() => {
+          console.log('✅ تم مزامنة البيانات مع Firebase');
+        });
+        
+        // جلب من Firebase للموبايل والديسكتوب
+        loadAllDataFromFirebase().then(async () => {
           // مزامنة الصور بعد تحميل البيانات
-          // await syncProductImages();
+          await syncProductImages();
           
           const storedLogo = window.localStorage.getItem("siteLogo");
           if (storedLogo) setLogo(storedLogo);
           fetchProducts();
           fetchCategories();
-        // });
+        });
         
         // تحقق من حالة الأدمن
         setIsAdmin(window.localStorage.getItem("isAdmin") === "true");

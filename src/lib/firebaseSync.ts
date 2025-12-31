@@ -339,10 +339,43 @@ export const syncAllDataToFirebase = async () => {
   }
 };
 
-// Firebase للنسخ الاحتياطي فقط - لا قراءة منه أبداً
+// جلب البيانات من Firebase للموبايل
 export const loadAllDataFromFirebase = async () => {
-  console.log('🚫 تم منع جلب البيانات من Firebase - الموقع هو المصدر الوحيد');
-  return false;
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    console.log('📱 جلب البيانات للموبايل من Firebase...');
+    
+    // جلب المنتجات
+    const products = await getProductsFromFirebase();
+    if (products.length > 0) {
+      localStorage.setItem('products', JSON.stringify(products));
+    }
+    
+    // جلب التصنيفات
+    const categories = await getCategoriesFromFirebase();
+    if (categories.length > 0) {
+      localStorage.setItem('cateringCategories', JSON.stringify(categories));
+    }
+    
+    // جلب البانرات
+    const banners = await getBannersFromFirebase();
+    if (banners.length > 0) {
+      localStorage.setItem('banners', JSON.stringify(banners));
+    }
+    
+    // جلب الشعار
+    const logo = await getLogoFromFirebase();
+    if (logo) {
+      localStorage.setItem('siteLogo', logo);
+    }
+    
+    console.log('✅ تم جلب البيانات للموبايل من Firebase');
+    return true;
+  } catch (error) {
+    console.error('❌ خطأ في جلب البيانات للموبايل:', error);
+    return false;
+  }
 };
 
 // جلب يدوي فقط للطوارئ (من لوحة الإدارة)
