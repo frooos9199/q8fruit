@@ -63,16 +63,16 @@ export default function AdminDashboard() {
   // دالة تحميل من Firebase
   const handleLoadFromFirebase = async () => {
     setSyncing(true);
-    setSyncMessage('جاري تحميل البيانات من Firebase...');
+    setSyncMessage('🆘 جلب طارئ من Firebase...');
     
-    const success = await loadAllDataFromFirebase();
+    const { emergencyLoadFromFirebase } = await import('../../lib/firebaseSync');
+    const success = await emergencyLoadFromFirebase();
     
     if (success) {
-      setSyncMessage('✅ تم تحميل جميع البيانات بنجاح!');
-      // إعادة تحميل الصفحة لعرض البيانات الجديدة
-      window.location.reload();
+      setSyncMessage('✅ تم الجلب الطارئ بنجاح! جاري إعادة تحميل الصفحة...');
+      setTimeout(() => window.location.reload(), 2000);
     } else {
-      setSyncMessage('❌ حدث خطأ في تحميل البيانات');
+      setSyncMessage('❌ حدث خطأ في الجلب الطارئ');
     }
     
     setSyncing(false);
@@ -294,8 +294,8 @@ export default function AdminDashboard() {
             disabled={syncing}
             className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
           >
-            <span className="text-xl">⬇️</span>
-            <span className="text-sm">{syncing ? 'جاري...' : 'تحميل من Firebase'}</span>
+            <span className="text-xl">🆘</span>
+            <span className="text-sm">{syncing ? 'جاري...' : 'جلب طارئ من Firebase'}</span>
           </button>
           
           <button
@@ -334,7 +334,7 @@ export default function AdminDashboard() {
           <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
             <li>• <strong>إعداد Firebase:</strong> يضيف 10 منتجات افتراضية إلى Firebase (استخدمه مرة واحدة فقط)</li>
             <li>• <strong>رفع إلى Firebase:</strong> يحفظ البيانات المحلية في السحابة</li>
-            <li>• <strong>تحميل من Firebase:</strong> يجلب أحدث البيانات من السحابة</li>
+            <li>• <strong>جلب طارئ من Firebase:</strong> يجلب البيانات في حالات الطوارئ فقط</li>
             <li>• <strong>مزامنة الصور:</strong> يربط الصور من Firebase Storage بالمنتجات</li>
           </ul>
         </div>

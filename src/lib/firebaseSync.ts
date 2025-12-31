@@ -339,11 +339,43 @@ export const syncAllDataToFirebase = async () => {
   }
 };
 
-// جلب جميع البيانات من Firebase (فقط عند الحاجة للاستعادة)
+// Firebase للنسخ الاحتياطي فقط - لا قراءة منه أبداً
 export const loadAllDataFromFirebase = async () => {
-  if (typeof window === 'undefined') return;
+  console.log('🚫 تم منع جلب البيانات من Firebase - الموقع هو المصدر الوحيد');
+  return false;
+};
+
+// جلب يدوي فقط للطوارئ (من لوحة الإدارة)
+export const emergencyLoadFromFirebase = async () => {
+  if (typeof window === 'undefined') return false;
   
-  // لا تجلب من Firebase إلا إذا طلب المستخدم ذلك يدوياً
-  console.log('تم تخطي جلب البيانات من Firebase - الموقع هو المصدر الأساسي');
-  return true;
+  try {
+    console.log('🆘 جلب طوارئ من Firebase...');
+    
+    const products = await getProductsFromFirebase();
+    if (products.length > 0) {
+      localStorage.setItem('products', JSON.stringify(products));
+    }
+    
+    const categories = await getCategoriesFromFirebase();
+    if (categories.length > 0) {
+      localStorage.setItem('cateringCategories', JSON.stringify(categories));
+    }
+    
+    const users = await getUsersFromFirebase();
+    if (users.length > 0) {
+      localStorage.setItem('users', JSON.stringify(users));
+    }
+    
+    const orders = await getOrdersFromFirebase();
+    if (orders.length > 0) {
+      localStorage.setItem('orders', JSON.stringify(orders));
+    }
+    
+    console.log('✅ تم الجلب الطارئ من Firebase');
+    return true;
+  } catch (error) {
+    console.error('❌ خطأ في الجلب الطارئ:', error);
+    return false;
+  }
 };
