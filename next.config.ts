@@ -15,14 +15,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['@/components', '@/lib']
   },
-  // استثناء مجلد التطبيق الموبايل
-  webpack: (config, { isServer }) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-    };
-    return config;
-  },
-  // تجاهل ملفات التطبيق الموبايل
+  turbopack: {},
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
   transpilePackages: [],
 };
