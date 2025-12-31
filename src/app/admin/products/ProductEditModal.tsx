@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef } from "react";
 import { uploadImage } from "@/lib/uploadImage";
+import OptimizedImage from "@/components/OptimizedImage";
 
 
 
@@ -155,7 +156,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
             <div className="flex flex-wrap items-center gap-4 mt-2">
               {(form.images && form.images.length > 0) && form.images.map((img, idx) => (
                 <div key={idx} className="relative group">
-                  <img src={img} alt="صورة المنتج" className="w-20 h-20 object-cover rounded border" />
+                  <OptimizedImage src={img} alt="صورة المنتج" size="small" className="w-20 h-20 object-cover rounded border" />
                   <button type="button" onClick={() => handleRemoveImage(idx)} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 group-hover:opacity-100">&times;</button>
                 </div>
               ))}

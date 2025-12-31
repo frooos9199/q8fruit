@@ -19,16 +19,26 @@ interface Product {
   image?: string;
   category: string;
   categories?: string[];
+  order?: number; // ترتيب المنتج
 }
 
 export default function ProductTable() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [draggedItem, setDraggedItem] = useState<number | null>(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const stored = window.localStorage.getItem('products');
       if (stored) {
-        setProducts(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        // إضافة ترتيب افتراضي للمنتجات القديمة
+        const withOrder = parsed.map((p: Product, index: number) => ({
+          ...p,
+          order: p.order ?? index
+        }));
+        // ترتيب المنتجات حسب الـ order
+        withOrder.sort((a: Product, b: Product) => (a.order || 0) - (b.order || 0));
+        setProducts(withOrder);
       } else {
         setProducts([]);
       }
@@ -178,9 +188,10 @@ export default function ProductTable() {
   const handleAddSave = async (newProduct: Product) => {
     setProducts((prev) => {
       const maxId = prev.length > 0 ? Math.max(...prev.map(p => p.id)) : 0;
+      const maxOrder = prev.length > 0 ? Math.max(...prev.map(p => p.order || 0)) : -1;
       const newProducts = [
         ...prev,
-        { ...newProduct, id: maxId + 1 }
+        { ...newProduct, id: maxId + 1, order: maxOrder + 1 }
       ];
       saveProductsToStorage(newProducts);
       
@@ -192,6 +203,47 @@ export default function ProductTable() {
       return newProducts;
     });
     setAddModalOpen(false);
+  };
+
+  // دوال Drag & Drop
+  const handleDragStart = (e: React.DragEvent, productId: number) => {
+    setDraggedItem(productId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    if (!draggedItem || draggedItem === targetId) return;
+
+    setProducts(prev => {
+      const draggedIndex = prev.findIndex(p => p.id === draggedItem);
+      const targetIndex = prev.findIndex(p => p.id === targetId);
+      
+      if (draggedIndex === -1 || targetIndex === -1) return prev;
+
+      const newProducts = [...prev];
+      const [draggedProduct] = newProducts.splice(draggedIndex, 1);
+      newProducts.splice(targetIndex, 0, draggedProduct);
+      
+      // تحديث ترقيم الترتيب
+      const reordered = newProducts.map((p, index) => ({ ...p, order: index }));
+      
+      saveProductsToStorage(reordered);
+      
+      // مزامنة مع Firebase
+      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+        syncAllDataToFirebase().catch(console.error);
+      });
+      
+      return reordered;
+    });
+    
+    setDraggedItem(null);
   };
 
   const filteredProducts = products.filter((product) => {
@@ -212,6 +264,14 @@ export default function ProductTable() {
         >
           + إضافة منتج
         </button>
+        <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+          <p className="text-sm text-blue-700 dark:text-blue-200 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            يمكنك سحب وإفلات المنتجات لتغيير ترتيبها في الموقع
+          </p>
+        </div>
         <div>
           <label className="block text-sm font-bold mb-1">بحث بالاسم</label>
           <input
@@ -239,6 +299,7 @@ export default function ProductTable() {
       <table className="min-w-full border text-center">
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-800">
+            <th className="p-2">↕️</th>
             <th className="p-2">#</th>
             <th className="p-2">الصورة</th>
             <th className="p-2">اسم المنتج</th>
@@ -253,7 +314,23 @@ export default function ProductTable() {
         </thead>
         <tbody>
           {filteredProducts.map((product, index) => (
-            <tr key={`product-${product.id}-${index}`} className="border-b">
+            <tr 
+              key={`product-${product.id}-${index}`} 
+              className={`border-b cursor-move hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                draggedItem === product.id ? 'opacity-50' : ''
+              }`}
+              draggable
+              onDragStart={(e) => handleDragStart(e, product.id)}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, product.id)}
+            >
+              <td className="p-2 text-gray-400">
+                <div className="flex items-center justify-center">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
+                  </svg>
+                </div>
+              </td>
               <td className="p-2 font-bold text-gray-600">{index + 1}</td>
               <td className="p-2">
                 {product.images && product.images.length > 0 ? (

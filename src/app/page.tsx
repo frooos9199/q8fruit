@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import OptimizedImage from "../components/OptimizedImage";
+import { useImagePreloader } from "../lib/imageOptimization";
 import { syncData, checkCompatibility } from "../lib/dataSync";
 import { 
   loadAllDataFromFirebase, 
@@ -20,6 +22,7 @@ interface Product {
   image?: string; // دعم خلفي للصورة القديمة
   category: string;
   categories?: string[]; // تصنيفات متعددة
+  order?: number; // ترتيب المنتج
 }
 
 interface ProductCardProps {
@@ -92,9 +95,10 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
   <div className={`relative aspect-square ${small ? 'w-full' : 'w-40'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center`}>
         {/* صورة المنتج */}
         {product.images && product.images.length > 0 ? (
-          <img
+          <OptimizedImage
             src={product.images[imgIdx]}
             alt={product.name}
+            size="small"
             className={`block absolute inset-0 w-full h-full object-cover transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
             style={{ transition: 'opacity 0.3s, transform 0.5s', verticalAlign: 'bottom' }}
             onError={(e) => {
@@ -105,9 +109,10 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
             }}
           />
         ) : product.image ? (
-          <img 
+          <OptimizedImage 
             src={product.image} 
-            alt={product.name} 
+            alt={product.name}
+            size="small" 
             className="block absolute inset-0 w-full h-full object-cover transition-all duration-500" 
             style={{ objectPosition: 'center', verticalAlign: 'bottom' }}
           />
@@ -305,11 +310,14 @@ export default function Home() {
       
       // إذا لم يوجد أي منتج، استخدم الافتراضي ومزامنه مع Firebase
       if (!safeProducts || safeProducts.length === 0) {
-        setProducts(defaultProducts);
-        window.localStorage.setItem('products', JSON.stringify(defaultProducts));
+        const defaultWithOrder = defaultProducts.map((p, index) => ({ ...p, order: index }));
+        setProducts(defaultWithOrder);
+        window.localStorage.setItem('products', JSON.stringify(defaultWithOrder));
         await syncAllDataToFirebase();
       } else {
-        setProducts(safeProducts);
+        // ترتيب المنتجات حسب order
+        const sortedProducts = safeProducts.sort((a, b) => (a.order || 0) - (b.order || 0));
+        setProducts(sortedProducts);
       }
     }
   };
@@ -376,6 +384,15 @@ export default function Home() {
   const [cartCount, setCartCount] = useState(0);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
+  
+  // تحميل مسبق للصور المهمة
+  const importantImages = [
+    logo,
+    ...banners.slice(0, 1), // أول بانر فقط
+    ...products.slice(0, 8).flatMap(p => p.images?.[0] ? [p.images[0]] : p.image ? [p.image] : []) // أول 8 منتجات
+  ].filter(Boolean) as string[];
+  
+  const loadedImages = useImagePreloader(importantImages);
   
   // دالة لجلب التصنيفات
   const fetchCategories = async () => {
@@ -634,7 +651,7 @@ export default function Home() {
         <div className="flex-1 flex justify-center">
           {logo ? (
             <div className="relative">
-              <img src={logo} alt="شعار الموقع" className="w-10 h-10 sm:w-16 sm:h-16 object-contain rounded-full shadow-xl border-2 sm:border-4 border-white bg-white" />
+              <OptimizedImage src={logo} alt="شعار الموقع" size="small" className="w-10 h-10 sm:w-16 sm:h-16 object-contain rounded-full shadow-xl border-2 sm:border-4 border-white bg-white" />
               <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-full blur opacity-25"></div>
             </div>
           ) : (
@@ -681,7 +698,7 @@ export default function Home() {
       {banners.length > 0 && (
         <div className="max-w-6xl mx-auto my-4 sm:my-12 px-2 sm:px-4">
           <div className="relative rounded-xl sm:rounded-3xl overflow-hidden shadow-2xl">
-            <img src={banners[0]} alt="بانر رئيسي" className="w-full h-28 sm:h-40 md:h-56 object-cover object-center" />
+            <OptimizedImage src={banners[0]} alt="بانر رئيسي" size="large" className="w-full h-28 sm:h-40 md:h-56 object-cover object-center" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
             <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 text-white">
               <h2 className="text-sm sm:text-xl md:text-2xl font-bold mb-1">أطيب الفواكه والخضار</h2>
