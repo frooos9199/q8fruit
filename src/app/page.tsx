@@ -616,7 +616,22 @@ export default function Home() {
         }, 1000); // تحديث أسرع للموبايل
         const onStorage = (e: StorageEvent) => {
           if (e.key === "products") {
-            fetchProducts();
+            // إذا تم مسح المنتجات تماماً، أعد تحميل من Firebase
+            if (e.newValue === null || e.newValue === '') {
+              console.log('تم مسح المنتجات، جاري إعادة التحميل من Firebase...');
+              loadAllDataFromFirebase().then(success => {
+                if (success) {
+                  fetchProducts();
+                  fetchCategories();
+                } else {
+                  // استخدم البيانات الافتراضية
+                  setProducts(defaultProducts);
+                  window.localStorage.setItem('products', JSON.stringify(defaultProducts));
+                }
+              });
+            } else {
+              fetchProducts();
+            }
             // مزامنة مع Firebase عند تغيير المنتجات
             syncAllDataToFirebase();
           }

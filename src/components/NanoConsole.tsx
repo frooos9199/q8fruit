@@ -32,7 +32,7 @@ export default function NanoConsole() {
 
   // أوامر متاحة
   const commands = {
-    help: () => 'الأوامر المتاحة:\n- clear: مسح الشاشة\n- products: عرض المنتجات\n- addproducts: إضافة منتجات الفواكه\n- clearproducts: مسح جميع المنتجات\n- users: عرض المستخدمين\n- orders: عرض الطلبات\n- admin: تفعيل وضع الإدارة\n- reload: إعادة تحميل الصفحة',
+    help: () => 'الأوامر المتاحة:\n- clear: مسح الشاشة\n- products: عرض المنتجات\n- addproducts: إضافة منتجات الفواكه\n- clearproducts: مسح جميع المنتجات\n- reload: إعادة تحميل البيانات من Firebase\n- users: عرض المستخدمين\n- orders: عرض الطلبات\n- admin: تفعيل وضع الإدارة\n- refresh: إعادة تحميل الصفحة',
     clear: () => { setOutput([]); return ''; },
     products: () => {
       const products: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
@@ -47,7 +47,11 @@ export default function NanoConsole() {
     },
     clearproducts: () => {
       localStorage.removeItem('products');
-      return 'تم مسح جميع المنتجات';
+      // إعادة تحميل البيانات من Firebase بعد المسح
+      if (typeof window !== 'undefined' && window.location) {
+        window.location.reload();
+      }
+      return 'تم مسح جميع المنتجات وإعادة تحميل الصفحة';
     },
     users: () => {
       const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
@@ -62,9 +66,27 @@ export default function NanoConsole() {
       return 'تم تفعيل وضع الإدارة';
     },
     reload: () => {
-      window.location.reload();
-      return 'جاري إعادة التحميل...';
-    }
+      // إعادة تحميل البيانات من Firebase
+      if (typeof window !== 'undefined' && window.location) {
+        // محاولة إعادة تحميل البيانات من Firebase أولاً
+        try {
+          // استدعاء دالة إعادة تحميل البيانات إذا كانت متاحة
+          const win = window as { forceReloadData?: () => void };
+          if (win.forceReloadData) {
+            win.forceReloadData();
+            return 'جاري إعادة تحميل البيانات من Firebase...';
+          } else {
+            // إعادة تحميل الصفحة كحل بديل
+            window.location.reload();
+            return 'جاري إعادة تحميل الصفحة...';
+          }
+        } catch {
+          window.location.reload();
+          return 'جاري إعادة تحميل الصفحة...';
+        }
+      }
+      return 'غير متاح في هذا السياق';
+    },
   };
 
   // تنفيذ الأوامر
