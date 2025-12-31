@@ -64,6 +64,11 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
         });
         
         alert(`تم رفع ${imageUrls.length} صورة بنجاح! ✅`);
+        
+        // تحديث فوري للـ form state
+        setTimeout(() => {
+          setForm(prev => ({ ...prev, images: updatedImages }));
+        }, 100);
       } catch (error) {
         console.error("خطأ في رفع الصور:", error);
         alert("فشل رفع الصور. الرجاء المحاولة مرة أخرى.");
@@ -89,6 +94,11 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
     import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
       syncAllDataToFirebase().catch(console.error);
     });
+    
+    // تحديث فوري للـ form state
+    setTimeout(() => {
+      setForm(prev => ({ ...prev, images: updatedImages }));
+    }, 100);
   };
 
 
@@ -98,6 +108,21 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
       ...prev,
       [name]: type === "number" ? Number(value) : value,
     }));
+  };
+
+  // حفظ المنتج مع ضمان عدم فقدان الصور
+  const handleSave = () => {
+    // جلب آخر حالة للصور من localStorage
+    const products = JSON.parse(localStorage.getItem('products') || '[]');
+    const currentProduct = products.find((p: any) => p.id === form.id);
+    const latestImages = currentProduct?.images || form.images || [];
+    
+    const updatedForm = {
+      ...form,
+      images: latestImages
+    };
+    
+    onSave(updatedForm);
   };
 
   // وحدات المنتج
@@ -245,7 +270,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
             إلغاء
           </button>
           <button
-            onClick={() => onSave(form)}
+            onClick={handleSave}
             className="px-4 py-2 rounded bg-green-600 text-white"
           >
             حفظ

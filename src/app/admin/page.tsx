@@ -98,7 +98,38 @@ export default function AdminDashboard() {
     setTimeout(() => setSyncMessage(''), 3000);
   };
   
-  // دالة إعداد Firebase بالبيانات الافتراضية
+  // دالة حذف جميع بيانات Firebase
+  const handleClearFirebase = async () => {
+    const confirmed = window.confirm('⚠️ هل أنت متأكد من حذف جميع بيانات Firebase?\n\nهذا سيحذف:\n• جميع المنتجات\n• جميع الطلبات\n• جميع المستخدمين\n• جميع الصور\n• جميع الإعدادات');
+    
+    if (!confirmed) return;
+    
+    const userInput = window.prompt('اكتب "DELETE" بالأحرف الكبيرة:');
+    if (userInput !== 'DELETE') {
+      alert('تم إلغاء العملية');
+      return;
+    }
+    
+    setSyncing(true);
+    setSyncMessage('🔥 جاري حذف جميع بيانات Firebase...');
+    
+    try {
+      const { clearAllFirebaseData } = await import('../../lib/clearFirebase');
+      const success = await clearAllFirebaseData();
+      
+      if (success) {
+        setSyncMessage('✅ تم حذف جميع بيانات Firebase بنجاح!');
+        alert('🎉 Firebase نظيف وجاهز للعمل!');
+      } else {
+        setSyncMessage('❌ حدث خطأ في حذف بيانات Firebase');
+      }
+    } catch (error) {
+      setSyncMessage('❌ خطأ في عملية الحذف');
+    }
+    
+    setSyncing(false);
+    setTimeout(() => setSyncMessage(''), 5000);
+  };
   const handleSetupFirebase = async () => {
     setSyncing(true);
     setSyncMessage('جاري إعداد Firebase بالبيانات الافتراضية...');
@@ -279,7 +310,7 @@ export default function AdminDashboard() {
           </h2>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
           <button
             onClick={handleSyncToFirebase}
             disabled={syncing}
@@ -308,12 +339,12 @@ export default function AdminDashboard() {
           </button>
           
           <button
-            onClick={handleSetupFirebase}
+            onClick={handleClearFirebase}
             disabled={syncing}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
           >
-            <span className="text-xl">⚙️</span>
-            <span className="text-sm">{syncing ? 'جاري...' : 'إعداد Firebase'}</span>
+            <span className="text-xl">🔥</span>
+            <span className="text-sm">{syncing ? 'جاري...' : 'حذف Firebase'}</span>
           </button>
         </div>
         
@@ -332,7 +363,7 @@ export default function AdminDashboard() {
             <span className="font-bold">⚠️ ملاحظة:</span>
           </p>
           <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-            <li>• <strong>إعداد Firebase:</strong> يضيف 10 منتجات افتراضية إلى Firebase (استخدمه مرة واحدة فقط)</li>
+            <li>• <strong>حذف Firebase:</strong> يحذف جميع بيانات Firebase (غير قابل للتراجع!)</li>
             <li>• <strong>رفع إلى Firebase:</strong> يحفظ البيانات المحلية في السحابة</li>
             <li>• <strong>جلب طارئ من Firebase:</strong> يجلب البيانات في حالات الطوارئ فقط</li>
             <li>• <strong>مزامنة الصور:</strong> يربط الصور من Firebase Storage بالمنتجات</li>

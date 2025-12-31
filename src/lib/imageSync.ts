@@ -50,49 +50,10 @@ export const getAllProductImages = async (): Promise<{ [productId: string]: stri
   }
 };
 
-// مزامنة صور المنتجات مع البيانات المحلية
+// مزامنة صور المنتجات مع البيانات المحلية (معطلة)
 export const syncProductImages = async () => {
-  if (typeof window === 'undefined') return;
-  
-  try {
-    // جلب الصور من Firebase Storage
-    const firebaseImages = await getAllProductImages();
-    
-    // جلب المنتجات من localStorage
-    const productsData = localStorage.getItem('products');
-    if (!productsData) return;
-    
-    const products = JSON.parse(productsData);
-    
-    // تحديث المنتجات بالصور من Firebase
-    const updatedProducts = products.map((product: any) => {
-      const productImages = firebaseImages[product.id.toString()];
-      if (productImages && productImages.length > 0) {
-        return {
-          ...product,
-          images: productImages,
-          image: productImages[0] // أول صورة كصورة رئيسية
-        };
-      }
-      return product;
-    });
-    
-    // حفظ المنتجات المحدثة
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-    
-    // إرسال إشعار التحديث
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: 'products',
-      newValue: JSON.stringify(updatedProducts),
-      storageArea: localStorage
-    }));
-    
-    console.log('تم مزامنة صور المنتجات بنجاح');
-    return true;
-  } catch (error) {
-    console.error('خطأ في مزامنة الصور:', error);
-    return false;
-  }
+  console.log('🚫 تم تعطيل مزامنة الصور - الموقع هو المصدر');
+  return true;
 };
 
 // حذف صور منتج من Firebase Storage
@@ -129,18 +90,8 @@ export const base64ToFile = (base64: string, fileName: string): File => {
   return new File([u8arr], fileName, { type: mime });
 };
 
-// مزامنة شاملة للصور
+// مزامنة شاملة للصور (معطلة)
 export const fullImageSync = async () => {
-  try {
-    // مزامنة الصور أولاً
-    await syncProductImages();
-    
-    // انتظار قصير للتأكد من التحديث
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    return true;
-  } catch (error) {
-    console.error('خطأ في المزامنة الشاملة للصور:', error);
-    return false;
-  }
+  console.log('🚫 تم تعطيل المزامنة الشاملة للصور');
+  return true;
 };

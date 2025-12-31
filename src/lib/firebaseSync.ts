@@ -23,13 +23,13 @@ export const syncProductsToFirebase = async (products: any[]) => {
       await deleteDoc(docSnap.ref);
     }
     
-    // تنظيف الصور القديمة من Storage
-    try {
-      const { cleanupOldImages } = await import('./storageCleanup');
-      await cleanupOldImages();
-    } catch (error) {
-      console.warn('خطأ في تنظيف الصور:', error);
-    }
+    // تنظيف الصور القديمة من Storage (معطل مؤقتاً)
+    // try {
+    //   const { cleanupOldImages } = await import('./storageCleanup');
+    //   await cleanupOldImages();
+    // } catch (error) {
+    //   console.warn('خطأ في تنظيف الصور:', error);
+    // }
     
     // إضافة المنتجات الجديدة
     for (const product of products) {
