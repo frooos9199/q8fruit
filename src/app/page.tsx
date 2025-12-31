@@ -7,7 +7,6 @@ import {
   syncAllDataToFirebase
 } from "../lib/firebaseSync";
 import { forceLoadAllData, checkDataCompleteness, retryDataLoad } from "../lib/forceSync";
-import DataStatusIndicator from "../components/DataStatusIndicator";
 import { syncProductImages, fullImageSync } from "../lib/imageSync";
 
 // تعريفات TypeScript أعلى الملف
@@ -710,8 +709,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-slate-900 dark:via-blue-900 dark:to-green-900 font-sans">
-      {/* مؤشر حالة البيانات */}
-      <DataStatusIndicator />
       {/* رسالة ترحيبية */}
       {currentUser?.name && (
         <div className="w-full text-center py-3 sm:py-4 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold text-sm sm:text-lg shadow-lg">
