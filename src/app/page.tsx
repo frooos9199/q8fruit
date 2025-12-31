@@ -211,62 +211,7 @@ export default function Home() {
   };
 
   // منتجات افتراضية تظهر عند عدم وجود منتجات في localStorage
-  const defaultProducts: Product[] = [
-    {
-      id: 1,
-      name: "تفاح أحمر",
-      units: [{ name: "كيلو", price: 1.250 }, { name: "حبة", price: 0.150 }],
-      quantity: 100,
-      active: true,
-      category: "فواكه",
-      images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop&crop=center"]
-    },
-    {
-      id: 2,
-      name: "موز",
-      units: [{ name: "كيلو", price: 0.750 }, { name: "حبة", price: 0.100 }],
-      quantity: 150,
-      active: true,
-      category: "فواكه",
-      images: ["https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop&crop=center"]
-    },
-    {
-      id: 3,
-      name: "برتقال",
-      units: [{ name: "كيلو", price: 1.000 }, { name: "حبة", price: 0.120 }],
-      quantity: 120,
-      active: true,
-      category: "فواكه",
-      images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=400&fit=crop&crop=center"]
-    },
-    {
-      id: 4,
-      name: "خس",
-      units: [{ name: "حبة", price: 0.500 }],
-      quantity: 80,
-      active: true,
-      category: "ورقيات",
-      images: ["https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&h=400&fit=crop&crop=center"]
-    },
-    {
-      id: 5,
-      name: "طماطم",
-      units: [{ name: "كيلو", price: 0.800 }],
-      quantity: 200,
-      active: true,
-      category: "خضار",
-      images: ["https://images.unsplash.com/photo-1546470427-e5380b6d0b66?w=400&h=400&fit=crop&crop=center"]
-    },
-    {
-      id: 6,
-      name: "خيار",
-      units: [{ name: "كيلو", price: 0.600 }],
-      quantity: 150,
-      active: true,
-      category: "خضار",
-      images: ["https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=400&h=400&fit=crop&crop=center"]
-    }
-  ];
+  // لا يوجد منتجات افتراضية إطلاقاً، جميع المنتجات تأتي من Firebase فقط
 
   const fetchProducts = async () => {
     if (typeof window !== "undefined") {
@@ -309,11 +254,11 @@ export default function Home() {
             }
           }
         }
-        // إذا لم تنجح العملية، عرض المنتجات الافتراضية فقط للعرض المؤقت
-        setProducts(defaultProducts);
+        // إذا لم تنجح العملية، لا تعرض أي منتجات إطلاقاً
+        setProducts([]);
       } catch (error) {
-        // في حالة الخطأ، عرض المنتجات الافتراضية فقط للعرض المؤقت
-        setProducts(defaultProducts);
+        // في حالة الخطأ، لا تعرض أي منتجات إطلاقاً
+        setProducts([]);
       }
     }
   };
@@ -410,56 +355,34 @@ export default function Home() {
   // دالة لجلب التصنيفات
   const fetchCategories = async () => {
     if (typeof window !== 'undefined') {
-      // جلب من localStorage أولاً
-      const stored = window.localStorage.getItem('cateringCategories');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          const simplifiedCategories = parsed.map((cat: CateringCategory) => ({
-            id: cat.id,
-            name: cat.name
-          }));
-          setCategories(simplifiedCategories);
-          return;
-        } catch {
-          // استمر للمحاولة من Firebase
-        }
-      }
+      // جلب التصنيفات من Firebase فقط
+      try {
+        const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
+        const firebaseSuccess = await loadAllDataFromFirebase();
 
-      // إذا لم تكن هناك تصنيفات محلية، حاول تحميل من Firebase
-      console.log('لا توجد تصنيفات محلية، جاري التحميل من Firebase...');
-      const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
-      const firebaseSuccess = await loadAllDataFromFirebase();
-
-      if (firebaseSuccess) {
-        // إعادة جلب من localStorage بعد التحميل من Firebase
-        const updatedCategories = window.localStorage.getItem('cateringCategories');
-        if (updatedCategories) {
-          try {
-            const parsed = JSON.parse(updatedCategories);
-            const simplifiedCategories = parsed.map((cat: CateringCategory) => ({
-              id: cat.id,
-              name: cat.name
-            }));
-            setCategories(simplifiedCategories);
-            return;
-          } catch {
-            // استمر لاستخدام البيانات الافتراضية
+        if (firebaseSuccess) {
+          // إعادة جلب من localStorage بعد التحميل من Firebase
+          const updatedCategories = window.localStorage.getItem('cateringCategories');
+          if (updatedCategories) {
+            try {
+              const parsed = JSON.parse(updatedCategories);
+              const simplifiedCategories = parsed.map((cat: CateringCategory) => ({
+                id: cat.id,
+                name: cat.name
+              }));
+              setCategories(simplifiedCategories);
+              return;
+            } catch {
+              // فشل في قراءة التصنيفات من Firebase
+            }
           }
         }
+        // إذا لم تنجح العملية، لا تعرض أي تصنيفات إطلاقاً
+        setCategories([]);
+      } catch (error) {
+        // في حالة الخطأ، لا تعرض أي تصنيفات إطلاقاً
+        setCategories([]);
       }
-
-      // استخدام البيانات الافتراضية فقط كحل أخير
-      console.log('⚠️ لا توجد تصنيفات متاحة، استخدام التصنيفات الافتراضية...');
-      const defaultCategories = [
-        { id: 1, name: "فواكه", products: [], image: undefined },
-        { id: 2, name: "خضار", products: [], image: undefined },
-        { id: 3, name: "ورقيات", products: [], image: undefined },
-        { id: 4, name: "سلات الفواكه", products: [], image: undefined },
-      ];
-      window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
-      setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
-      // لا ترفع التصنيفات الافتراضية إلى Firebase تلقائياً
     }
   };
   
@@ -489,7 +412,6 @@ export default function Home() {
                 try {
                   const firebaseSuccess = await loadAllDataFromFirebase();
                   if (firebaseSuccess) {
-                    // إذا كانت هناك بيانات أحدث في Firebase، حدث الواجهة
                     await fetchProducts();
                     await fetchCategories();
                     console.log('✅ تم تحديث البيانات من Firebase');
@@ -497,7 +419,7 @@ export default function Home() {
                 } catch (error) {
                   console.warn('⚠️ تعذر التحقق من التحديثات في Firebase:', error);
                 }
-              }, 3000); // تأخير لتجنب التداخل
+              }, 3000);
 
             } else {
               // لا توجد بيانات محلية، تحميل من Firebase
@@ -505,33 +427,14 @@ export default function Home() {
               const firebaseSuccess = await loadAllDataFromFirebase();
 
               if (firebaseSuccess) {
-                // مزامنة الصور بعد تحميل البيانات
                 await syncProductImages();
-
-                // تحديث الواجهة
                 await fetchProducts();
                 await fetchCategories();
-
                 console.log('✅ تم تحميل البيانات من Firebase بنجاح');
               } else {
-                // فشل في التحميل من Firebase، استخدام البيانات الافتراضية
-                console.log('⚠️ فشل في التحميل من Firebase، استخدام البيانات الافتراضية...');
-                setProducts(defaultProducts);
-                window.localStorage.setItem('products', JSON.stringify(defaultProducts));
-
-                const defaultCategories = [
-                  { id: 1, name: "فواكه", products: [], image: undefined },
-                  { id: 2, name: "خضار", products: [], image: undefined },
-                  { id: 3, name: "ورقيات", products: [], image: undefined },
-                  { id: 4, name: "سلات الفواكه", products: [], image: undefined },
-                ];
-                window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
-                setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
-
-                // حفظ البيانات الافتراضية في Firebase
-                setTimeout(() => {
-                  syncAllDataToFirebase();
-                }, 1000);
+                // فشل في التحميل من Firebase، لا تعرض أي منتجات أو تصنيفات إطلاقاً
+                setProducts([]);
+                setCategories([]);
               }
             }
 
@@ -550,15 +453,8 @@ export default function Home() {
 
           } catch (error) {
             console.error('❌ خطأ في تحميل البيانات:', error);
-            // في حالة الخطأ، استخدم البيانات الافتراضية
-            setProducts(defaultProducts);
-            const defaultCategories = [
-              { id: 1, name: "فواكه", products: [], image: undefined },
-              { id: 2, name: "خضار", products: [], image: undefined },
-              { id: 3, name: "ورقيات", products: [], image: undefined },
-              { id: 4, name: "سلات الفواكه", products: [], image: undefined },
-            ];
-            setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
+            setProducts([]);
+            setCategories([]);
           }
         };
         
@@ -633,15 +529,12 @@ export default function Home() {
                   fetchProducts();
                   fetchCategories();
                 } else {
-                  // استخدم البيانات الافتراضية
-                  setProducts(defaultProducts);
-                  window.localStorage.setItem('products', JSON.stringify(defaultProducts));
+                  setProducts([]);
                 }
               });
             } else {
               fetchProducts();
             }
-            // مزامنة مع Firebase عند تغيير المنتجات
             syncAllDataToFirebase();
           }
           if (e.key === "siteLogo") {
@@ -703,14 +596,11 @@ export default function Home() {
 
   // تجميع المنتجات حسب التصنيف
   const grouped: Record<string, Product[]> = {};
-  (products.length > 0 ? products : defaultProducts).forEach((product) => {
+  products.forEach((product) => {
     if (!product.active) return;
-    
-    // إضافة المنتج لجميع التصنيفات المختارة
     const productCategories = product.categories || [product.category];
     productCategories.forEach(categoryName => {
       if (!grouped[categoryName]) grouped[categoryName] = [];
-      // تجنب التكرار
       if (!grouped[categoryName].find(p => p.id === product.id)) {
         grouped[categoryName].push(product);
       }
