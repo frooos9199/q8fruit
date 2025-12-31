@@ -678,18 +678,6 @@ export default function Home() {
           )}
         </div>
         <div className="flex items-center gap-1 sm:gap-3">
-          {/* زر إعادة تحميل البيانات للموبايل */}
-          <button
-            onClick={handleForceReload}
-            disabled={dataLoading}
-            className="p-2 sm:p-3 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation lg:hidden"
-            title="إعادة تحميل البيانات"
-          >
-            <svg width="18" height="18" className={`${dataLoading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24">
-              <path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-          
           {/* زر الإدارة يظهر فقط للأدمن */}
           {isAdmin && (
             <Link href="/admin" className="px-2 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 text-white font-bold text-xs sm:text-sm hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation">
