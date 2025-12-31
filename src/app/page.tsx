@@ -270,22 +270,10 @@ export default function Home() {
 
   const fetchProducts = async () => {
     if (typeof window !== "undefined") {
-      // التحقق من اكتمال البيانات أولاً
-      if (!checkDataCompleteness()) {
-        console.log('البيانات غير مكتملة، جاري إعادة التحميل...');
-        const success = await retryDataLoad();
-        if (!success) {
-          // استخدام البيانات الافتراضية كحل أخير
-          setProducts(defaultProducts);
-          window.localStorage.setItem('products', JSON.stringify(defaultProducts));
-          await syncAllDataToFirebase();
-          return;
-        }
-      }
-      
-      // جلب من localStorage بعد التأكد من اكتمال البيانات
+      // جلب من localStorage أولاً
       const storedProducts = window.localStorage.getItem("products");
       let safeProducts: Product[] = [];
+
       if (storedProducts) {
         try {
           const parsed = JSON.parse(storedProducts);
@@ -311,15 +299,63 @@ export default function Home() {
           safeProducts = [];
         }
       }
-      
-      // إذا لم يوجد أي منتج، استخدم الافتراضي ومزامنه مع Firebase
-      if (!safeProducts || safeProducts.length === 0) {
-        setProducts(defaultProducts);
-        window.localStorage.setItem('products', JSON.stringify(defaultProducts));
-        await syncAllDataToFirebase();
-      } else {
+
+      // إذا كانت هناك منتجات في localStorage، استخدمها
+      if (safeProducts && safeProducts.length > 0) {
         setProducts(safeProducts);
+        return;
       }
+
+      // إذا لم تكن هناك منتجات في localStorage، حاول تحميل من Firebase
+      console.log('لا توجد منتجات محلية، جاري التحميل من Firebase...');
+      const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
+      const firebaseSuccess = await loadAllDataFromFirebase();
+
+      if (firebaseSuccess) {
+        // إعادة جلب من localStorage بعد التحميل من Firebase
+        const updatedProducts = window.localStorage.getItem("products");
+        if (updatedProducts) {
+          try {
+            const parsed = JSON.parse(updatedProducts);
+            const firebaseProducts = Array.isArray(parsed)
+              ? parsed.filter(
+                  (p) =>
+                    typeof p === "object" &&
+                    typeof p.id === "number" &&
+                    typeof p.name === "string" &&
+                    Array.isArray(p.units) &&
+                    p.units.every(
+                      (u: Unit) =>
+                        typeof u === "object" &&
+                        typeof u.name === "string" &&
+                        typeof u.price === "number"
+                    ) &&
+                    typeof p.quantity === "number" &&
+                    typeof p.active === "boolean" &&
+                    typeof p.category === "string"
+                )
+              : [];
+
+            if (firebaseProducts.length > 0) {
+              setProducts(firebaseProducts);
+              return;
+            }
+          } catch {
+            // استمر لاستخدام البيانات الافتراضية
+          }
+        }
+      }
+
+      // استخدام البيانات الافتراضية فقط كحل أخير إذا لم يكن هناك أي بيانات على الإطلاق
+      console.log('⚠️ لا توجد بيانات متاحة، استخدام البيانات الافتراضية...');
+      setProducts(defaultProducts);
+      window.localStorage.setItem('products', JSON.stringify(defaultProducts));
+
+      // حفظ البيانات الافتراضية في Firebase في الخلفية
+      setTimeout(async () => {
+        const { syncAllDataToFirebase } = await import('../lib/firebaseSync');
+        await syncAllDataToFirebase();
+      }, 1000);
     }
   };
 
@@ -415,11 +451,7 @@ export default function Home() {
   // دالة لجلب التصنيفات
   const fetchCategories = async () => {
     if (typeof window !== 'undefined') {
-      // التحقق من اكتمال البيانات
-      if (!checkDataCompleteness()) {
-        await retryDataLoad();
-      }
-      
+      // جلب من localStorage أولاً
       const stored = window.localStorage.getItem('cateringCategories');
       if (stored) {
         try {
@@ -429,28 +461,51 @@ export default function Home() {
             name: cat.name
           }));
           setCategories(simplifiedCategories);
+          return;
         } catch {
-          const defaultCategories = [
-            { id: 1, name: "فواكه", products: [], image: undefined },
-            { id: 2, name: "خضار", products: [], image: undefined },
-            { id: 3, name: "ورقيات", products: [], image: undefined },
-            { id: 4, name: "سلات الفواكه", products: [], image: undefined },
-          ];
-          window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
-          syncAllDataToFirebase();
-          setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
+          // استمر للمحاولة من Firebase
         }
-      } else {
-        const defaultCategories = [
-          { id: 1, name: "فواكه", products: [], image: undefined },
-          { id: 2, name: "خضار", products: [], image: undefined },
-          { id: 3, name: "ورقيات", products: [], image: undefined },
-          { id: 4, name: "سلات الفواكه", products: [], image: undefined },
-        ];
-        window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
-        syncAllDataToFirebase();
-        setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
       }
+
+      // إذا لم تكن هناك تصنيفات محلية، حاول تحميل من Firebase
+      console.log('لا توجد تصنيفات محلية، جاري التحميل من Firebase...');
+      const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
+      const firebaseSuccess = await loadAllDataFromFirebase();
+
+      if (firebaseSuccess) {
+        // إعادة جلب من localStorage بعد التحميل من Firebase
+        const updatedCategories = window.localStorage.getItem('cateringCategories');
+        if (updatedCategories) {
+          try {
+            const parsed = JSON.parse(updatedCategories);
+            const simplifiedCategories = parsed.map((cat: CateringCategory) => ({
+              id: cat.id,
+              name: cat.name
+            }));
+            setCategories(simplifiedCategories);
+            return;
+          } catch {
+            // استمر لاستخدام البيانات الافتراضية
+          }
+        }
+      }
+
+      // استخدام البيانات الافتراضية فقط كحل أخير
+      console.log('⚠️ لا توجد تصنيفات متاحة، استخدام التصنيفات الافتراضية...');
+      const defaultCategories = [
+        { id: 1, name: "فواكه", products: [], image: undefined },
+        { id: 2, name: "خضار", products: [], image: undefined },
+        { id: 3, name: "ورقيات", products: [], image: undefined },
+        { id: 4, name: "سلات الفواكه", products: [], image: undefined },
+      ];
+      window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
+      setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
+
+      // حفظ البيانات الافتراضية في Firebase في الخلفية
+      setTimeout(async () => {
+        const { syncAllDataToFirebase } = await import('../lib/firebaseSync');
+        await syncAllDataToFirebase();
+      }, 1000);
     }
   };
   
@@ -466,9 +521,10 @@ export default function Home() {
             console.log('🔄 بدء تحميل البيانات...');
 
             // التحقق من وجود بيانات محلية أولاً
-            const hasLocalData = checkDataCompleteness();
+            const hasLocalProducts = window.localStorage.getItem('products');
+            const hasLocalCategories = window.localStorage.getItem('cateringCategories');
 
-            if (hasLocalData) {
+            if (hasLocalProducts && hasLocalCategories) {
               // استخدام البيانات المحلية أولاً (أسرع وأكثر موثوقية)
               console.log('✅ البيانات المحلية متوفرة، جاري تحديث الواجهة...');
               await fetchProducts();
