@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧹 تنظيف localStorage</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #fef3c7; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { color: #d97706; text-align: center; margin-bottom: 30px; }
+        .warning { background: #fef3c7; border: 2px solid #fbbf24; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        button { padding: 15px 30px; margin: 10px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; }
+        .danger-btn { background: #dc2626; color: white; }
+        .danger-btn:hover { background: #b91c1c; }
+        .safe-btn { background: #059669; color: white; }
+        .safe-btn:hover { background: #047857; }
+        .info-btn { background: #3b82f6; color: white; }
+        .info-btn:hover { background: #2563eb; }
+        .message { padding: 15px; border-radius: 8px; margin: 10px 0; font-weight: bold; text-align: center; }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fef2f2; color: #dc2626; }
+        .info { background: #dbeafe; color: #1d4ed8; }
+        .data-box { background: #f9fafb; border: 2px solid #e5e7eb; padding: 15px; border-radius: 8px; margin: 10px 0; font-family: monospace; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 تنظيف localStorage</h1>
+        
+        <div class="warning">
+            <h2>⚠️ المشكلة:</h2>
+            <p>localStorage يحتوي على منتجات قديمة تتداخل مع Firebase</p>
+        </div>
+        
+        <div id="message"></div>
+        
+        <button class="info-btn" onclick="checkData()">📊 فحص البيانات الحالية</button>
+        <div id="currentProducts" class="data-box"></div>
+        
+        <button class="safe-btn" onclick="backupData()">💾 تحميل نسخة احتياطية</button>
+        <button class="danger-btn" onclick="clearData()">🗑️ مسح localStorage</button>
+        <button class="info-btn" onclick="reloadPage()">🔄 إعادة تحميل الصفحة</button>
+    </div>
+
+    <script>
+        function showMessage(text, type = 'info') {
+            document.getElementById('message').innerHTML = `<div class="message ${type}">${text}</div>`;
+        }
+
+        function checkData() {
+            const products = localStorage.getItem('products');
+            const div = document.getElementById('currentProducts');
+            
+            if (products) {
+                const parsed = JSON.parse(products);
+                div.innerHTML = `<strong>عدد المنتجات: ${parsed.length}</strong><br><br>${parsed.map(p => `• ${p.name} (ID: ${p.id})`).join('<br>')}`;
+                showMessage(`📊 يوجد ${parsed.length} منتج في localStorage`, 'info');
+            } else {
+                div.innerHTML = 'لا توجد منتجات في localStorage';
+                showMessage('✅ localStorage فارغ', 'success');
+            }
+        }
+
+        function backupData() {
+            const products = localStorage.getItem('products');
+            if (products) {
+                const backup = {
+                    products: JSON.parse(products),
+                    timestamp: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `backup-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                showMessage('✅ تم تحميل النسخة الاحتياطية!', 'success');
+            } else {
+                showMessage('❌ لا توجد بيانات للنسخ', 'error');
+            }
+        }
+
+        function clearData() {
+            if (confirm('⚠️ هل أنت متأكد من مسح localStorage؟')) {
+                localStorage.removeItem('products');
+                localStorage.removeItem('categories');
+                localStorage.removeItem('cateringCategories');
+                
+                showMessage('✅ تم مسح localStorage! أعد تحميل الصفحة.', 'success');
+                checkData();
+            }
+        }
+
+        function reloadPage() {
+            window.location.reload();
+        }
+
+        // فحص تلقائي
+        window.onload = function() {
+            checkData();
+            showMessage('🧹 صفحة التنظيف جاهزة', 'info');
+        };
+    </script>
+</body>
+</html>

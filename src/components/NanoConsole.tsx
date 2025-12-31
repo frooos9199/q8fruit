@@ -1,6 +1,28 @@
 "use client";
 import { useState, useEffect } from 'react';
 
+interface Product {
+  name: string;
+  active: boolean;
+}
+
+interface User {
+  name: string;
+  email: string;
+}
+
+interface Order {
+  id: string;
+  customer: string;
+  total: number;
+}
+
+declare global {
+  interface Window {
+    addFruitProducts?: () => void;
+  }
+}
+
 export default function NanoConsole() {
   const [isOpen, setIsOpen] = useState(false);
   const [command, setCommand] = useState('');
@@ -13,12 +35,12 @@ export default function NanoConsole() {
     help: () => 'الأوامر المتاحة:\n- clear: مسح الشاشة\n- products: عرض المنتجات\n- addproducts: إضافة منتجات الفواكه\n- clearproducts: مسح جميع المنتجات\n- users: عرض المستخدمين\n- orders: عرض الطلبات\n- admin: تفعيل وضع الإدارة\n- reload: إعادة تحميل الصفحة',
     clear: () => { setOutput([]); return ''; },
     products: () => {
-      const products = JSON.parse(localStorage.getItem('products') || '[]');
-      return `عدد المنتجات: ${products.length}\n${products.map((p: any) => `- ${p.name} (${p.active ? 'مفعل' : 'معطل'})`).join('\n')}`;
+      const products: Product[] = JSON.parse(localStorage.getItem('products') || '[]');
+      return `عدد المنتجات: ${products.length}\n${products.map((p) => `- ${p.name} (${p.active ? 'مفعل' : 'معطل'})`).join('\n')}`;
     },
     addproducts: () => {
-      if (typeof (window as any).addFruitProducts === 'function') {
-        (window as any).addFruitProducts();
+      if (typeof window.addFruitProducts === 'function') {
+        window.addFruitProducts();
         return 'تم إضافة منتجات الفواكه!';
       }
       return 'خطأ: دالة إضافة المنتجات غير متاحة';
@@ -28,12 +50,12 @@ export default function NanoConsole() {
       return 'تم مسح جميع المنتجات';
     },
     users: () => {
-      const users = JSON.parse(localStorage.getItem('users') || '[]');
-      return `عدد المستخدمين: ${users.length}\n${users.map((u: any) => `- ${u.name} (${u.email})`).join('\n')}`;
+      const users: User[] = JSON.parse(localStorage.getItem('users') || '[]');
+      return `عدد المستخدمين: ${users.length}\n${users.map((u) => `- ${u.name} (${u.email})`).join('\n')}`;
     },
     orders: () => {
-      const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-      return `عدد الطلبات: ${orders.length}\n${orders.map((o: any) => `- طلب #${o.id} - ${o.customer} - ${o.total} د.ك`).join('\n')}`;
+      const orders: Order[] = JSON.parse(localStorage.getItem('orders') || '[]');
+      return `عدد الطلبات: ${orders.length}\n${orders.map((o) => `- طلب #${o.id} - ${o.customer} - ${o.total} د.ك`).join('\n')}`;
     },
     admin: () => {
       localStorage.setItem('isAdmin', 'true');
@@ -138,7 +160,7 @@ export default function NanoConsole() {
 
         {/* Output */}
         <div className="h-80 overflow-y-auto p-2 space-y-1">
-          <div className="text-green-300">مرحباً بك في Q8 Fruit Console! اكتب "help" لعرض الأوامر المتاحة.</div>
+          <div className="text-green-300">مرحباً بك في Q8 Fruit Console! اكتب &quot;help&quot; لعرض الأوامر المتاحة.</div>
           {output.map((line, index) => (
             <div key={index} className={line.startsWith('>') ? 'text-yellow-400' : 'text-green-400'}>
               {line}

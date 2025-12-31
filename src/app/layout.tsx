@@ -17,14 +17,15 @@ export const metadata: Metadata = {
   description: "متجرك المفضل للفواكه والخضار الطازجة في الكويت. جودة عالية وأسعار منافسة مع خدمة توصيل سريعة",
   keywords: "فواكه، خضار، الكويت، توصيل، طازج، صحي",
   authors: [{ name: "NexDev" }],
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    maximumScale: 1,
-    userScalable: false,
-  },
   themeColor: "#10b981",
   manifest: "/manifest.json",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({

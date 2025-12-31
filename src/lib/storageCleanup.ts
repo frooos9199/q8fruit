@@ -4,7 +4,7 @@ import { ref, deleteObject, listAll } from 'firebase/storage';
 // حذف جميع الصور القديمة من Firebase Storage
 export const cleanupOldImages = async () => {
   try {
-    const imagesRef = ref(storage, 'products');
+    const imagesRef = ref(storage!, 'products');
     const imagesList = await listAll(imagesRef);
     
     // حذف جميع الصور الموجودة
@@ -22,7 +22,7 @@ export const cleanupOldImages = async () => {
 // حذف صورة محددة من Firebase Storage
 export const deleteImageFromStorage = async (imagePath: string) => {
   try {
-    const imageRef = ref(storage, imagePath);
+    const imageRef = ref(storage!, imagePath);
     await deleteObject(imageRef);
     console.log(`تم حذف الصورة: ${imagePath}`);
     return true;

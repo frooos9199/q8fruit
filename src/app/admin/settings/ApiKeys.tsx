@@ -13,20 +13,19 @@ const defaultKeys = [
 ];
 
 export default function ApiKeysSettings() {
-  const [fields, setFields] = useState(defaultKeys);
-  const [saved, setSaved] = useState(false);
-
-  useEffect(() => {
+  const [fields, setFields] = useState(() => {
     if (typeof window !== "undefined") {
       const stored = window.localStorage.getItem("apiKeys");
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) setFields(parsed);
+          if (Array.isArray(parsed)) return parsed;
         } catch {}
       }
     }
-  }, []);
+    return defaultKeys;
+  });
+  const [saved, setSaved] = useState(false);
 
   const handleChange = (idx: number, value: string) => {
     setFields((prev) => prev.map((f, i) => (i === idx ? { ...f, value } : f)));

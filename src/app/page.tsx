@@ -1,14 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import OptimizedImage from "../components/OptimizedImage";
-import { useImagePreloader } from "../lib/imageOptimization";
 import { syncData, checkCompatibility } from "../lib/dataSync";
 import { 
   loadAllDataFromFirebase, 
   syncAllDataToFirebase
 } from "../lib/firebaseSync";
 import { forceLoadAllData, checkDataCompleteness, retryDataLoad } from "../lib/forceSync";
+import DataStatusIndicator from "../components/DataStatusIndicator";
 import { syncProductImages, fullImageSync } from "../lib/imageSync";
 
 // تعريفات TypeScript أعلى الملف
@@ -22,7 +21,18 @@ interface Product {
   image?: string; // دعم خلفي للصورة القديمة
   category: string;
   categories?: string[]; // تصنيفات متعددة
-  order?: number; // ترتيب المنتج
+}
+
+interface Unit {
+  name: string;
+  price: number;
+}
+
+interface CateringCategory {
+  id: number;
+  name: string;
+  products?: string[];
+  image?: string;
 }
 
 interface ProductCardProps {
@@ -83,8 +93,6 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
         }, 150); // مدة التلاشي
       }, 3000); // كل 3 ثواني
       return () => clearInterval(interval);
-    } else {
-      setImgIdx(0);
     }
   }, [product.images]);
 
@@ -92,15 +100,13 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
     <div
       className={`bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 flex flex-col items-stretch border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl group backdrop-blur-sm`}
     >
-  <div className={`relative aspect-square ${small ? 'w-full' : 'w-40'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center`}>
-        {/* صورة المنتج */}
+      <div className={`${small ? 'w-full h-32 xs:h-36 sm:h-40 mb-2 sm:mb-3' : 'w-40 h-40 mb-4'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center relative`}>
         {product.images && product.images.length > 0 ? (
-          <OptimizedImage
+          <img
             src={product.images[imgIdx]}
             alt={product.name}
-            size="small"
-            className={`block absolute inset-0 w-full h-full object-cover transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
-            style={{ transition: 'opacity 0.3s, transform 0.5s', verticalAlign: 'bottom' }}
+            className={`absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl group-hover:scale-105 transition-all duration-500 ${fade ? 'opacity-100' : 'opacity-0'}`}
+            style={{ transition: 'opacity 0.3s, transform 0.5s', objectPosition: 'center' }}
             onError={(e) => {
               // في حالة فشل تحميل الصورة، جرب الصورة القديمة
               if (product.image) {
@@ -109,12 +115,11 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
             }}
           />
         ) : product.image ? (
-          <OptimizedImage 
+          <img 
             src={product.image} 
-            alt={product.name}
-            size="small" 
-            className="block absolute inset-0 w-full h-full object-cover transition-all duration-500" 
-            style={{ objectPosition: 'center', verticalAlign: 'bottom' }}
+            alt={product.name} 
+            className="absolute inset-0 w-full h-full object-cover object-center rounded-xl sm:rounded-2xl group-hover:scale-105 transition-all duration-500" 
+            style={{ objectPosition: 'center' }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-gray-400">
@@ -293,7 +298,7 @@ export default function Home() {
                   typeof p.name === "string" &&
                   Array.isArray(p.units) &&
                   p.units.every(
-                    (u: any) =>
+                    (u: Unit) =>
                       typeof u === "object" &&
                       typeof u.name === "string" &&
                       typeof u.price === "number"
@@ -310,14 +315,11 @@ export default function Home() {
       
       // إذا لم يوجد أي منتج، استخدم الافتراضي ومزامنه مع Firebase
       if (!safeProducts || safeProducts.length === 0) {
-        const defaultWithOrder = defaultProducts.map((p, index) => ({ ...p, order: index }));
-        setProducts(defaultWithOrder);
-        window.localStorage.setItem('products', JSON.stringify(defaultWithOrder));
+        setProducts(defaultProducts);
+        window.localStorage.setItem('products', JSON.stringify(defaultProducts));
         await syncAllDataToFirebase();
       } else {
-        // ترتيب المنتجات حسب order
-        const sortedProducts = safeProducts.sort((a, b) => (a.order || 0) - (b.order || 0));
-        setProducts(sortedProducts);
+        setProducts(safeProducts);
       }
     }
   };
@@ -368,31 +370,48 @@ export default function Home() {
   // دالة إعادة تحميل البيانات يدوياً
   const handleForceReload = async () => {
     setDataLoading(true);
-    
-    // مزامنة شاملة للبيانات والصور
-    const dataSuccess = await forceLoadAllData();
-    const imageSuccess = await fullImageSync();
-    
-    if (dataSuccess || imageSuccess) {
+
+    try {
+      console.log('🔄 بدء إعادة تحميل البيانات...');
+
+      // 1. جلب من Firebase أولاً
+      const dataSuccess = await loadAllDataFromFirebase();
+
+      if (dataSuccess) {
+        // 2. مزامنة الصور
+        await syncProductImages();
+
+        // 3. تحديث الواجهة
+        await fetchProducts();
+        await fetchCategories();
+
+        // 4. مزامنة مع Firebase في الخلفية (بدون تداخل)
+        setTimeout(() => {
+          syncAllDataToFirebase().then(() => {
+            console.log('✅ تم مزامنة البيانات مع Firebase');
+          });
+        }, 2000); // تأخير لتجنب التداخل
+
+        console.log('✅ تم إعادة تحميل البيانات بنجاح');
+      } else {
+        console.error('❌ فشل في إعادة تحميل البيانات من Firebase');
+        // في حالة الخطأ، أعد تحميل من localStorage
+        await fetchProducts();
+        await fetchCategories();
+      }
+    } catch (error) {
+      console.error('❌ خطأ في إعادة تحميل البيانات:', error);
+      // في حالة الخطأ، أعد تحميل من localStorage
       await fetchProducts();
       await fetchCategories();
     }
-    
+
     setDataLoading(false);
   };
   
   const [cartCount, setCartCount] = useState(0);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
-  
-  // تحميل مسبق للصور المهمة
-  const importantImages = [
-    logo,
-    ...banners.slice(0, 1), // أول بانر فقط
-    ...products.slice(0, 8).flatMap(p => p.images?.[0] ? [p.images[0]] : p.image ? [p.image] : []) // أول 8 منتجات
-  ].filter(Boolean) as string[];
-  
-  const loadedImages = useImagePreloader(importantImages);
   
   // دالة لجلب التصنيفات
   const fetchCategories = async () => {
@@ -406,7 +425,7 @@ export default function Home() {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          const simplifiedCategories = parsed.map((cat: any) => ({
+          const simplifiedCategories = parsed.map((cat: CateringCategory) => ({
             id: cat.id,
             name: cat.name
           }));
@@ -442,21 +461,99 @@ export default function Home() {
       const cleanup = syncData();
       
       if (typeof window !== "undefined") {
-        // مزامنة فورية مع Firebase عند تحميل الصفحة
-        syncAllDataToFirebase().then(() => {
-          console.log('✅ تم مزامنة البيانات مع Firebase');
-        });
+        // تسلسل تحميل البيانات بشكل صحيح
+        const loadDataSequentially = async () => {
+          try {
+            console.log('🔄 بدء تحميل البيانات...');
+
+            // التحقق من وجود بيانات محلية أولاً
+            const hasLocalData = checkDataCompleteness();
+
+            if (hasLocalData) {
+              // استخدام البيانات المحلية أولاً (أسرع وأكثر موثوقية)
+              console.log('✅ البيانات المحلية متوفرة، جاري تحديث الواجهة...');
+              await fetchProducts();
+              await fetchCategories();
+
+              // مزامنة مع Firebase في الخلفية فقط للتحقق من التحديثات
+              setTimeout(async () => {
+                try {
+                  const firebaseSuccess = await loadAllDataFromFirebase();
+                  if (firebaseSuccess) {
+                    // إذا كانت هناك بيانات أحدث في Firebase، حدث الواجهة
+                    await fetchProducts();
+                    await fetchCategories();
+                    console.log('✅ تم تحديث البيانات من Firebase');
+                  }
+                } catch (error) {
+                  console.warn('⚠️ تعذر التحقق من التحديثات في Firebase:', error);
+                }
+              }, 3000); // تأخير لتجنب التداخل
+
+            } else {
+              // لا توجد بيانات محلية، تحميل من Firebase
+              console.log('📱 لا توجد بيانات محلية، جاري التحميل من Firebase...');
+              const firebaseSuccess = await loadAllDataFromFirebase();
+
+              if (firebaseSuccess) {
+                // مزامنة الصور بعد تحميل البيانات
+                await syncProductImages();
+
+                // تحديث الواجهة
+                await fetchProducts();
+                await fetchCategories();
+
+                console.log('✅ تم تحميل البيانات من Firebase بنجاح');
+              } else {
+                // فشل في التحميل من Firebase، استخدام البيانات الافتراضية
+                console.log('⚠️ فشل في التحميل من Firebase، استخدام البيانات الافتراضية...');
+                setProducts(defaultProducts);
+                window.localStorage.setItem('products', JSON.stringify(defaultProducts));
+
+                const defaultCategories = [
+                  { id: 1, name: "فواكه", products: [], image: undefined },
+                  { id: 2, name: "خضار", products: [], image: undefined },
+                  { id: 3, name: "ورقيات", products: [], image: undefined },
+                  { id: 4, name: "سلات الفواكه", products: [], image: undefined },
+                ];
+                window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
+                setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
+
+                // حفظ البيانات الافتراضية في Firebase
+                setTimeout(() => {
+                  syncAllDataToFirebase();
+                }, 1000);
+              }
+            }
+
+            // تحديث الشعار والبنرات
+            const storedLogo = window.localStorage.getItem("siteLogo");
+            if (storedLogo) setLogo(storedLogo);
+
+            const storedBanners = window.localStorage.getItem("banners");
+            if (storedBanners) {
+              try {
+                setBanners(JSON.parse(storedBanners));
+              } catch {
+                setBanners([]);
+              }
+            }
+
+          } catch (error) {
+            console.error('❌ خطأ في تحميل البيانات:', error);
+            // في حالة الخطأ، استخدم البيانات الافتراضية
+            setProducts(defaultProducts);
+            const defaultCategories = [
+              { id: 1, name: "فواكه", products: [], image: undefined },
+              { id: 2, name: "خضار", products: [], image: undefined },
+              { id: 3, name: "ورقيات", products: [], image: undefined },
+              { id: 4, name: "سلات الفواكه", products: [], image: undefined },
+            ];
+            setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
+          }
+        };
         
-        // جلب من Firebase للموبايل والديسكتوب
-        loadAllDataFromFirebase().then(async () => {
-          // مزامنة الصور بعد تحميل البيانات
-          await syncProductImages();
-          
-          const storedLogo = window.localStorage.getItem("siteLogo");
-          if (storedLogo) setLogo(storedLogo);
-          fetchProducts();
-          fetchCategories();
-        });
+        loadDataSequentially();
         
         // تحقق من حالة الأدمن
         setIsAdmin(window.localStorage.getItem("isAdmin") === "true");
@@ -598,6 +695,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-slate-900 dark:via-blue-900 dark:to-green-900 font-sans">
+      {/* مؤشر حالة البيانات */}
+      <DataStatusIndicator />
       {/* رسالة ترحيبية */}
       {currentUser?.name && (
         <div className="w-full text-center py-3 sm:py-4 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold text-sm sm:text-lg shadow-lg">
@@ -656,7 +755,7 @@ export default function Home() {
         <div className="flex-1 flex justify-center">
           {logo ? (
             <div className="relative">
-              <OptimizedImage src={logo} alt="شعار الموقع" size="small" className="w-10 h-10 sm:w-16 sm:h-16 object-contain rounded-full shadow-xl border-2 sm:border-4 border-white bg-white" />
+              <img src={logo} alt="شعار الموقع" className="w-10 h-10 sm:w-16 sm:h-16 object-contain rounded-full shadow-xl border-2 sm:border-4 border-white bg-white" />
               <div className="absolute -inset-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-full blur opacity-25"></div>
             </div>
           ) : (
@@ -703,7 +802,7 @@ export default function Home() {
       {banners.length > 0 && (
         <div className="max-w-6xl mx-auto my-4 sm:my-12 px-2 sm:px-4">
           <div className="relative rounded-xl sm:rounded-3xl overflow-hidden shadow-2xl">
-            <OptimizedImage src={banners[0]} alt="بانر رئيسي" size="large" className="w-full h-28 sm:h-40 md:h-56 object-cover object-center" />
+            <img src={banners[0]} alt="بانر رئيسي" className="w-full h-28 sm:h-40 md:h-56 object-cover object-center" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent"></div>
             <div className="absolute bottom-2 sm:bottom-4 left-2 sm:left-4 text-white">
               <h2 className="text-sm sm:text-xl md:text-2xl font-bold mb-1">أطيب الفواكه والخضار</h2>

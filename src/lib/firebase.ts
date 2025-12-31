@@ -19,37 +19,42 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app: FirebaseApp;
-let db: Firestore;
-let storage: FirebaseStorage;
-let auth: Auth;
+let app: FirebaseApp | null = null;
+let db: Firestore | null = null;
+let storage: FirebaseStorage | null = null;
+let auth: Auth | null = null;
 let analytics: Analytics | null = null;
 
 // تهيئة Firebase
 try {
-  app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-  db = getFirestore(app);
-  storage = getStorage(app);
-  auth = getAuth(app);
-  
-  // Analytics يعمل فقط في المتصفح
-  if (typeof window !== 'undefined') {
-    try {
-      analytics = getAnalytics(app);
-    } catch (analyticsError) {
-      console.warn('Analytics not available:', analyticsError);
-      analytics = null;
+  if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    db = getFirestore(app);
+    storage = getStorage(app);
+    auth = getAuth(app);
+    
+    // Analytics يعمل فقط في المتصفح
+    if (typeof window !== 'undefined') {
+      try {
+        analytics = getAnalytics(app);
+      } catch (analyticsError) {
+        console.warn('Analytics not available:', analyticsError);
+        analytics = null;
+      }
     }
   }
 } catch (error) {
   console.error('خطأ في تهيئة Firebase:', error);
-  throw error;
+  // لا نرمي الخطأ في بيئة الإنتاج
+  if (process.env.NODE_ENV === 'development') {
+    throw error;
+  }
 }
 
 export { app, db, storage, auth, analytics };
 
 // دوال مساعدة للتحقق من حالة Firebase
-export const isFirebaseInitialized = () => {
+export const isFirebaseInitialized = (): boolean => {
   return !!(app && db && storage && auth);
 };
 
@@ -57,5 +62,5 @@ export const getFirebaseServices = () => {
   if (!isFirebaseInitialized()) {
     throw new Error('Firebase غير مُهيأ بشكل صحيح');
   }
-  return { app, db, storage, auth, analytics };
+  return { app: app!, db: db!, storage: storage!, auth: auth!, analytics };
 };

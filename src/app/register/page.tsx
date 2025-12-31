@@ -40,8 +40,9 @@ export default function RegisterPage() {
       setTimeout(() => {
         router.push("/login");
       }, 2000);
-    } catch (error: any) {
-      setError(error.message || "حدث خطأ أثناء التسجيل");
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      setError(err.message || "حدث خطأ أثناء التسجيل");
     } finally {
       setLoading(false);
     }

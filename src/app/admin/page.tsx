@@ -4,6 +4,19 @@ import { syncAllDataToFirebase, loadAllDataFromFirebase } from "../../lib/fireba
 import { syncProductImages, fullImageSync } from "../../lib/imageSync";
 import { setupFirebaseData } from "../../lib/setupFirebase";
 
+interface Category {
+  name: string;
+  products?: string[];
+  image?: string;
+}
+
+interface Product {
+  id: number;
+  name: string;
+  category: string;
+  active: boolean;
+}
+
 export default function AdminDashboard() {
   const initialUsers = [
     { id: 1, name: "محمد أحمد", email: "mohamed@email.com", phone: "55512345", active: true, role: "عميل", password: "1234" },
@@ -213,8 +226,8 @@ export default function AdminDashboard() {
             const products = JSON.parse(storedProducts);
             
             // حساب المنتجات الفعلية لكل تصنيف
-            const details = categories.map((cat: any) => {
-              const actualProducts = products.filter((product: any) => 
+            const details = categories.map((cat: Category) => {
+              const actualProducts = products.filter((product: Product) => 
                 product.category === cat.name && product.active === true
               );
               return {

@@ -39,8 +39,9 @@ export default function LoginPage() {
       } else {
         router.push("/");
       }
-    } catch (error: any) {
-      setError(error.message || "حدث خطأ أثناء تسجيل الدخول");
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      setError(err.message || "حدث خطأ أثناء تسجيل الدخول");
     } finally {
       setLoading(false);
     }
@@ -59,8 +60,9 @@ export default function LoginPage() {
     try {
       await resetPassword(email.trim().toLowerCase());
       setResetSuccess(true);
-    } catch (error: any) {
-      setError(error.message || "حدث خطأ أثناء إرسال رابط الاستعادة");
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      setError(err.message || "حدث خطأ أثناء إرسال رابط الاستعادة");
     } finally {
       setLoading(false);
     }

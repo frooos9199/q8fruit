@@ -14,8 +14,13 @@ import {
 
 // مزامنة المنتجات مع Firebase (الموقع هو المصدر)
 export const syncProductsToFirebase = async (products: any[]) => {
+  if (!db) {
+    console.error('❌ Firebase db غير متاح');
+    return false;
+  }
+
   try {
-    const productsRef = collection(db, 'products');
+    const productsRef = collection(db!, 'products');
     
     // حذف جميع المنتجات القديمة من Firebase
     const existingDocs = await getDocs(productsRef);
@@ -50,7 +55,7 @@ export const syncProductsToFirebase = async (products: any[]) => {
 // جلب المنتجات من Firebase (فقط عند الحاجة للاستعادة)
 export const getProductsFromFirebase = async () => {
   try {
-    const productsRef = collection(db, 'products');
+    const productsRef = collection(db!, 'products');
     const q = query(productsRef, orderBy('id'));
     const snapshot = await getDocs(q);
     
@@ -72,7 +77,7 @@ export const getProductsFromFirebase = async () => {
 // مزامنة التصنيفات مع Firebase
 export const syncCategoriesToFirebase = async (categories: any[]) => {
   try {
-    await setDoc(doc(db, 'settings', 'categories'), {
+    await setDoc(doc(db!, 'settings', 'categories'), {
       categories,
       updatedAt: new Date().toISOString()
     });
@@ -88,7 +93,7 @@ export const syncCategoriesToFirebase = async (categories: any[]) => {
 // جلب التصنيفات من Firebase
 export const getCategoriesFromFirebase = async () => {
   try {
-    const docRef = doc(db, 'settings', 'categories');
+    const docRef = doc(db!, 'settings', 'categories');
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
@@ -104,7 +109,7 @@ export const getCategoriesFromFirebase = async () => {
 // مزامنة البانرات مع Firebase
 export const syncBannersToFirebase = async (banners: string[]) => {
   try {
-    await setDoc(doc(db, 'settings', 'banners'), {
+    await setDoc(doc(db!, 'settings', 'banners'), {
       banners,
       updatedAt: new Date().toISOString()
     });
@@ -120,7 +125,7 @@ export const syncBannersToFirebase = async (banners: string[]) => {
 // جلب البانرات من Firebase
 export const getBannersFromFirebase = async () => {
   try {
-    const docRef = doc(db, 'settings', 'banners');
+    const docRef = doc(db!, 'settings', 'banners');
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
@@ -136,7 +141,7 @@ export const getBannersFromFirebase = async () => {
 // مزامنة الشعار مع Firebase
 export const syncLogoToFirebase = async (logo: string) => {
   try {
-    await setDoc(doc(db, 'settings', 'logo'), {
+    await setDoc(doc(db!, 'settings', 'logo'), {
       logo,
       updatedAt: new Date().toISOString()
     });
@@ -152,7 +157,7 @@ export const syncLogoToFirebase = async (logo: string) => {
 // جلب الشعار من Firebase
 export const getLogoFromFirebase = async () => {
   try {
-    const docRef = doc(db, 'settings', 'logo');
+    const docRef = doc(db!, 'settings', 'logo');
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {
@@ -168,7 +173,7 @@ export const getLogoFromFirebase = async () => {
 // مزامنة المستخدمين مع Firebase
 export const syncUsersToFirebase = async (users: any[]) => {
   try {
-    const usersRef = collection(db, 'users');
+    const usersRef = collection(db!, 'users');
     
     for (const user of users) {
       await setDoc(doc(usersRef, user.id.toString()), {
@@ -188,7 +193,7 @@ export const syncUsersToFirebase = async (users: any[]) => {
 // جلب المستخدمين من Firebase
 export const getUsersFromFirebase = async () => {
   try {
-    const usersRef = collection(db, 'users');
+    const usersRef = collection(db!, 'users');
     const q = query(usersRef, orderBy('id'));
     const snapshot = await getDocs(q);
     
@@ -207,7 +212,7 @@ export const getUsersFromFirebase = async () => {
 // مزامنة الطلبات مع Firebase
 export const syncOrdersToFirebase = async (orders: any[]) => {
   try {
-    const ordersRef = collection(db, 'orders');
+    const ordersRef = collection(db!, 'orders');
     
     for (const order of orders) {
       await setDoc(doc(ordersRef, order.id.toString()), {
@@ -227,7 +232,7 @@ export const syncOrdersToFirebase = async (orders: any[]) => {
 // جلب الطلبات من Firebase
 export const getOrdersFromFirebase = async () => {
   try {
-    const ordersRef = collection(db, 'orders');
+    const ordersRef = collection(db!, 'orders');
     const q = query(ordersRef, orderBy('id'));
     const snapshot = await getDocs(q);
     
@@ -246,7 +251,7 @@ export const getOrdersFromFirebase = async () => {
 // مزامنة إعدادات التوصيل مع Firebase
 export const syncDeliverySettingsToFirebase = async (settings: any) => {
   try {
-    await setDoc(doc(db, 'settings', 'delivery'), {
+    await setDoc(doc(db!, 'settings', 'delivery'), {
       ...settings,
       updatedAt: new Date().toISOString()
     });
@@ -262,7 +267,7 @@ export const syncDeliverySettingsToFirebase = async (settings: any) => {
 // جلب إعدادات التوصيل من Firebase
 export const getDeliverySettingsFromFirebase = async () => {
   try {
-    const docRef = doc(db, 'settings', 'delivery');
+    const docRef = doc(db!, 'settings', 'delivery');
     const docSnap = await getDoc(docRef);
     
     if (docSnap.exists()) {

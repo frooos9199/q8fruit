@@ -8,10 +8,14 @@ export function useImagePreloader(urls: string[]) {
   const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    if (urls.length === 0) return;
+
     const preloadImages = async () => {
+      const newLoadedImages = new Set<string>();
+      
       const promises = urls.map(async (url) => {
         if (imageCache.has(url)) {
-          setLoadedImages(prev => new Set([...prev, url]));
+          newLoadedImages.add(url);
           return;
         }
 
@@ -19,21 +23,20 @@ export function useImagePreloader(urls: string[]) {
           const img = new Image();
           img.onload = () => {
             imageCache.set(url, url);
-            setLoadedImages(prev => new Set([...prev, url]));
+            newLoadedImages.add(url);
             resolve();
           };
-          img.onerror = () => resolve(); // تجاهل الأخطاء
+          img.onerror = () => resolve();
           img.src = url;
         });
       });
 
       await Promise.all(promises);
+      setLoadedImages(newLoadedImages);
     };
 
-    if (urls.length > 0) {
-      preloadImages();
-    }
-  }, [urls]);
+    preloadImages();
+  }, [urls.join(',')]);
 
   return loadedImages;
 }

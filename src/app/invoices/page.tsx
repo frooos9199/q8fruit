@@ -2,25 +2,62 @@
 import { useEffect, useState } from "react";
 import InvoicePrint from "../admin/orders/InvoicePrint";
 
-export default function InvoicesPage() {
-  const [user, setUser] = useState<any>(null);
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [selectedInvoice, setSelectedInvoice] = useState<any | null>(null);
+interface User {
+  email: string;
+  name?: string;
+  phone?: string;
+}
 
-  useEffect(() => {
+interface Invoice {
+  id: string;
+  userEmail: string;
+  items?: any[];
+  products?: any[];
+  total: number;
+  date: string;
+  status: string;
+  userInfo?: {
+    name?: string;
+    phone?: string;
+    address?: string;
+  };
+  customer?: string;
+  phone?: string;
+  address?: string;
+  deliveryPrice?: number;
+  deliveryFee?: number;
+  paymentType?: string;
+}
+
+export default function InvoicesPage() {
+  const [user, setUser] = useState<User | null>(() => {
     if (typeof window !== "undefined") {
       const userStr = window.localStorage.getItem("currentUser");
-      if (userStr) setUser(JSON.parse(userStr));
-      const invStr = window.localStorage.getItem("invoices");
-      try {
-        setInvoices(
-          JSON.parse(invStr || '[]').filter((inv: any) => inv.userEmail === JSON.parse(userStr!).email)
-        );
-      } catch {
-        setInvoices([]);
+      if (userStr) {
+        try {
+          return JSON.parse(userStr);
+        } catch {
+          return null;
+        }
       }
     }
-  }, []);
+    return null;
+  });
+  const [invoices, setInvoices] = useState<Invoice[]>(() => {
+    if (typeof window !== "undefined" && user) {
+      const invStr = window.localStorage.getItem("invoices");
+      if (invStr) {
+        try {
+          const allInvoices = JSON.parse(invStr);
+          return allInvoices.filter((inv: Invoice) => inv.userEmail === user.email);
+        } catch {
+          return [];
+        }
+      }
+    }
+    return [];
+  });
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   if (!user) return <div className="p-8 text-center text-lg">يجب تسجيل الدخول أولاً.</div>;
 

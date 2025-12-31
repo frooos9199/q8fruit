@@ -299,8 +299,3 @@ video {
     line-height: 1.5;
   }
 }
-
-/* Aspect ratio utility */
-.aspect-square {
-  aspect-ratio: 1/1;
-}

@@ -4,7 +4,7 @@ import { ref, uploadBytes, getDownloadURL, listAll, deleteObject } from 'firebas
 // رفع صورة إلى Firebase Storage
 export const uploadImageToFirebase = async (file: File, path: string): Promise<string | null> => {
   try {
-    const imageRef = ref(storage, `products/${path}`);
+    const imageRef = ref(storage!, `products/${path}`);
     const snapshot = await uploadBytes(imageRef, file);
     const downloadURL = await getDownloadURL(snapshot.ref);
     return downloadURL;
@@ -27,7 +27,7 @@ export const uploadMultipleImages = async (files: File[], productId: number): Pr
 // جلب جميع صور المنتجات من Firebase Storage
 export const getAllProductImages = async (): Promise<{ [productId: string]: string[] }> => {
   try {
-    const productsRef = ref(storage, 'products/');
+    const productsRef = ref(storage!, 'products/');
     const result = await listAll(productsRef);
     
     const imagesByProduct: { [productId: string]: string[] } = {};
@@ -59,7 +59,7 @@ export const syncProductImages = async () => {
 // حذف صور منتج من Firebase Storage
 export const deleteProductImages = async (productId: number) => {
   try {
-    const productsRef = ref(storage, 'products/');
+    const productsRef = ref(storage!, 'products/');
     const result = await listAll(productsRef);
     
     const deletePromises = result.items

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { optimizeFirebaseImage } from "../lib/imageOptimization";
 
 interface OptimizedImageProps {
@@ -11,18 +11,31 @@ interface OptimizedImageProps {
   size?: 'small' | 'medium' | 'large';
 }
 
-export default function OptimizedImage({ src, alt, className, style, onError, size = 'medium' }: OptimizedImageProps) {
+export default function OptimizedImage({ src, alt, className = "", style, onError, size = 'medium' }: OptimizedImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
-  const handleLoad = () => setLoaded(true);
-  const handleError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+  const handleLoad = useCallback(() => setLoaded(true), []);
+  
+  const handleError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     setError(true);
     onError?.(e);
-  };
+  }, [onError]);
 
   // تحسين رابط الصورة
   const optimizedSrc = optimizeFirebaseImage(src, size);
+
+  if (!src) {
+    return (
+      <div className={`relative w-full h-full ${className}`} style={style}>
+        <div className="absolute inset-0 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center">
+          <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="relative w-full h-full">

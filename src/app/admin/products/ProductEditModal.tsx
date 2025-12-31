@@ -1,10 +1,7 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { uploadImage } from "@/lib/uploadImage";
 import OptimizedImage from "@/components/OptimizedImage";
-
-
-
 
 interface ProductUnit {
   name: string;
@@ -17,9 +14,9 @@ interface Product {
   units: ProductUnit[];
   quantity: number;
   active: boolean;
-  images?: string[]; // صور متعددة
-  image?: string; // دعم خلفي للصورة القديمة
-  category: string; // اسم الكاترينج
+  images?: string[];
+  image?: string;
+  category: string;
 }
 
 interface Props {
@@ -30,139 +27,154 @@ interface Props {
 }
 
 export default function ProductEditModal({ product, onSave, onClose, categories }: Props) {
-
   const [form, setForm] = useState<Product>({ ...product });
   const [uploading, setUploading] = useState(false);
-
   const fileInput = useRef<HTMLInputElement>(null);
-  // رفع عدة صور
-  const handleImagesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleImagesChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      setUploading(true);
-      try {
-        const imageUrls: string[] = [];
-        
-        for (const file of Array.from(files)) {
-          const url = await uploadImage(file, "products");
-          imageUrls.push(url);
-        }
-        
-        // إضافة الصور الجديدة للمنتج
-        const updatedImages = [...(form.images || []), ...imageUrls];
-        setForm((prev) => ({ ...prev, images: updatedImages }));
-        
-        // حفظ فوري في localStorage
+    if (!files || files.length === 0) return;
+    
+    setUploading(true);
+    try {
+      const imageUrls: string[] = [];
+      
+      for (const file of Array.from(files)) {
+        const url = await uploadImage(file, "products");
+        imageUrls.push(url);
+      }
+      
+      const updatedImages = [...(form.images || []), ...imageUrls];
+      setForm((prev) => ({ ...prev, images: updatedImages }));
+      
+      // لا تحديث localStorage للمنتجات الجديدة (id = 0) - سيتم الحفظ عند النقر على حفظ
+      if (form.id !== 0) {
         const products = JSON.parse(localStorage.getItem('products') || '[]');
-        const updatedProducts = products.map((p: any) => 
+        const updatedProducts = products.map((p: Product) => 
           p.id === form.id ? { ...p, images: updatedImages } : p
         );
         localStorage.setItem('products', JSON.stringify(updatedProducts));
         
-        // مزامنة مع Firebase
-        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-          syncAllDataToFirebase().catch(console.error);
-        });
-        
-        alert(`تم رفع ${imageUrls.length} صورة بنجاح! ✅`);
-        
-        // تحديث فوري للـ form state
-        setTimeout(() => {
-          setForm(prev => ({ ...prev, images: updatedImages }));
-        }, 100);
-      } catch (error) {
-        console.error("خطأ في رفع الصور:", error);
-        alert("فشل رفع الصور. الرجاء المحاولة مرة أخرى.");
-      } finally {
-        setUploading(false);
+        const { syncAllDataToFirebase } = await import('../../../lib/firebaseSync');
+        await syncAllDataToFirebase();
       }
+      
+      alert(`تم رفع ${imageUrls.length} صورة بنجاح! ✅`);
+    } catch (error) {
+      console.error("خطأ في رفع الصور:", error);
+      alert("فشل رفع الصور. الرجاء المحاولة مرة أخرى.");
+    } finally {
+      setUploading(false);
     }
-  };
+  }, [form.id, form.images]);
 
-  // حذف صورة
-  const handleRemoveImage = (idx: number) => {
+  const handleRemoveImage = useCallback(async (idx: number) => {
     const updatedImages = (form.images || []).filter((_, i) => i !== idx);
     setForm((prev) => ({ ...prev, images: updatedImages }));
     
-    // حفظ فوري في localStorage
     const products = JSON.parse(localStorage.getItem('products') || '[]');
-    const updatedProducts = products.map((p: any) => 
+    const updatedProducts = products.map((p: Product) => 
       p.id === form.id ? { ...p, images: updatedImages } : p
     );
     localStorage.setItem('products', JSON.stringify(updatedProducts));
     
-    // مزامنة مع Firebase
-    import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-      syncAllDataToFirebase().catch(console.error);
-    });
-    
-    // تحديث فوري للـ form state
-    setTimeout(() => {
-      setForm(prev => ({ ...prev, images: updatedImages }));
-    }, 100);
-  };
+    try {
+      const { syncAllDataToFirebase } = await import('../../../lib/firebaseSync');
+      await syncAllDataToFirebase();
+    } catch (error) {
+      console.error('Error syncing to Firebase:', error);
+    }
+  }, [form.id, form.images]);
 
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     setForm((prev) => ({
       ...prev,
       [name]: type === "number" ? Number(value) : value,
     }));
-  };
+  }, []);
 
-  // حفظ المنتج مع ضمان عدم فقدان الصور
-  const handleSave = () => {
-    // جلب آخر حالة للصور من localStorage
+  const handleSave = useCallback(() => {
+    console.log('💾 بدء حفظ المنتج:', form);
+
+    // فحص صحة البيانات
+    if (!form.name.trim()) {
+      alert('يرجى إدخال اسم المنتج');
+      return;
+    }
+
+    if (!form.category) {
+      alert('يرجى اختيار الفئة');
+      return;
+    }
+
+    if (!form.units || form.units.length === 0 || form.units.some(u => !u.name.trim() || u.price <= 0)) {
+      alert('يرجى إدخال وحدات صحيحة مع أسعار');
+      return;
+    }
+
     const products = JSON.parse(localStorage.getItem('products') || '[]');
-    const currentProduct = products.find((p: any) => p.id === form.id);
+    const currentProduct = products.find((p: Product) => p.id === form.id);
     const latestImages = currentProduct?.images || form.images || [];
-    
+
     const updatedForm = {
       ...form,
-      images: latestImages
+      images: latestImages,
+      name: form.name.trim(),
+      category: form.category.trim()
     };
-    
-    onSave(updatedForm);
-  };
 
-  // وحدات المنتج
-  const handleUnitChange = (idx: number, field: keyof ProductUnit, value: string | number) => {
+    console.log('✅ المنتج المحدث:', updatedForm);
+    onSave(updatedForm);
+  }, [form, onSave]);
+
+  const handleUnitChange = useCallback((idx: number, field: keyof ProductUnit, value: string | number) => {
     setForm((prev) => {
       const units = prev.units.map((unit, i) =>
         i === idx ? { ...unit, [field]: field === "price" ? Number(value) : value } : unit
       );
       return { ...prev, units };
     });
-  };
+  }, []);
 
-  const addUnit = () => {
+  const addUnit = useCallback(() => {
     setForm((prev) => ({ ...prev, units: [...prev.units, { name: "", price: 0 }] }));
-  };
+  }, []);
 
-  const removeUnit = (idx: number) => {
+  const removeUnit = useCallback((idx: number) => {
     setForm((prev) => ({ ...prev, units: prev.units.filter((_, i) => i !== idx) }));
-  };
+  }, []);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg min-w-[320px]">
+      <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg min-w-[320px] max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4">تعديل المنتج</h2>
-
 
         <div className="flex flex-col gap-3">
           <label className="mb-2">
             صور المنتج
             <div className="flex flex-wrap items-center gap-4 mt-2">
-              {(form.images && form.images.length > 0) && form.images.map((img, idx) => (
-                <div key={idx} className="relative group">
-                  <OptimizedImage src={img} alt="صورة المنتج" size="small" className="w-20 h-20 object-cover rounded border" />
-                  <button type="button" onClick={() => handleRemoveImage(idx)} className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 group-hover:opacity-100">&times;</button>
+              {form.images && form.images.length > 0 && form.images.map((img, idx) => (
+                <div key={`${img}-${idx}`} className="relative group">
+                  <OptimizedImage 
+                    src={img} 
+                    alt={`صورة المنتج ${idx + 1}`} 
+                    size="small" 
+                    className="w-20 h-20 object-cover rounded border" 
+                  />
+                  <button 
+                    type="button" 
+                    onClick={() => handleRemoveImage(idx)} 
+                    className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 group-hover:opacity-100 hover:bg-red-700 transition-colors"
+                    aria-label={`حذف الصورة ${idx + 1}`}
+                  >
+                    &times;
+                  </button>
                 </div>
               ))}
               <button
                 type="button"
-                className="px-2 py-1 bg-blue-500 text-white rounded text-sm flex items-center gap-2 disabled:opacity-50"
+                className="px-2 py-1 bg-blue-500 text-white rounded text-sm flex items-center gap-2 disabled:opacity-50 hover:bg-blue-600 transition-colors"
                 onClick={() => fileInput.current?.click()}
                 disabled={uploading}
               >
@@ -189,8 +201,6 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
             </div>
           </label>
 
-
-
           <label>
             اسم المنتج
             <input
@@ -198,10 +208,12 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               value={form.name}
               onChange={handleChange}
               className="w-full border rounded p-2 mt-1"
+              required
             />
           </label>
+          
           <label>
-            الكاترينج
+            الفئة
             <select
               name="category"
               value={form.category}
@@ -209,7 +221,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               className="w-full border rounded p-2 mt-1"
               required
             >
-              <option value="">اختر الكاترينج</option>
+              <option value="">اختر الفئة</option>
               {categories && categories.length > 0 ? (
                 categories.map(cat => (
                   <option key={cat.id} value={cat.name}>{cat.name}</option>
@@ -224,6 +236,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               )}
             </select>
           </label>
+          
           <label>
             الكمية المتوفرة
             <input
@@ -237,10 +250,17 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               required
             />
           </label>
+          
           <div className="border rounded p-2 mt-2">
             <div className="flex justify-between items-center mb-2">
               <span className="font-bold">الوحدات والأسعار</span>
-              <button type="button" onClick={addUnit} className="px-2 py-1 bg-green-500 text-white rounded text-sm">إضافة وحدة</button>
+              <button 
+                type="button" 
+                onClick={addUnit} 
+                className="px-2 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 transition-colors"
+              >
+                إضافة وحدة
+              </button>
             </div>
             {form.units.map((unit, idx) => (
               <div key={idx} className="flex gap-2 items-center mb-2">
@@ -250,6 +270,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
                   onChange={e => handleUnitChange(idx, "name", e.target.value)}
                   placeholder="اسم الوحدة"
                   className="border rounded p-1 w-1/2"
+                  required
                 />
                 <input
                   type="number"
@@ -257,22 +278,35 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
                   onChange={e => handleUnitChange(idx, "price", e.target.value)}
                   placeholder="السعر"
                   className="border rounded p-1 w-1/3"
+                  min={0}
+                  step={0.01}
+                  required
                 />
-                <button type="button" onClick={() => removeUnit(idx)} className="px-2 py-1 bg-red-500 text-white rounded text-xs">حذف</button>
+                <button 
+                  type="button" 
+                  onClick={() => removeUnit(idx)} 
+                  className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
+                  aria-label={`حذف الوحدة ${idx + 1}`}
+                >
+                  حذف
+                </button>
               </div>
             ))}
           </div>
         </div>
+        
         <div className="flex gap-2 justify-end mt-6">
           <button
+            type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-400 text-white"
+            className="px-4 py-2 rounded bg-gray-400 text-white hover:bg-gray-500 transition-colors"
           >
             إلغاء
           </button>
           <button
+            type="button"
             onClick={handleSave}
-            className="px-4 py-2 rounded bg-green-600 text-white"
+            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition-colors"
           >
             حفظ
           </button>

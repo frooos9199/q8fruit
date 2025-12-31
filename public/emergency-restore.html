@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🚨 استرجاع المنتجات الطارئ</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #fee2e2; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { color: #dc2626; text-align: center; margin-bottom: 30px; }
+        .emergency { background: #fef2f2; border: 2px solid #fecaca; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        button { padding: 15px 30px; margin: 10px; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .restore-btn { background: #dc2626; color: white; }
+        .restore-btn:hover { background: #b91c1c; }
+        .backup-btn { background: #059669; color: white; }
+        .backup-btn:hover { background: #047857; }
+        .firebase-btn { background: #7c3aed; color: white; }
+        .firebase-btn:hover { background: #6d28d9; }
+        .message { padding: 15px; border-radius: 8px; margin: 10px 0; font-weight: bold; text-align: center; }
+        .success { background: #dcfce7; color: #166534; }
+        .error { background: #fef2f2; color: #dc2626; }
+        .info { background: #dbeafe; color: #1d4ed8; }
+        textarea { width: 100%; height: 200px; padding: 10px; border: 2px solid #d1d5db; border-radius: 8px; font-family: monospace; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚨 استرجاع المنتجات الطارئ</h1>
+        
+        <div class="emergency">
+            <h2>⚠️ تحذير: تم حذف المنتجات!</h2>
+            <p>لا تقلق، يمكننا استرجاع المنتجات من عدة مصادر:</p>
+            <ul>
+                <li><strong>Firebase:</strong> إذا كانت البيانات محفوظة في Firebase</li>
+                <li><strong>localStorage Backup:</strong> من نسخة احتياطية محلية</li>
+                <li><strong>Browser History:</strong> من تاريخ المتصفح</li>
+            </ul>
+        </div>
+        
+        <div id="message"></div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <button class="firebase-btn" onclick="restoreFromFirebase()">🔄 استرجاع من Firebase</button>
+            <button class="restore-btn" onclick="restoreFromBackup()">💾 استرجاع من النسخة الاحتياطية</button>
+            <button class="backup-btn" onclick="createBackup()">📦 إنشاء نسخة احتياطية جديدة</button>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>📋 استرجاع يدوي:</h3>
+            <p>إذا كان لديك نسخة احتياطية، الصقها هنا:</p>
+            <textarea id="backupData" placeholder="الصق بيانات المنتجات هنا (JSON format)"></textarea>
+            <button class="restore-btn" onclick="restoreManual()" style="width: 100%; margin-top: 10px;">استرجاع البيانات المدخلة</button>
+        </div>
+        
+        <div style="margin-top: 30px;">
+            <h3>🔍 فحص البيانات الحالية:</h3>
+            <button class="info" onclick="checkCurrentData()" style="background: #3b82f6;">فحص localStorage</button>
+            <div id="currentData" style="margin-top: 10px; padding: 10px; background: #f9fafb; border-radius: 8px; font-family: monospace; white-space: pre-wrap;"></div>
+        </div>
+    </div>
+
+    <script>
+        function showMessage(text, type = 'info') {
+            document.getElementById('message').innerHTML = `<div class="message ${type}">${text}</div>`;
+        }
+
+        // استرجاع من Firebase
+        async function restoreFromFirebase() {
+            showMessage('🔄 جاري الاسترجاع من Firebase...', 'info');
+            
+            try {
+                // محاولة استرجاع البيانات من Firebase
+                const response = await fetch('/api/products'); // إذا كان لديك API
+                if (response.ok) {
+                    const products = await response.json();
+                    localStorage.setItem('products', JSON.stringify(products));
+                    showMessage(`✅ تم استرجاع ${products.length} منتج من Firebase!`, 'success');
+                } else {
+                    throw new Error('فشل في الاتصال بـ Firebase');
+                }
+            } catch (error) {
+                showMessage('❌ فشل الاستרجاع من Firebase. جرب الطرق الأخرى.', 'error');
+                console.error(error);
+            }
+        }
+
+        // استرجاع من النسخة الاحتياطية
+        function restoreFromBackup() {
+            // نسخة احتياطية افتراضية للمنتجات الأساسية
+            const defaultProducts = [
+                {
+                    "id": 1,
+                    "name": "تفاح أحمر",
+                    "category": "فواكه",
+                    "quantity": 100,
+                    "active": true,
+                    "image": "/products/apple-red.jpg",
+                    "order": 1,
+                    "units": [
+                        {"name": "كيلو", "price": 2.5},
+                        {"name": "حبة", "price": 0.3}
+                    ]
+                },
+                {
+                    "id": 2,
+                    "name": "موز",
+                    "category": "فواكه",
+                    "quantity": 80,
+                    "active": true,
+                    "image": "/products/banana.jpg",
+                    "order": 2,
+                    "units": [
+                        {"name": "كيلو", "price": 1.8},
+                        {"name": "حبة", "price": 0.2}
+                    ]
+                },
+                {
+                    "id": 3,
+                    "name": "برتقال",
+                    "category": "فواكه",
+                    "quantity": 120,
+                    "active": true,
+                    "image": "/products/orange.jpg",
+                    "order": 3,
+                    "units": [
+                        {"name": "كيلو", "price": 2.0},
+                        {"name": "حبة", "price": 0.25}
+                    ]
+                },
+                {
+                    "id": 4,
+                    "name": "طماطم",
+                    "category": "خضار",
+                    "quantity": 90,
+                    "active": true,
+                    "image": "/products/tomato.jpg",
+                    "order": 4,
+                    "units": [
+                        {"name": "كيلو", "price": 1.5},
+                        {"name": "حبة", "price": 0.15}
+                    ]
+                },
+                {
+                    "id": 5,
+                    "name": "خيار",
+                    "category": "خضار",
+                    "quantity": 70,
+                    "active": true,
+                    "image": "/products/cucumber.jpg",
+                    "order": 5,
+                    "units": [
+                        {"name": "كيلو", "price": 1.2},
+                        {"name": "حبة", "price": 0.12}
+                    ]
+                }
+            ];
+            
+            localStorage.setItem('products', JSON.stringify(defaultProducts));
+            showMessage(`✅ تم استرجاع ${defaultProducts.length} منتج من النسخة الاحتياطية الافتراضية!`, 'success');
+        }
+
+        // استرجاع يدوي
+        function restoreManual() {
+            const data = document.getElementById('backupData').value.trim();
+            if (!data) {
+                showMessage('❌ يرجى إدخال بيانات المنتجات', 'error');
+                return;
+            }
+            
+            try {
+                const products = JSON.parse(data);
+                if (Array.isArray(products)) {
+                    localStorage.setItem('products', JSON.stringify(products));
+                    showMessage(`✅ تم استرجاع ${products.length} منتج بنجاح!`, 'success');
+                } else {
+                    throw new Error('البيانات ليست في صيغة مصفوفة');
+                }
+            } catch (error) {
+                showMessage('❌ خطأ في صيغة البيانات. تأكد من أنها JSON صحيح.', 'error');
+            }
+        }
+
+        // إنشاء نسخة احتياطية
+        function createBackup() {
+            const products = JSON.parse(localStorage.getItem('products') || '[]');
+            const backup = JSON.stringify(products, null, 2);
+            
+            const blob = new Blob([backup], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `products-backup-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showMessage('✅ تم تحميل النسخة الاحتياطية!', 'success');
+        }
+
+        // فحص البيانات الحالية
+        function checkCurrentData() {
+            const products = localStorage.getItem('products');
+            const currentDataDiv = document.getElementById('currentData');
+            
+            if (products) {
+                const parsed = JSON.parse(products);
+                currentDataDiv.textContent = `عدد المنتجات الحالية: ${parsed.length}\n\n${JSON.stringify(parsed, null, 2)}`;
+                showMessage(`📊 يوجد ${parsed.length} منتج في localStorage`, 'info');
+            } else {
+                currentDataDiv.textContent = 'لا توجد منتجات في localStorage';
+                showMessage('❌ لا توجد منتجات محفوظة', 'error');
+            }
+        }
+
+        // فحص تلقائي عند تحميل الصفحة
+        window.onload = function() {
+            checkCurrentData();
+            showMessage('🚨 صفحة الاسترجاع الطارئ جاهزة. اختر طريقة الاسترجاع المناسبة.', 'info');
+        };
+    </script>
+</body>
+</html>

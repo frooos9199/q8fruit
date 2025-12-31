@@ -45,9 +45,22 @@ export default function ProductTable() {
       
       // مراقبة تغييرات localStorage
       const handleStorageChange = (e: StorageEvent) => {
+        console.log('🔄 حدث storage:', e.key, e.newValue ? JSON.parse(e.newValue).length + ' منتج' : 'null');
         if (e.key === 'products' && e.newValue) {
           try {
-            setProducts(JSON.parse(e.newValue));
+            const parsed = JSON.parse(e.newValue);
+            console.log('📦 تحديث المنتجات من storage:', parsed.length);
+
+            // إضافة ترتيب افتراضي للمنتجات الجديدة
+            const withOrder = parsed.map((p: Product, index: number) => ({
+              ...p,
+              order: p.order ?? index
+            }));
+
+            // ترتيب المنتجات حسب الـ order
+            withOrder.sort((a: Product, b: Product) => (a.order || 0) - (b.order || 0));
+
+            setProducts(withOrder);
           } catch (error) {
             console.error('خطأ في تحليل بيانات المنتجات:', error);
           }
@@ -91,6 +104,7 @@ export default function ProductTable() {
   }, []);
 
   const saveProductsToStorage = (prods: Product[]) => {
+    console.log('💾 حفظ المنتجات في localStorage:', prods.length);
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('products', JSON.stringify(prods));
       // إرسال حدث مخصص لتحديث الواجهة
@@ -186,26 +200,42 @@ export default function ProductTable() {
   };
 
   const handleAddSave = async (newProduct: Product) => {
+    console.log('🔄 بدء إضافة منتج جديد:', newProduct);
     setProducts((prev) => {
+      console.log('📊 المنتجات الحالية:', prev.length);
+
+      // فحص عدم وجود منتج بنفس الاسم
+      const existingProduct = prev.find(p => p.name.trim().toLowerCase() === newProduct.name.trim().toLowerCase());
+      if (existingProduct) {
+        console.warn('⚠️ منتج بنفس الاسم موجود بالفعل:', existingProduct);
+        alert('يوجد منتج بنفس الاسم بالفعل!');
+        return prev; // لا تضيف المنتج
+      }
+
       const maxId = prev.length > 0 ? Math.max(...prev.map(p => p.id)) : 0;
       const maxOrder = prev.length > 0 ? Math.max(...prev.map(p => p.order || 0)) : -1;
-      const newProducts = [
-        ...prev,
-        { ...newProduct, id: maxId + 1, order: maxOrder + 1 }
-      ];
+      const newId = maxId + 1;
+      const newOrder = maxOrder + 1;
+
+      console.log('🆔 ID جديد:', newId, 'ترتيب جديد:', newOrder);
+
+      const productWithId = { ...newProduct, id: newId, order: newOrder };
+      const newProducts = [...prev, productWithId];
+
+      console.log('✅ المنتجات بعد الإضافة:', newProducts.length);
+      console.log('📦 المنتج المضاف:', productWithId);
+
       saveProductsToStorage(newProducts);
-      
+
       // مزامنة فورية مع Firebase عند إضافة منتج
       import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
         syncAllDataToFirebase().catch(console.error);
       });
-      
+
       return newProducts;
     });
     setAddModalOpen(false);
-  };
-
-  // دوال Drag & Drop
+  };  // دوال Drag & Drop
   const handleDragStart = (e: React.DragEvent, productId: number) => {
     setDraggedItem(productId);
     e.dataTransfer.effectAllowed = 'move';

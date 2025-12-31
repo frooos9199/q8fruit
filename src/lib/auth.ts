@@ -69,13 +69,14 @@ export const registerUser = async (userData: {
     await setDoc(doc(db, 'users', userCredential.user.uid), userProfile);
 
     return { user: userCredential.user, profile: userProfile };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // ترجمة رسائل الخطأ
-    if (error.code === 'auth/email-already-in-use') {
+    const err = error as { code?: string };
+    if (err.code === 'auth/email-already-in-use') {
       throw new Error('البريد الإلكتروني مستخدم بالفعل');
-    } else if (error.code === 'auth/invalid-email') {
+    } else if (err.code === 'auth/invalid-email') {
       throw new Error('البريد الإلكتروني غير صحيح');
-    } else if (error.code === 'auth/weak-password') {
+    } else if (err.code === 'auth/weak-password') {
       throw new Error('كلمة المرور ضعيفة');
     }
     throw error;
@@ -105,19 +106,20 @@ export const loginUser = async (email: string, password: string) => {
     }
 
     return { user: userCredential.user, profile };
-  } catch (error: any) {
+  } catch (error: unknown) {
     // معالجة أخطاء تسجيل الدخول
-    if (error.code === 'auth/user-not-found') {
+    const err = error as { code?: string };
+    if (err.code === 'auth/user-not-found') {
       throw new Error('المستخدم غير موجود');
-    } else if (error.code === 'auth/wrong-password') {
+    } else if (err.code === 'auth/wrong-password') {
       throw new Error('كلمة المرور غير صحيحة');
-    } else if (error.code === 'auth/invalid-credential') {
+    } else if (err.code === 'auth/invalid-credential') {
       throw new Error('البريد الإلكتروني أو كلمة المرور غير صحيحة');
-    } else if (error.code === 'auth/invalid-email') {
+    } else if (err.code === 'auth/invalid-email') {
       throw new Error('البريد الإلكتروني غير صحيح');
-    } else if (error.code === 'auth/user-disabled') {
+    } else if (err.code === 'auth/user-disabled') {
       throw new Error('هذا الحساب معطل');
-    } else if (error.code === 'auth/too-many-requests') {
+    } else if (err.code === 'auth/too-many-requests') {
       throw new Error('محاولات كثيرة، حاول مرة أخرى لاحقاً');
     }
     throw error;
@@ -136,8 +138,9 @@ export const resetPassword = async (email: string) => {
   
   try {
     await sendPasswordResetEmail(auth, email);
-  } catch (error: any) {
-    if (error.code === 'auth/user-not-found') {
+  } catch (error: unknown) {
+    const err = error as { code?: string };
+    if (err.code === 'auth/user-not-found') {
       throw new Error('البريد الإلكتروني غير مسجل');
     }
     throw error;

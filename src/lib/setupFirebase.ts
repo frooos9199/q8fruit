@@ -98,7 +98,7 @@ export const addDefaultProductsToFirebase = async () => {
 
   try {
     for (const product of defaultProducts) {
-      await setDoc(doc(db, 'products', product.id.toString()), {
+      await setDoc(doc(db!, 'products', product.id.toString()), {
         ...product,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
@@ -123,7 +123,7 @@ export const addDefaultCategoriesToFirebase = async () => {
   ];
 
   try {
-    await setDoc(doc(db, 'settings', 'categories'), {
+    await setDoc(doc(db!, 'settings', 'categories'), {
       categories: defaultCategories,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()

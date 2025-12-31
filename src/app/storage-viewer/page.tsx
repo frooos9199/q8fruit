@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface StorageData {
@@ -15,15 +15,14 @@ export default function StorageViewerPage() {
   const router = useRouter();
 
   // دالة لحساب حجم البيانات
-  const getDataSize = (data: string): string => {
+  const getDataSize = useCallback((data: string): string => {
     const bytes = new Blob([data]).size;
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-  };
+  }, []);
 
-  // دالة لتحميل البيانات من localStorage
-  const loadStorageData = () => {
+  useEffect(() => {
     if (typeof window === "undefined") return;
 
     const data: StorageData[] = [];
@@ -50,11 +49,37 @@ export default function StorageViewerPage() {
       }
     }
     setStorageData(data.sort((a, b) => a.key.localeCompare(b.key)));
-  };
+  }, [getDataSize]);
 
-  useEffect(() => {
-    loadStorageData();
-  }, []);
+  // دالة لتحميل البيانات من localStorage (للاستخدام في أزرار إعادة التحميل)
+  const loadStorageData = useCallback(() => {
+    if (typeof window === "undefined") return;
+
+    const data: StorageData[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        const value = localStorage.getItem(key);
+        if (value) {
+          try {
+            const parsedValue = JSON.parse(value);
+            data.push({
+              key,
+              value: parsedValue,
+              size: getDataSize(value)
+            });
+          } catch {
+            data.push({
+              key,
+              value: value,
+              size: getDataSize(value)
+            });
+          }
+        }
+      }
+    }
+    setStorageData(data.sort((a, b) => a.key.localeCompare(b.key)));
+  }, [getDataSize]);
 
   // تصفية البيانات حسب البحث
   const filteredData = storageData.filter(item =>

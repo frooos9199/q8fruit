@@ -29,52 +29,63 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
   const invoiceRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (autoPrint && invoiceRef.current) {
-      const invoiceHtml = invoiceRef.current.innerHTML;
-      const printWindow = window.open('', '_blank', 'width=800,height=900');
-      if (printWindow) {
-        printWindow.document.write(`
-          <html dir="rtl" lang="ar">
-            <head>
-              <title>فاتورة الطلب</title>
-              <style>
-                * { box-sizing: border-box; margin: 0; padding: 0; }
-                body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f8fafc; padding: 20px; }
-                .invoice { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
-                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-                .logo { width: 80px; height: 80px; border-radius: 50%; border: 4px solid white; margin: 0 auto 15px; }
-                .invoice-title { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
-                .invoice-number { background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 25px; display: inline-block; }
-                .customer-info { padding: 30px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
-                .customer-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-                .customer-details { font-size: 16px; opacity: 0.9; }
-                .products-section { padding: 30px; }
-                .products-title { text-align: center; font-size: 22px; font-weight: bold; color: #4a5568; margin-bottom: 20px; }
-                .products-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-                .products-table th { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px; font-weight: bold; }
-                .products-table td { padding: 15px; border-bottom: 1px solid #e2e8f0; }
-                .products-table tr:nth-child(even) { background: #f7fafc; }
-                .products-table tr:hover { background: #edf2f7; }
-                .delivery-row { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important; }
-                .total-row { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important; font-weight: bold; font-size: 18px; }
-                .footer { background: #2d3748; color: white; padding: 25px; text-align: center; }
-                .footer-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
-                .footer-contact { font-size: 14px; opacity: 0.8; }
-                .payment-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; }
-                @media print { body { background: white; padding: 0; } .invoice { box-shadow: none; } }
-              </style>
-            </head>
-            <body>
-              <div class="invoice">${invoiceHtml}</div>
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-        printWindow.focus();
-        setTimeout(() => {
-          printWindow.print();
-          printWindow.close();
-          onClose();
-        }, 400);
+      try {
+        const invoiceHtml = invoiceRef.current.innerHTML;
+        // تنظيف HTML من المحتوى الضار
+        const cleanHtml = invoiceHtml
+          .replace(/<script[^>]*>.*?<\/script>/gi, '')
+          .replace(/javascript:/gi, '')
+          .replace(/on\w+="[^"]*"/gi, '');
+          
+        const printWindow = window.open('', '_blank', 'width=800,height=900');
+        if (printWindow) {
+          printWindow.document.write(`
+            <html dir="rtl" lang="ar">
+              <head>
+                <title>فاتورة الطلب</title>
+                <style>
+                  * { box-sizing: border-box; margin: 0; padding: 0; }
+                  body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f8fafc; padding: 20px; }
+                  .invoice { max-width: 800px; margin: 0 auto; background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.1); }
+                  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+                  .logo { width: 80px; height: 80px; border-radius: 50%; border: 4px solid white; margin: 0 auto 15px; }
+                  .invoice-title { font-size: 28px; font-weight: bold; margin-bottom: 10px; }
+                  .invoice-number { background: rgba(255,255,255,0.2); padding: 8px 20px; border-radius: 25px; display: inline-block; }
+                  .customer-info { padding: 30px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; }
+                  .customer-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+                  .customer-details { font-size: 16px; opacity: 0.9; }
+                  .products-section { padding: 30px; }
+                  .products-title { text-align: center; font-size: 22px; font-weight: bold; color: #4a5568; margin-bottom: 20px; }
+                  .products-table { width: 100%; border-collapse: separate; border-spacing: 0; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+                  .products-table th { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 15px; font-weight: bold; }
+                  .products-table td { padding: 15px; border-bottom: 1px solid #e2e8f0; }
+                  .products-table tr:nth-child(even) { background: #f7fafc; }
+                  .products-table tr:hover { background: #edf2f7; }
+                  .delivery-row { background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%) !important; }
+                  .total-row { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%) !important; font-weight: bold; font-size: 18px; }
+                  .footer { background: #2d3748; color: white; padding: 25px; text-align: center; }
+                  .footer-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
+                  .footer-contact { font-size: 14px; opacity: 0.8; }
+                  .payment-badge { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: bold; }
+                  @media print { body { background: white; padding: 0; } .invoice { box-shadow: none; } }
+                </style>
+              </head>
+              <body>
+                <div class="invoice">${cleanHtml}</div>
+              </body>
+            </html>
+          `);
+          printWindow.document.close();
+          printWindow.focus();
+          setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+            onClose();
+          }, 400);
+        }
+      } catch (error) {
+        console.error('خطأ في طباعة الفاتورة:', error);
+        alert('حدث خطأ أثناء طباعة الفاتورة');
       }
     }
   }, [autoPrint, onClose]);

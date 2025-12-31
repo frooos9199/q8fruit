@@ -133,9 +133,33 @@ export async function uploadBase64Image(base64Data: string, folder: string = 'im
   }
 
   try {
+    // فحص وتنظيف base64 data
+    if (!base64Data || typeof base64Data !== 'string') {
+      throw new Error('بيانات Base64 غير صحيحة');
+    }
+    
+    // فحص أن الرابط آمن (ليس external URL)
+    if (base64Data.startsWith('http://') || base64Data.startsWith('https://')) {
+      // فقط السماح بروابط Firebase و data URLs
+      const allowedDomains = ['firebasestorage.googleapis.com', 'data:'];
+      const isAllowed = allowedDomains.some(domain => base64Data.includes(domain));
+      if (!isAllowed) {
+        throw new Error('رابط غير مسموح');
+      }
+    }
+    
     // تحويل Base64 إلى Blob
     const response = await fetch(base64Data);
+    if (!response.ok) {
+      throw new Error('فشل في تحميل الصورة');
+    }
+    
     const originalBlob = await response.blob();
+    
+    // فحص نوع الملف
+    if (!originalBlob.type.startsWith('image/')) {
+      throw new Error('نوع الملف غير مدعوم');
+    }
     
     // ضغط الصورة
     const file = new File([originalBlob], 'image.jpg', { type: 'image/jpeg' });
@@ -165,8 +189,11 @@ export async function uploadBase64Image(base64Data: string, folder: string = 'im
     const randomString = Math.random().toString(36).substring(2, 9);
     const fileName = `${timestamp}_${randomString}.jpg`;
     
+    // تنظيف اسم المجلد
+    const cleanFolder = folder.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 50);
+    
     // إنشاء المرجع في Storage
-    const storageRef = ref(storage, `${folder}/${fileName}`);
+    const storageRef = ref(storage, `${cleanFolder}/${fileName}`);
     
     // رفع الملف المضغوط
     const uploadTask = uploadBytesResumable(storageRef, compressedBlob, {

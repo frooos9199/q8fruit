@@ -9,8 +9,13 @@ import { ref, listAll, deleteObject } from 'firebase/storage';
 
 // حذف جميع المنتجات من Firestore
 export const deleteAllProducts = async () => {
+  if (!db) {
+    console.error('❌ Firebase db غير متاح');
+    return false;
+  }
+  
   try {
-    const productsRef = collection(db, 'products');
+    const productsRef = collection(db!, 'products');
     const snapshot = await getDocs(productsRef);
     
     const deletePromises = snapshot.docs.map(docSnap => deleteDoc(docSnap.ref));
@@ -26,8 +31,13 @@ export const deleteAllProducts = async () => {
 
 // حذف جميع الطلبات من Firestore
 export const deleteAllOrders = async () => {
+  if (!db) {
+    console.error('❌ Firebase db غير متاح');
+    return false;
+  }
+  
   try {
-    const ordersRef = collection(db, 'orders');
+    const ordersRef = collection(db!, 'orders');
     const snapshot = await getDocs(ordersRef);
     
     const deletePromises = snapshot.docs.map(docSnap => deleteDoc(docSnap.ref));
@@ -43,8 +53,13 @@ export const deleteAllOrders = async () => {
 
 // حذف جميع المستخدمين من Firestore
 export const deleteAllUsers = async () => {
+  if (!db) {
+    console.error('❌ Firebase db غير متاح');
+    return false;
+  }
+  
   try {
-    const usersRef = collection(db, 'users');
+    const usersRef = collection(db!, 'users');
     const snapshot = await getDocs(usersRef);
     
     const deletePromises = snapshot.docs.map(docSnap => deleteDoc(docSnap.ref));
@@ -60,8 +75,13 @@ export const deleteAllUsers = async () => {
 
 // حذف جميع الصور من Firebase Storage
 export const deleteAllImages = async () => {
+  if (!storage) {
+    console.error('❌ Firebase storage غير متاح');
+    return false;
+  }
+  
   try {
-    const storageRef = ref(storage, 'products');
+    const storageRef = ref(storage!, 'products');
     const imagesList = await listAll(storageRef);
     
     const deletePromises = imagesList.items.map(imageRef => deleteObject(imageRef));
@@ -77,14 +97,19 @@ export const deleteAllImages = async () => {
 
 // حذف جميع الإعدادات من Firestore
 export const deleteAllSettings = async () => {
+  if (!db) {
+    console.error('❌ Firebase db غير متاح');
+    return false;
+  }
+
   try {
     const settingsToDelete = ['categories', 'banners', 'logo', 'delivery'];
-    
-    const deletePromises = settingsToDelete.map(setting => 
-      deleteDoc(doc(db, 'settings', setting))
+
+    const deletePromises = settingsToDelete.map(setting =>
+      deleteDoc(doc(db!, 'settings', setting))
     );
     await Promise.all(deletePromises);
-    
+
     console.log('✅ تم حذف جميع الإعدادات من Firestore');
     return true;
   } catch (error) {
