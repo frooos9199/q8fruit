@@ -270,87 +270,51 @@ export default function Home() {
 
   const fetchProducts = async () => {
     if (typeof window !== "undefined") {
-      // جلب من localStorage أولاً
-      const storedProducts = window.localStorage.getItem("products");
-      let safeProducts: Product[] = [];
+      // حذف أي منتجات محلية
+      window.localStorage.removeItem("products");
 
-      if (storedProducts) {
-        try {
-          const parsed = JSON.parse(storedProducts);
-          safeProducts = Array.isArray(parsed)
-            ? parsed.filter(
-                (p) =>
-                  typeof p === "object" &&
-                  typeof p.id === "number" &&
-                  typeof p.name === "string" &&
-                  Array.isArray(p.units) &&
-                  p.units.every(
-                    (u: Unit) =>
-                      typeof u === "object" &&
-                      typeof u.name === "string" &&
-                      typeof u.price === "number"
-                  ) &&
-                  typeof p.quantity === "number" &&
-                  typeof p.active === "boolean" &&
-                  typeof p.category === "string"
-              )
-            : [];
-        } catch {
-          safeProducts = [];
-        }
-      }
+      // جلب المنتجات من Firebase فقط
+      try {
+        const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
+        const firebaseSuccess = await loadAllDataFromFirebase();
 
-      // إذا كانت هناك منتجات في localStorage، استخدمها
-      if (safeProducts && safeProducts.length > 0) {
-        setProducts(safeProducts);
-        return;
-      }
-
-      // إذا لم تكن هناك منتجات في localStorage، حاول تحميل من Firebase
-      console.log('لا توجد منتجات محلية، جاري التحميل من Firebase...');
-      const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
-      const firebaseSuccess = await loadAllDataFromFirebase();
-
-      if (firebaseSuccess) {
-        // إعادة جلب من localStorage بعد التحميل من Firebase
-        const updatedProducts = window.localStorage.getItem("products");
-        if (updatedProducts) {
-          try {
-            const parsed = JSON.parse(updatedProducts);
-            const firebaseProducts = Array.isArray(parsed)
-              ? parsed.filter(
-                  (p) =>
-                    typeof p === "object" &&
-                    typeof p.id === "number" &&
-                    typeof p.name === "string" &&
-                    Array.isArray(p.units) &&
-                    p.units.every(
-                      (u: Unit) =>
-                        typeof u === "object" &&
-                        typeof u.name === "string" &&
-                        typeof u.price === "number"
-                    ) &&
-                    typeof p.quantity === "number" &&
-                    typeof p.active === "boolean" &&
-                    typeof p.category === "string"
-                )
-              : [];
-
-            if (firebaseProducts.length > 0) {
+        if (firebaseSuccess) {
+          // جلب المنتجات من Firebase (يجب أن يقوم loadAllDataFromFirebase بتخزينها في مكان ما أو إرجاعها)
+          const updatedProducts = window.localStorage.getItem("products");
+          if (updatedProducts) {
+            try {
+              const parsed = JSON.parse(updatedProducts);
+              const firebaseProducts = Array.isArray(parsed)
+                ? parsed.filter(
+                    (p) =>
+                      typeof p === "object" &&
+                      typeof p.id === "number" &&
+                      typeof p.name === "string" &&
+                      Array.isArray(p.units) &&
+                      p.units.every(
+                        (u: Unit) =>
+                          typeof u === "object" &&
+                          typeof u.name === "string" &&
+                          typeof u.price === "number"
+                      ) &&
+                      typeof p.quantity === "number" &&
+                      typeof p.active === "boolean" &&
+                      typeof p.category === "string"
+                  )
+                : [];
               setProducts(firebaseProducts);
               return;
+            } catch {
+              // فشل في قراءة المنتجات من Firebase
             }
-          } catch {
-            // استمر لاستخدام البيانات الافتراضية
           }
         }
+        // إذا لم تنجح العملية، عرض المنتجات الافتراضية فقط للعرض المؤقت
+        setProducts(defaultProducts);
+      } catch (error) {
+        // في حالة الخطأ، عرض المنتجات الافتراضية فقط للعرض المؤقت
+        setProducts(defaultProducts);
       }
-
-      // استخدام البيانات الافتراضية فقط كحل أخير إذا لم يكن هناك أي بيانات على الإطلاق
-      console.log('⚠️ لا توجد بيانات متاحة، استخدام البيانات الافتراضية...');
-      setProducts(defaultProducts);
-      window.localStorage.setItem('products', JSON.stringify(defaultProducts));
-      // لا ترفع المنتجات الافتراضية إلى Firebase تلقائياً
     }
   };
 
