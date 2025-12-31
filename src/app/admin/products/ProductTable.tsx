@@ -217,14 +217,6 @@ export default function ProductTable() {
     setProducts((prev) => {
       console.log('📊 المنتجات الحالية:', prev.length);
 
-      // فحص عدم وجود منتج بنفس الاسم
-      const existingProduct = prev.find(p => p.name.trim().toLowerCase() === newProduct.name.trim().toLowerCase());
-      if (existingProduct) {
-        console.warn('⚠️ منتج بنفس الاسم موجود بالفعل:', existingProduct);
-        alert('يوجد منتج بنفس الاسم بالفعل!');
-        return prev; // لا تضيف المنتج
-      }
-
       const maxId = prev.length > 0 ? Math.max(...prev.map(p => p.id)) : 0;
       const maxOrder = prev.length > 0 ? Math.max(...prev.map(p => p.order || 0)) : -1;
       const newId = maxId + 1;
@@ -290,7 +282,7 @@ export default function ProductTable() {
   };
 
   const filteredProducts = products.filter((product) => {
-    const nameMatch = product.name.includes(filterName);
+    const nameMatch = filterName === "" || product.name.toLowerCase().includes(filterName.toLowerCase());
     const statusMatch =
       filterStatus === "all" ||
       (filterStatus === "active" && product.active) ||
@@ -307,6 +299,14 @@ export default function ProductTable() {
         >
           + إضافة منتج
         </button>
+        <div className="bg-green-50 dark:bg-green-900 p-3 rounded-lg border border-green-200 dark:border-green-700">
+          <p className="text-sm text-green-700 dark:text-green-200 flex items-center gap-2">
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            إجمالي المنتجات: {products.length} | المعروضة: {filteredProducts.length}
+          </p>
+        </div>
         <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
           <p className="text-sm text-blue-700 dark:text-blue-200 flex items-center gap-2">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -322,7 +322,7 @@ export default function ProductTable() {
             value={filterName}
             onChange={e => setFilterName(e.target.value)}
             className="border rounded p-2 min-w-[180px]"
-            placeholder="اسم المنتج..."
+            placeholder="اسم المنتج... (فارغ لعرض الكل)"
           />
         </div>
         <div>
