@@ -50,51 +50,7 @@ export default function CleanProductsPage() {
     }
   };
 
-  const cleanDuplicateProducts = () => {
-    if (confirm('هل أنت متأكد من حذف المنتجات المكررة؟')) {
-      const uniqueProducts = products.filter((product, index, arr) => {
-        const key = `${product.name?.toLowerCase()?.trim()}-${product.category?.toLowerCase()?.trim()}`;
-        return arr.findIndex(p =>
-          `${p.name?.toLowerCase()?.trim()}-${p.category?.toLowerCase()?.trim()}` === key
-        ) === index;
-      });
 
-      localStorage.setItem('products', JSON.stringify(uniqueProducts));
-      alert(`تم حذف ${products.length - uniqueProducts.length} منتج مكرر`);
-      loadProducts();
-    }
-  };
-
-  const cleanProblemProducts = () => {
-    if (confirm('هل أنت متأكد من حذف المنتجات المشكلة؟')) {
-      const cleanProducts = products.filter(p =>
-        !problemProducts.some(problem => problem.id === p.id)
-      );
-
-      localStorage.setItem('products', JSON.stringify(cleanProducts));
-      alert(`تم حذف ${problemProducts.length} منتج مشكل`);
-      loadProducts();
-    }
-  };
-
-  const resetToDefault = () => {
-    if (confirm('هل أنت متأكد من إعادة تعيين جميع المنتجات للقيم الافتراضية؟')) {
-      // استيراد المنتجات الافتراضية
-      import('../../lib/fruitProducts').then(({ fruitProducts }) => {
-        localStorage.setItem('products', JSON.stringify(fruitProducts));
-        alert('تم إعادة تعيين المنتجات للقيم الافتراضية');
-        loadProducts();
-      });
-    }
-  };
-
-  const clearAllProducts = () => {
-    if (confirm('هل أنت متأكد من حذف جميع المنتجات؟')) {
-      localStorage.setItem('products', JSON.stringify([]));
-      alert('تم حذف جميع المنتجات');
-      loadProducts();
-    }
-  };
 
   return (
     <div className="min-h-screen p-8 bg-gray-50 dark:bg-gray-900">
@@ -164,51 +120,7 @@ export default function CleanProductsPage() {
           </div>
         )}
 
-        {/* أزرار الإجراءات */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">
-            🛠️ إجراءات التنظيف
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <button
-              onClick={cleanProblemProducts}
-              disabled={problemProducts.length === 0}
-              className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              🗑️ حذف المنتجات المشكلة ({problemProducts.length})
-            </button>
-
-            <button
-              onClick={cleanDuplicateProducts}
-              disabled={duplicateProducts.length === 0}
-              className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-            >
-              🔄 حذف المنتجات المكررة ({duplicateProducts.length})
-            </button>
-
-            <button
-              onClick={resetToDefault}
-              className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-            >
-              🔄 إعادة تعيين للقيم الافتراضية
-            </button>
-
-            <button
-              onClick={clearAllProducts}
-              className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-            >
-              🗑️ حذف جميع المنتجات
-            </button>
-
-            <button
-              onClick={loadProducts}
-              className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-            >
-              🔄 إعادة تحميل البيانات
-            </button>
-          </div>
-        </div>
+        {/* تمت إزالة جميع أزرار إجراءات التنظيف - الصفحة للعرض فقط */}
 
         {/* قائمة جميع المنتجات */}
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mt-8">
