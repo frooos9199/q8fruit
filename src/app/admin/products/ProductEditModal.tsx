@@ -47,7 +47,22 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
           imageUrls.push(url);
         }
         
-        setForm((prev) => ({ ...prev, images: [...(prev.images || []), ...imageUrls] }));
+        // إضافة الصور الجديدة للمنتج
+        const updatedImages = [...(form.images || []), ...imageUrls];
+        setForm((prev) => ({ ...prev, images: updatedImages }));
+        
+        // حفظ فوري في localStorage
+        const products = JSON.parse(localStorage.getItem('products') || '[]');
+        const updatedProducts = products.map((p: any) => 
+          p.id === form.id ? { ...p, images: updatedImages } : p
+        );
+        localStorage.setItem('products', JSON.stringify(updatedProducts));
+        
+        // مزامنة مع Firebase
+        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+          syncAllDataToFirebase().catch(console.error);
+        });
+        
         alert(`تم رفع ${imageUrls.length} صورة بنجاح! ✅`);
       } catch (error) {
         console.error("خطأ في رفع الصور:", error);
@@ -60,7 +75,20 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
 
   // حذف صورة
   const handleRemoveImage = (idx: number) => {
-    setForm((prev) => ({ ...prev, images: (prev.images || []).filter((_, i) => i !== idx) }));
+    const updatedImages = (form.images || []).filter((_, i) => i !== idx);
+    setForm((prev) => ({ ...prev, images: updatedImages }));
+    
+    // حفظ فوري في localStorage
+    const products = JSON.parse(localStorage.getItem('products') || '[]');
+    const updatedProducts = products.map((p: any) => 
+      p.id === form.id ? { ...p, images: updatedImages } : p
+    );
+    localStorage.setItem('products', JSON.stringify(updatedProducts));
+    
+    // مزامنة مع Firebase
+    import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+      syncAllDataToFirebase().catch(console.error);
+    });
   };
 
 
