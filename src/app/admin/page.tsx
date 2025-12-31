@@ -1,8 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { syncAllDataToFirebase, loadAllDataFromFirebase } from "../../lib/firebaseSync";
-import { syncProductImages, fullImageSync } from "../../lib/imageSync";
-import { setupFirebaseData } from "../../lib/setupFirebase";
+
 
 interface Category {
   name: string;
@@ -52,114 +50,7 @@ export default function AdminDashboard() {
     details: [] as { name: string; productCount: number }[]
   });
   
-  // حالة المزامنة
-  const [syncing, setSyncing] = useState(false);
-  const [syncMessage, setSyncMessage] = useState('');
-  
-  // دالة المزامنة اليدوية
-  const handleSyncToFirebase = async () => {
-    setSyncing(true);
-    setSyncMessage('جاري رفع البيانات إلى Firebase...');
-    
-    const success = await syncAllDataToFirebase();
-    
-    if (success) {
-      setSyncMessage('✅ تم رفع جميع البيانات بنجاح!');
-    } else {
-      setSyncMessage('❌ حدث خطأ في رفع البيانات');
-    }
-    
-    setSyncing(false);
-    setTimeout(() => setSyncMessage(''), 3000);
-  };
-  
-  // دالة تحميل من Firebase
-  const handleLoadFromFirebase = async () => {
-    setSyncing(true);
-    setSyncMessage('🆘 جلب طارئ من Firebase...');
-    
-    const { emergencyLoadFromFirebase } = await import('../../lib/firebaseSync');
-    const success = await emergencyLoadFromFirebase();
-    
-    if (success) {
-      setSyncMessage('✅ تم الجلب الطارئ بنجاح! جاري إعادة تحميل الصفحة...');
-      setTimeout(() => window.location.reload(), 2000);
-    } else {
-      setSyncMessage('❌ حدث خطأ في الجلب الطارئ');
-    }
-    
-    setSyncing(false);
-    setTimeout(() => setSyncMessage(''), 3000);
-  };
-  
-  // دالة مزامنة الصور
-  const handleSyncImages = async () => {
-    setSyncing(true);
-    setSyncMessage('جاري مزامنة الصور مع Firebase Storage...');
-    
-    const success = await fullImageSync();
-    
-    if (success) {
-      setSyncMessage('✅ تم مزامنة جميع الصور بنجاح!');
-      // إعادة تحميل الصفحة لعرض الصور الجديدة
-      setTimeout(() => window.location.reload(), 1000);
-    } else {
-      setSyncMessage('❌ حدث خطأ في مزامنة الصور');
-    }
-    
-    setSyncing(false);
-    setTimeout(() => setSyncMessage(''), 3000);
-  };
-  
-  // دالة حذف جميع بيانات Firebase
-  const handleClearFirebase = async () => {
-    const confirmed = window.confirm('⚠️ هل أنت متأكد من حذف جميع بيانات Firebase?\n\nهذا سيحذف:\n• جميع المنتجات\n• جميع الطلبات\n• جميع المستخدمين\n• جميع الصور\n• جميع الإعدادات');
-    
-    if (!confirmed) return;
-    
-    const userInput = window.prompt('اكتب "DELETE" بالأحرف الكبيرة:');
-    if (userInput !== 'DELETE') {
-      alert('تم إلغاء العملية');
-      return;
-    }
-    
-    setSyncing(true);
-    setSyncMessage('🔥 جاري حذف جميع بيانات Firebase...');
-    
-    try {
-      const { clearAllFirebaseData } = await import('../../lib/clearFirebase');
-      const success = await clearAllFirebaseData();
-      
-      if (success) {
-        setSyncMessage('✅ تم حذف جميع بيانات Firebase بنجاح!');
-        alert('🎉 Firebase نظيف وجاهز للعمل!');
-      } else {
-        setSyncMessage('❌ حدث خطأ في حذف بيانات Firebase');
-      }
-    } catch (error) {
-      setSyncMessage('❌ خطأ في عملية الحذف');
-    }
-    
-    setSyncing(false);
-    setTimeout(() => setSyncMessage(''), 5000);
-  };
-  const handleSetupFirebase = async () => {
-    setSyncing(true);
-    setSyncMessage('جاري إعداد Firebase بالبيانات الافتراضية...');
-    
-    const success = await setupFirebaseData();
-    
-    if (success) {
-      setSyncMessage('✅ تم إعداد Firebase بنجاح! جاري إعادة تحميل الصفحة...');
-      // إعادة تحميل الصفحة لعرض البيانات الجديدة
-      setTimeout(() => window.location.reload(), 2000);
-    } else {
-      setSyncMessage('❌ حدث خطأ في إعداد Firebase');
-    }
-    
-    setSyncing(false);
-    setTimeout(() => setSyncMessage(''), 5000);
-  };
+
 
   useEffect(() => {
     // تحديث عدد المستخدمين
@@ -314,75 +205,7 @@ export default function AdminDashboard() {
         />
       </div>
 
-      {/* أزرار مزامنة Firebase */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-700">
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">🔄</span>
-          <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            مزامنة Firebase
-          </h2>
-        </div>
-        
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-          <button
-            onClick={handleSyncToFirebase}
-            disabled={syncing}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
-          >
-            <span className="text-xl">⬆️</span>
-            <span className="text-sm">{syncing ? 'جاري...' : 'رفع إلى Firebase'}</span>
-          </button>
-          
-          <button
-            onClick={handleLoadFromFirebase}
-            disabled={syncing}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
-          >
-            <span className="text-xl">🆘</span>
-            <span className="text-sm">{syncing ? 'جاري...' : 'جلب طارئ من Firebase'}</span>
-          </button>
-          
-          <button
-            onClick={handleSyncImages}
-            disabled={syncing}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
-          >
-            <span className="text-xl">🖼️</span>
-            <span className="text-sm">{syncing ? 'جاري...' : 'مزامنة الصور'}</span>
-          </button>
-          
-          <button
-            onClick={handleClearFirebase}
-            disabled={syncing}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-gray-400 disabled:to-gray-500 text-white rounded-xl font-bold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
-          >
-            <span className="text-xl">🔥</span>
-            <span className="text-sm">{syncing ? 'جاري...' : 'حذف Firebase'}</span>
-          </button>
-        </div>
-        
-        {syncMessage && (
-          <div className={`p-3 rounded-lg text-center font-medium ${
-            syncMessage.includes('✅') ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-            syncMessage.includes('❌') ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200' :
-            'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-          }`}>
-            {syncMessage}
-          </div>
-        )}
-        
-        <div className="mt-4 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900 dark:to-orange-900 rounded-lg border border-yellow-200 dark:border-yellow-700">
-          <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
-            <span className="font-bold">⚠️ ملاحظة:</span>
-          </p>
-          <ul className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-            <li>• <strong>حذف Firebase:</strong> يحذف جميع بيانات Firebase (غير قابل للتراجع!)</li>
-            <li>• <strong>رفع إلى Firebase:</strong> يحفظ البيانات المحلية في السحابة</li>
-            <li>• <strong>جلب طارئ من Firebase:</strong> يجلب البيانات في حالات الطوارئ فقط</li>
-            <li>• <strong>مزامنة الصور:</strong> يربط الصور من Firebase Storage بالمنتجات</li>
-          </ul>
-        </div>
-      </div>
+      {/* ...تمت إزالة أزرار ودوال مزامنة Firebase لجعل لوحة الإدارة للعرض فقط... */}
 
       {/* إحصائيات الكاترينج */}
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-100 dark:border-gray-700">
