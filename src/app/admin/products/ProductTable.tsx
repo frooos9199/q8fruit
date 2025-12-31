@@ -28,21 +28,34 @@ export default function ProductTable() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const stored = window.localStorage.getItem('products');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        // إضافة ترتيب افتراضي للمنتجات القديمة
-        const withOrder = parsed.map((p: Product, index: number) => ({
-          ...p,
-          order: p.order ?? index
-        }));
-        // ترتيب المنتجات حسب الـ order
-        withOrder.sort((a: Product, b: Product) => (a.order || 0) - (b.order || 0));
-        setProducts(withOrder);
-      } else {
-        setProducts([]);
-      }
-      
+      const loadProducts = () => {
+        const stored = window.localStorage.getItem('products');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            console.log('📦 تحميل المنتجات من localStorage:', parsed.length);
+
+            // إضافة ترتيب افتراضي للمنتجات القديمة
+            const withOrder = parsed.map((p: Product, index: number) => ({
+              ...p,
+              order: p.order ?? index
+            }));
+
+            // ترتيب المنتجات حسب الـ order
+            withOrder.sort((a: Product, b: Product) => (a.order || 0) - (b.order || 0));
+            setProducts(withOrder);
+          } catch (error) {
+            console.error('خطأ في تحليل بيانات المنتجات:', error);
+            setProducts([]);
+          }
+        } else {
+          console.log('⚠️ لا توجد منتجات في localStorage');
+          setProducts([]);
+        }
+      };
+
+      loadProducts();
+
       // مراقبة تغييرات localStorage
       const handleStorageChange = (e: StorageEvent) => {
         console.log('🔄 حدث storage:', e.key, e.newValue ? JSON.parse(e.newValue).length + ' منتج' : 'null');
@@ -66,9 +79,9 @@ export default function ProductTable() {
           }
         }
       };
-      
+
       window.addEventListener('storage', handleStorageChange);
-      
+
       return () => {
         window.removeEventListener('storage', handleStorageChange);
       };
@@ -326,7 +339,7 @@ export default function ProductTable() {
         </div>
       </div>
       <div className="overflow-x-auto">
-      <table className="min-w-full border text-center">
+      <table className="min-w-full border text-center rtl">
         <thead>
           <tr className="bg-gray-100 dark:bg-gray-800">
             <th className="p-2">↕️</th>
@@ -417,7 +430,11 @@ export default function ProductTable() {
               <td className="p-2">
                 <button
                   onClick={() => toggleActive(product.id)}
-                  className={`px-3 py-1 rounded text-white ${product.active ? "bg-red-500" : "bg-green-500"}`}
+                  className={`px-3 py-1 rounded text-white font-bold transition-colors ${
+                    product.active 
+                      ? "bg-red-500 hover:bg-red-600" 
+                      : "bg-green-500 hover:bg-green-600"
+                  }`}
                 >
                   {product.active ? "إيقاف" : "تفعيل"}
                 </button>
@@ -425,7 +442,7 @@ export default function ProductTable() {
               <td className="p-2">
                 <button
                   onClick={() => setEditProduct(product)}
-                  className="px-3 py-1 rounded bg-blue-600 text-white"
+                  className="px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white font-bold transition-colors"
                 >
                   تعديل
                 </button>
@@ -433,7 +450,7 @@ export default function ProductTable() {
               <td className="p-2">
                 <button
                   onClick={() => removeProduct(product.id)}
-                  className="px-3 py-1 rounded bg-red-600 text-white"
+                  className="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white font-bold transition-colors"
                 >
                   حذف
                 </button>

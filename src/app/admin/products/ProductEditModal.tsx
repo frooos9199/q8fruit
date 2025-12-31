@@ -147,8 +147,8 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg min-w-[320px] max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold mb-4">تعديل المنتج</h2>
+      <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg min-w-[320px] max-w-[600px] max-h-[90vh] overflow-y-auto rtl">
+        <h2 className="text-xl font-bold mb-4 text-center">تعديل المنتج</h2>
 
         <div className="flex flex-col gap-3">
           <label className="mb-2">
@@ -156,15 +156,18 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
             <div className="flex flex-wrap items-center gap-4 mt-2">
               {form.images && form.images.length > 0 && form.images.map((img, idx) => (
                 <div key={`${img}-${idx}`} className="relative group">
-                  <OptimizedImage 
-                    src={img} 
-                    alt={`صورة المنتج ${idx + 1}`} 
-                    size="small" 
-                    className="w-20 h-20 object-cover rounded border" 
+                  <img
+                    src={img}
+                    alt={`صورة المنتج ${idx + 1}`}
+                    className="w-20 h-20 object-cover rounded border"
+                    onError={(e) => {
+                      console.error('فشل تحميل الصورة:', img);
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
                   />
-                  <button 
-                    type="button" 
-                    onClick={() => handleRemoveImage(idx)} 
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(idx)}
                     className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 group-hover:opacity-100 hover:bg-red-700 transition-colors"
                     aria-label={`حذف الصورة ${idx + 1}`}
                   >
@@ -174,7 +177,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               ))}
               <button
                 type="button"
-                className="px-2 py-1 bg-blue-500 text-white rounded text-sm flex items-center gap-2 disabled:opacity-50 hover:bg-blue-600 transition-colors"
+                className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded font-bold flex items-center gap-2 disabled:opacity-50 transition-colors"
                 onClick={() => fileInput.current?.click()}
                 disabled={uploading}
               >
@@ -187,7 +190,12 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
                     جاري الرفع...
                   </>
                 ) : (
-                  'إضافة صور'
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    إضافة صور
+                  </>
                 )}
               </button>
               <input
@@ -257,8 +265,11 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               <button 
                 type="button" 
                 onClick={addUnit} 
-                className="px-2 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600 transition-colors"
+                className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded font-bold transition-colors"
               >
+                <svg className="w-4 h-4 inline ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
                 إضافة وحدة
               </button>
             </div>
@@ -285,7 +296,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
                 <button 
                   type="button" 
                   onClick={() => removeUnit(idx)} 
-                  className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
+                  className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-bold transition-colors"
                   aria-label={`حذف الوحدة ${idx + 1}`}
                 >
                   حذف
@@ -295,18 +306,18 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
           </div>
         </div>
         
-        <div className="flex gap-2 justify-end mt-6">
+        <div className="flex gap-3 justify-end mt-6">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-400 text-white hover:bg-gray-500 transition-colors"
+            className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-600 text-white font-bold transition-colors"
           >
             إلغاء
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition-colors"
+            className="px-4 py-2 rounded bg-green-500 hover:bg-green-600 text-white font-bold transition-colors"
           >
             حفظ
           </button>
