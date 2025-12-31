@@ -350,12 +350,7 @@ export default function Home() {
       console.log('⚠️ لا توجد بيانات متاحة، استخدام البيانات الافتراضية...');
       setProducts(defaultProducts);
       window.localStorage.setItem('products', JSON.stringify(defaultProducts));
-
-      // حفظ البيانات الافتراضية في Firebase في الخلفية
-      setTimeout(async () => {
-        const { syncAllDataToFirebase } = await import('../lib/firebaseSync');
-        await syncAllDataToFirebase();
-      }, 1000);
+      // لا ترفع المنتجات الافتراضية إلى Firebase تلقائياً
     }
   };
 
@@ -500,12 +495,7 @@ export default function Home() {
       ];
       window.localStorage.setItem('cateringCategories', JSON.stringify(defaultCategories));
       setCategories(defaultCategories.map(cat => ({ id: cat.id, name: cat.name })));
-
-      // حفظ البيانات الافتراضية في Firebase في الخلفية
-      setTimeout(async () => {
-        const { syncAllDataToFirebase } = await import('../lib/firebaseSync');
-        await syncAllDataToFirebase();
-      }, 1000);
+      // لا ترفع التصنيفات الافتراضية إلى Firebase تلقائياً
     }
   };
   

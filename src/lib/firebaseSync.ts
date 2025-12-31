@@ -285,11 +285,17 @@ export const syncAllDataToFirebase = async () => {
   if (typeof window === 'undefined') return;
   
   try {
-    // مزامنة المنتجات
+    // مزامنة المنتجات مع حماية ضد المسح الكامل
     const products = localStorage.getItem('products');
     if (products) {
       const parsedProducts = JSON.parse(products);
-      await syncProductsToFirebase(parsedProducts);
+      // حماية: لا تزامن إذا كان عدد المنتجات 0 أو 1 (تغيير الرقم حسب الحاجة)
+      if (!Array.isArray(parsedProducts) || parsedProducts.length < 2) {
+        alert('تحذير: عدد المنتجات في التخزين المحلي قليل جداً! لن تتم المزامنة مع Firebase حتى لا يتم حذف كل شيء.');
+        console.warn('إلغاء مزامنة المنتجات مع Firebase بسبب قلة المنتجات في localStorage.');
+      } else {
+        await syncProductsToFirebase(parsedProducts);
+      }
     }
     
     // مزامنة التصنيفات
