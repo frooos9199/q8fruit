@@ -12,7 +12,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-// مزامنة المنتجات مع Firebase (الموقع هو المصدر)
+// مزامنة المنتجات مع Firebase (تحديث بدلاً من حذف وإعادة إنشاء)
 export const syncProductsToFirebase = async (products: any[]) => {
   if (!db) {
     console.error('❌ Firebase db غير متاح');
@@ -22,26 +22,12 @@ export const syncProductsToFirebase = async (products: any[]) => {
   try {
     const productsRef = collection(db!, 'products');
     
-    // حذف جميع المنتجات القديمة من Firebase
-    const existingDocs = await getDocs(productsRef);
-    for (const docSnap of existingDocs.docs) {
-      await deleteDoc(docSnap.ref);
-    }
-    
-    // تنظيف الصور القديمة من Storage (معطل مؤقتاً)
-    // try {
-    //   const { cleanupOldImages } = await import('./storageCleanup');
-    //   await cleanupOldImages();
-    // } catch (error) {
-    //   console.warn('خطأ في تنظيف الصور:', error);
-    // }
-    
-    // إضافة المنتجات الجديدة
+    // تحديث/إضافة المنتجات بدلاً من حذف الكل
     for (const product of products) {
       await setDoc(doc(productsRef, product.id.toString()), {
         ...product,
         updatedAt: new Date().toISOString()
-      });
+      }, { merge: true }); // merge: true للحفاظ على البيانات الموجودة
     }
     
     console.log('تم مزامنة المنتجات مع Firebase');
@@ -285,16 +271,14 @@ export const syncAllDataToFirebase = async () => {
   if (typeof window === 'undefined') return;
   
   try {
-    // مزامنة المنتجات مع حماية ضد المسح الكامل
+    // مزامنة المنتجات بدون حماية مفرطة
     const products = localStorage.getItem('products');
     if (products) {
       const parsedProducts = JSON.parse(products);
-      // حماية: لا تزامن إذا كان عدد المنتجات 0 أو 1 (تغيير الرقم حسب الحاجة)
-      if (!Array.isArray(parsedProducts) || parsedProducts.length < 2) {
-        alert('تحذير: عدد المنتجات في التخزين المحلي قليل جداً! لن تتم المزامنة مع Firebase حتى لا يتم حذف كل شيء.');
-        console.warn('إلغاء مزامنة المنتجات مع Firebase بسبب قلة المنتجات في localStorage.');
-      } else {
+      if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
         await syncProductsToFirebase(parsedProducts);
+      } else {
+        console.warn('لا توجد منتجات في localStorage');
       }
     }
     

@@ -1,9 +1,18 @@
-// نظام إجباري لضمان تحميل جميع البيانات
+// نظام إجباري لضمان تحميل جميع البيانات (للطوارئ فقط)
 export const forceLoadAllData = async () => {
   if (typeof window === 'undefined') return false;
 
   try {
-    // مسح البيانات المحلية أولاً
+    console.log('⚠️ تحذير: سيتم مسح البيانات المحلية وإعادة تحميلها من Firebase');
+    
+    // تأكيد من المستخدم قبل المسح
+    const confirmed = confirm('هل أنت متأكد من أنك تريد مسح جميع البيانات المحلية وإعادة تحميلها من Firebase؟ هذا الإجراء لا يمكن التراجع عنه.');
+    if (!confirmed) {
+      console.log('تم إلغاء العملية من قبل المستخدم');
+      return false;
+    }
+
+    // مسح البيانات المحلية فقط بعد التأكيد
     localStorage.removeItem('products');
     localStorage.removeItem('cateringCategories');
     localStorage.removeItem('banners');

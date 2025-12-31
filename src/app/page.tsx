@@ -210,15 +210,71 @@ export default function Home() {
     setQuantities((prev) => ({ ...prev, [productId]: value }));
   };
 
-  // منتجات افتراضية تظهر عند عدم وجود منتجات في localStorage
-  // لا يوجد منتجات افتراضية إطلاقاً، جميع المنتجات تأتي من Firebase فقط
+  // منتجات افتراضية تظهر فوراً لسرعة التحميل
+  const defaultProducts = [
+    {
+      id: 1, name: "تفاح أحمر", units: [{ name: "كيلو", price: 1.250 }], quantity: 100, active: true, category: "فواكه",
+      images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop&crop=center"]
+    },
+    {
+      id: 2, name: "موز", units: [{ name: "كيلو", price: 0.750 }], quantity: 150, active: true, category: "فواكه",
+      images: ["https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop&crop=center"]
+    },
+    {
+      id: 3, name: "برتقال", units: [{ name: "كيلو", price: 1.000 }], quantity: 120, active: true, category: "فواكه",
+      images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=400&fit=crop&crop=center"]
+    },
+    {
+      id: 4, name: "طماطم", units: [{ name: "كيلو", price: 0.800 }], quantity: 200, active: true, category: "خضار",
+      images: ["https://images.unsplash.com/photo-1546470427-e5380e2d2b8d?w=400&h=400&fit=crop&crop=center"]
+    },
+    {
+      id: 5, name: "خيار", units: [{ name: "كيلو", price: 0.600 }], quantity: 180, active: true, category: "خضار",
+      images: ["https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=400&h=400&fit=crop&crop=center"]
+    },
+    {
+      id: 6, name: "خس", units: [{ name: "حبة", price: 0.500 }], quantity: 100, active: true, category: "ورقيات",
+      images: ["https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&h=400&fit=crop&crop=center"]
+    }
+  ];
 
   const fetchProducts = async () => {
     if (typeof window !== "undefined") {
-      // حذف أي منتجات محلية
-      window.localStorage.removeItem("products");
+      // جلب المنتجات من localStorage أولاً، ثم من Firebase إذا لم توجد
+      const storedProducts = window.localStorage.getItem("products");
+      
+      if (storedProducts) {
+        try {
+          const parsed = JSON.parse(storedProducts);
+          const validProducts = Array.isArray(parsed)
+            ? parsed.filter(
+                (p) =>
+                  typeof p === "object" &&
+                  typeof p.id === "number" &&
+                  typeof p.name === "string" &&
+                  Array.isArray(p.units) &&
+                  p.units.every(
+                    (u: Unit) =>
+                      typeof u === "object" &&
+                      typeof u.name === "string" &&
+                      typeof u.price === "number"
+                  ) &&
+                  typeof p.quantity === "number" &&
+                  typeof p.active === "boolean" &&
+                  typeof p.category === "string"
+              )
+            : [];
+          
+          if (validProducts.length > 0) {
+            setProducts(validProducts);
+            return; // استخدم البيانات المحلية إذا كانت صحيحة
+          }
+        } catch {
+          // فشل في قراءة البيانات المحلية، جرب Firebase
+        }
+      }
 
-      // جلب المنتجات من Firebase فقط
+      // جلب المنتجات من Firebase فقط إذا لم توجد بيانات محلية صحيحة
       try {
         const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
         const firebaseSuccess = await loadAllDataFromFirebase();
@@ -355,7 +411,26 @@ export default function Home() {
   // دالة لجلب التصنيفات
   const fetchCategories = async () => {
     if (typeof window !== 'undefined') {
-      // جلب التصنيفات من Firebase فقط
+      // جلب التصنيفات من localStorage أولاً، ثم من Firebase إذا لم توجد
+      const storedCategories = window.localStorage.getItem('cateringCategories');
+      
+      if (storedCategories) {
+        try {
+          const parsed = JSON.parse(storedCategories);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const simplifiedCategories = parsed.map((cat: CateringCategory) => ({
+              id: cat.id,
+              name: cat.name
+            }));
+            setCategories(simplifiedCategories);
+            return; // استخدم البيانات المحلية إذا كانت صحيحة
+          }
+        } catch {
+          // فشل في قراءة التصنيفات المحلية، جرب Firebase
+        }
+      }
+
+      // جلب التصنيفات من Firebase فقط إذا لم توجد بيانات محلية صحيحة
       try {
         const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
         const firebaseSuccess = await loadAllDataFromFirebase();
@@ -387,6 +462,14 @@ export default function Home() {
   };
   
   useEffect(() => {
+    // عرض المنتجات الافتراضية فوراً لسرعة التحميل
+    setProducts(defaultProducts);
+    setCategories([
+      { id: 1, name: "فواكه" },
+      { id: 2, name: "خضار" },
+      { id: 3, name: "ورقيات" }
+    ]);
+    
     // تحقق من التوافق وبدء التزامن
     if (checkCompatibility()) {
       const cleanup = syncData();
@@ -453,8 +536,13 @@ export default function Home() {
 
           } catch (error) {
             console.error('❌ خطأ في تحميل البيانات:', error);
-            setProducts([]);
-            setCategories([]);
+            // عرض المنتجات الافتراضية عند الخطأ
+            setProducts(defaultProducts);
+            setCategories([
+              { id: 1, name: "فواكه" },
+              { id: 2, name: "خضار" },
+              { id: 3, name: "ورقيات" }
+            ]);
           }
         };
         
@@ -521,30 +609,23 @@ export default function Home() {
         }, 1000); // تحديث أسرع للموبايل
         const onStorage = (e: StorageEvent) => {
           if (e.key === "products") {
-            // إذا تم مسح المنتجات تماماً، أعد تحميل من Firebase
+            // إذا تم مسح المنتجات تماماً، لا تعيد تحميل تلقائياً
             if (e.newValue === null || e.newValue === '') {
-              console.log('تم مسح المنتجات، جاري إعادة التحميل من Firebase...');
-              loadAllDataFromFirebase().then(success => {
-                if (success) {
-                  fetchProducts();
-                  fetchCategories();
-                } else {
-                  setProducts([]);
-                }
-              });
+              console.log('تم مسح المنتجات من localStorage');
+              setProducts([]); // اعرض قائمة فارغة
             } else {
               fetchProducts();
             }
-            syncAllDataToFirebase();
+            // لا تزامن مع Firebase تلقائياً عند كل تغيير
           }
           if (e.key === "siteLogo") {
             setLogo(e.newValue);
-            syncAllDataToFirebase();
+            // لا تزامن مع Firebase عند كل تغيير
           }
           if (e.key === "isAdmin") setIsAdmin(e.newValue === "true");
           if (e.key === "cateringCategories") {
             fetchCategories();
-            syncAllDataToFirebase();
+            // لا تزامن مع Firebase عند كل تغيير
           }
           if (e.key === "currentUser") {
             try {
@@ -562,7 +643,7 @@ export default function Home() {
                 '/banners/banner3.jpg',
                 '/banners/banner4.jpg',
               ]);
-              syncAllDataToFirebase();
+              // لا تزامن مع Firebase عند كل تغيير
             } catch {
               setBanners([
                 '/banners/banner1.jpg',
