@@ -13,15 +13,18 @@ export default function ProductsPage() {
   const handleExportExcel = async () => {
     const products = JSON.parse(window.localStorage.getItem("products") || "[]");
     
-    // إنشاء محتوى CSV
-    let csv = 'الرقم,الاسم,الفئة,الكمية,نشط,رابط الصورة,الوحدات\n';
+    // إنشاء محتوى CSV مع BOM لدعم العربية
+    const BOM = '\uFEFF'; // Byte Order Mark للعربية
+    let csv = BOM + 'الرقم,الاسم,الفئة,الكمية,نشط,رابط الصورة,الوحدات\n';
     
     for (const p of products) {
-      const units = p.units.map((u: any) => `${u.name}:${u.price}`).join(';');
-      csv += `${p.id},"${p.name}","${p.category}",${p.quantity},${p.active ? 'نعم' : 'لا'},"${p.image || ''}","${units}"\n`;
+      // استخدام جميع الصور أو الصورة القديمة
+      const imageUrls = p.images && p.images.length > 0 ? p.images.join('; ') : (p.image || '');
+      const units = p.units.map((u: any) => `${u.name}:${u.price}`).join('; ');
+      csv += `${p.id},"${p.name}","${p.category}",${p.quantity},${p.active ? 'نعم' : 'لا'},"${imageUrls}","${units}"\n`;
     }
     
-    // تحميل ملف CSV
+    // تحميل ملف CSV مع ترميز UTF-8
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -53,13 +56,31 @@ export default function ProductsPage() {
           return entities[match] || match;
         });
         
+        // إضافة جميع الصور
+        const imagesXml = [];
+        if (p.images && Array.isArray(p.images)) {
+          for (const img of p.images) {
+            const safeImg = String(img || '').replace(/[<>&"']/g, (match) => {
+              const entities: {[key: string]: string} = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;' };
+              return entities[match] || match;
+            });
+            imagesXml.push(`      <image>${safeImg}</image>`);
+          }
+        } else if (p.image) {
+          imagesXml.push(`      <image>${safeImage}</image>`);
+        }
+        
         xml += `  <product>\n`;
         xml += `    <id>${Number(p.id) || 0}</id>\n`;
         xml += `    <name>${safeName}</name>\n`;
         xml += `    <category>${safeCategory}</category>\n`;
         xml += `    <quantity>${Number(p.quantity) || 0}</quantity>\n`;
         xml += `    <active>${Boolean(p.active)}</active>\n`;
-        xml += `    <image>${safeImage}</image>\n`;
+        xml += `    <images>\n`;
+        for (const imgXml of imagesXml) {
+          xml += `${imgXml}\n`;
+        }
+        xml += `    </images>\n`;
         xml += `    <units>\n`;
         if (Array.isArray(p.units)) {
           for (const u of p.units) {
