@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { db } from "../../lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 
 interface Category {
@@ -67,42 +69,73 @@ export default function AdminDashboard() {
       }
     };
     
-    // مراقبة تغييرات localStorage فقط - لا حاجة لمراقبة Firebase
-    // Firebase هو نسخة احتياطية فقط
-    
     window.addEventListener("usersUpdated", syncCount);
     syncCount();
 
-    // تحديث إحصائيات الطلبات
-    const syncOrders = () => {
-      let orders = [];
+    // تحديث إحصائيات الطلبات من Firebase + localStorage
+    const syncOrders = async () => {
+      let allOrders: any[] = [];
+      
+      // 1. Get orders from Firebase
+      if (db) {
+        try {
+          const ordersRef = collection(db, 'orders');
+          const snapshot = await getDocs(ordersRef);
+          const firebaseOrders = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              total: data.pricing?.total || data.total || 0,
+              date: data.createdAt ? data.createdAt.toDate().toISOString() : (data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString()),
+              status: data.status
+            };
+          });
+          allOrders = [...firebaseOrders];
+          console.log('📦 Firebase orders:', firebaseOrders.length);
+        } catch (error) {
+          console.error('Error fetching Firebase orders:', error);
+        }
+      }
+      
+      // 2. Get orders from localStorage (legacy)
       if (typeof window !== "undefined") {
         const stored = window.localStorage.getItem("orders");
         if (stored) {
           try {
-            orders = JSON.parse(stored);
-          } catch {}
+            const localOrders = JSON.parse(stored);
+            if (Array.isArray(localOrders)) {
+              allOrders = [...allOrders, ...localOrders];
+            }
+          } catch (error) {
+            console.error('Error parsing localStorage orders:', error);
+          }
         }
       }
-      // إجمالي الطلبات
-      const total = Array.isArray(orders) ? orders.length : 0;
-      // طلبات اليوم
-      const todayStr = new Date().toLocaleDateString();
-      const today = Array.isArray(orders)
-        ? orders.filter((o) => {
-            if (!o.date) return false;
-            // دعم تنسيقات التاريخ المختلفة
-            const d = o.date.split(",")[0].trim();
-            return d === todayStr;
-          }).length
-        : 0;
-      // إجمالي المبيعات
-      const sales = Array.isArray(orders)
-        ? orders.reduce((sum, o) => sum + (typeof o.total === "number" ? o.total : 0), 0)
-        : 0;
-      setOrdersStats({ total, today, sales });
       
-      console.log('تم تحديث إحصائيات الطلبات:', { total, today, sales });
+      // Calculate statistics
+      const total = allOrders.length;
+      
+      // طلبات اليوم
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      const today = allOrders.filter((o) => {
+        if (!o.date) return false;
+        try {
+          const orderDate = new Date(o.date);
+          return orderDate >= todayStart;
+        } catch {
+          return false;
+        }
+      }).length;
+      
+      // إجمالي المبيعات
+      const sales = allOrders.reduce((sum, o) => {
+        const orderTotal = typeof o.total === "number" ? o.total : 0;
+        return sum + orderTotal;
+      }, 0);
+      
+      setOrdersStats({ total, today, sales });
+      console.log('📊 Orders stats updated:', { total, today, sales });
     };
 
     // تحديث إحصائيات الكاترينج
@@ -142,22 +175,21 @@ export default function AdminDashboard() {
       }
     };
 
-    window.addEventListener("storage", syncOrders);
     window.addEventListener("storage", syncCatering);
+    
+    // Initial sync and periodic updates
+    syncOrders(); // Initial call
+    syncCatering();
     
     // مراقبة دورية لضمان تحديث الإحصائيات
     const statsInterval = setInterval(() => {
-      syncOrders();
+      syncOrders(); // Will be async
       syncCatering();
       syncCount();
-    }, 5000); // كل 5 ثواني
-    
-    syncOrders();
-    syncCatering();
+    }, 10000); // كل 10 ثواني
     
     return () => {
       window.removeEventListener("usersUpdated", syncCount);
-      window.removeEventListener("storage", syncOrders);
       window.removeEventListener("storage", syncCatering);
       clearInterval(statsInterval);
     };
