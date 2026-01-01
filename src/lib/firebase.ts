@@ -28,10 +28,14 @@ let analytics: Analytics | null = null;
 // تهيئة Firebase
 try {
   if (typeof window !== 'undefined' || process.env.NODE_ENV === 'development') {
+    console.log('🔥 Initializing Firebase...');
     app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     db = getFirestore(app);
     storage = getStorage(app);
     auth = getAuth(app);
+    console.log('✅ Firebase initialized successfully');
+    console.log('📊 Firebase project:', firebaseConfig.projectId);
+    console.log('🗄️ Firestore instance:', db ? 'Ready' : 'Not initialized');
     
     // Analytics يعمل فقط في المتصفح
     if (typeof window !== 'undefined') {
@@ -44,7 +48,7 @@ try {
     }
   }
 } catch (error) {
-  console.error('خطأ في تهيئة Firebase:', error);
+  console.error('❌ خطأ في تهيئة Firebase:', error);
   // لا نرمي الخطأ في بيئة الإنتاج
   if (process.env.NODE_ENV === 'development') {
     throw error;

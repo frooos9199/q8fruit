@@ -1,20 +1,27 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import OrderEditModal from "./OrderEditModal";
 import InvoiceModal from "./InvoiceModal";
 import { sendInvoiceViaWhatsApp } from "../../../lib/whatsappInvoice";
+import { db } from "../../../lib/firebase";
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "firebase/firestore";
 
 interface OrderProduct {
+  productId?: string;
   name: string;
   unit: string;
   price: number;
   quantity: number;
+  total?: number;
+  image?: string;
 }
 
 interface Order {
-  id: number;
+  id: string;
+  orderNumber?: string;
   customer: string;
   phone?: string;
+  email?: string;
   address?: string;
   total: number;
   status: "جديد" | "قيد التنفيذ" | "مكتمل" | "ملغي";
@@ -22,82 +29,299 @@ interface Order {
   products: OrderProduct[];
   deliveryFee?: number;
   paymentType?: string;
+  // Firebase fields
+  delivery?: {
+    address?: string;
+    area?: string;
+    block?: string;
+    street?: string;
+    building?: string;
+    floor?: string;
+    apartment?: string;
+    notes?: string;
+  };
+  pricing?: {
+    subtotal?: number;
+    deliveryPrice?: number;
+    total?: number;
+  };
+  items?: OrderProduct[];
+  createdAt?: any;
+  timestamp?: number;
 }
-
-import { useEffect } from "react";
-import { useRef } from "react";
 
 function OrdersTable() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [editOrder, setEditOrder] = useState<Order | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
   const [printOrder, setPrintOrder] = useState<Order | null>(null);
-  const [sendingWhatsApp, setSendingWhatsApp] = useState<{ orderId: number; type: string } | null>(null);
+  const [sendingWhatsApp, setSendingWhatsApp] = useState<{ orderId: string; type: string } | null>(null);
 
-  // تحديث الطلبات عند أي تغيير في localStorage
+  // Transform Firebase order to match Order interface
+  function transformFirebaseOrder(doc: any): Order {
+    const data = doc.data();
+    
+    console.log('🔍 Transforming order:', doc.id, data);
+    
+    // Map Firebase status to Arabic status (handle both old and new statuses)
+    const statusMap: Record<string, Order['status']> = {
+      'new': 'جديد',
+      'pending': 'جديد',
+      'confirmed': 'قيد التنفيذ',
+      'preparing': 'قيد التنفيذ',
+      'delivering': 'قيد التنفيذ',
+      'completed': 'مكتمل',
+      'مكتمل': 'مكتمل',
+      'جديد': 'جديد',
+      'قيد التنفيذ': 'قيد التنفيذ',
+      'cancelled': 'ملغي',
+      'ملغي': 'ملغي'
+    };
+
+    // Build address from delivery object
+    let address = '';
+    if (data.delivery) {
+      const parts = [];
+      if (data.delivery.area) parts.push(data.delivery.area);
+      if (data.delivery.block) parts.push(`قطعة ${data.delivery.block}`);
+      if (data.delivery.street) parts.push(`شارع ${data.delivery.street}`);
+      if (data.delivery.building) parts.push(`بناية ${data.delivery.building}`);
+      if (data.delivery.floor) parts.push(`دور ${data.delivery.floor}`);
+      if (data.delivery.apartment) parts.push(`شقة ${data.delivery.apartment}`);
+      address = parts.join('، ');
+      if (data.delivery.notes) address += ` - ${data.delivery.notes}`;
+    }
+
+    // Get products from items or products field
+    const products = (data.items || data.products || []).map((item: any) => ({
+      productId: item.productId || '',
+      name: item.name || '',
+      unit: item.unit || '',
+      price: item.price || 0,
+      quantity: item.quantity || 0,
+      total: item.total || (item.price * item.quantity),
+      image: item.image || ''
+    }));
+
+    // Get date
+    let date = new Date().toISOString();
+    if (data.createdAt) {
+      try {
+        if (typeof data.createdAt.toDate === 'function') {
+          date = data.createdAt.toDate().toISOString();
+        }
+      } catch {
+        date = new Date().toISOString();
+      }
+    } else if (data.timestamp) {
+      date = new Date(data.timestamp).toISOString();
+    }
+    
+    // Get customer name - handle different formats
+    let customerName = 'عميل';
+    if (data.customer) {
+      if (typeof data.customer === 'string') {
+        customerName = data.customer;
+      } else if (data.customer.name) {
+        customerName = data.customer.name;
+      }
+    }
+    
+    // Get phone - handle different formats
+    let phone = '';
+    if (data.customer && typeof data.customer === 'object' && data.customer.phone) {
+      phone = data.customer.phone;
+    } else if (data.phone) {
+      phone = data.phone;
+    }
+
+    return {
+      id: doc.id,
+      orderNumber: data.orderNumber || `#${doc.id.slice(-6)}`,
+      customer: customerName,
+      phone: phone,
+      email: data.customer?.email || data.email || '',
+      address: address || data.delivery?.address || data.address || 'غير محدد',
+      total: data.pricing?.total || data.total || 0,
+      status: statusMap[data.status] || 'جديد',
+      date,
+      products,
+      deliveryFee: data.pricing?.deliveryPrice || data.deliveryFee || 0,
+      paymentType: data.paymentType || 'نقدي',
+      delivery: data.delivery,
+      pricing: data.pricing,
+      items: data.items,
+      createdAt: data.createdAt,
+      timestamp: data.timestamp
+    };
+  }
+
+  // تحديث الطلبات من Firebase
   useEffect(() => {
-    function getOrdersFromStorage(): Order[] {
+    // Check if Firebase is available
+    if (!db) {
+      console.warn('Firebase not initialized, falling back to localStorage only');
+      // Fallback to localStorage only
       if (typeof window !== "undefined") {
         const stored = window.localStorage.getItem("orders");
         if (stored) {
           try {
             const parsed = JSON.parse(stored);
-            return Array.isArray(parsed) ? parsed : [];
-          } catch {}
+            if (Array.isArray(parsed)) {
+              const localOrders = parsed.map((order: any) => ({
+                ...order,
+                id: `local_${order.id}`
+              }));
+              setOrders(localOrders);
+            }
+          } catch (e) {
+            console.error("Error parsing orders from localStorage:", e);
+          }
         }
       }
-      return [];
+      return;
     }
+
+    // Real-time listener for Firebase orders
+    const ordersRef = collection(db, 'orders');
+    // Try without orderBy first to see if we get any data
+    // const q = query(ordersRef, orderBy('createdAt', 'desc'));
     
-    function updateOrders() {
-      const newOrders = getOrdersFromStorage();
-      setOrders(newOrders);
-    }
+    console.log('🔥 Setting up Firebase listener for orders...');
     
-    // تحديث فوري عند التحميل
-    updateOrders();
-    
-    // مراقب للتغييرات في localStorage
-    window.addEventListener("storage", updateOrders);
-    
-    // مراقب دوري كل ثانية للتأكد من التحديث
-    const interval = setInterval(updateOrders, 1000);
-    
-    return () => {
-      window.removeEventListener("storage", updateOrders);
-      clearInterval(interval);
-    };
+    const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
+      console.log('📦 Received orders from Firebase:', snapshot.docs.length, 'orders');
+      const firebaseOrders = snapshot.docs.map(doc => {
+        console.log('📝 Order doc:', doc.id, doc.data());
+        return transformFirebaseOrder(doc);
+      });
+      console.log('✅ Transformed Firebase orders:', firebaseOrders);
+      
+      // Get localStorage orders (legacy)
+      let localOrders: Order[] = [];
+      if (typeof window !== "undefined") {
+        const stored = window.localStorage.getItem("orders");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              localOrders = parsed.map((order: any) => ({
+                ...order,
+                id: `local_${order.id}` // Prefix to avoid conflicts
+              }));
+            }
+          } catch (e) {
+            console.error("Error parsing orders from localStorage:", e);
+          }
+        }
+      }
+      
+      // Merge orders (Firebase first, then localStorage)
+      const allOrders = [...firebaseOrders, ...localOrders];
+      console.log('🎯 Total orders to display:', allOrders.length, 'orders');
+      setOrders(allOrders);
+    }, (error) => {
+      console.error('❌ Error listening to orders:', error);
+      
+      // Fallback to localStorage only
+      if (typeof window !== "undefined") {
+        const stored = window.localStorage.getItem("orders");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (Array.isArray(parsed)) {
+              const localOrders = parsed.map((order: any) => ({
+                ...order,
+                id: `local_${order.id}`
+              }));
+              setOrders(localOrders);
+            }
+          } catch (e) {
+            console.error("Error parsing orders from localStorage:", e);
+          }
+        }
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleEditSave = async (updated: Order) => {
-    setOrders(prev => {
-      const updatedOrders = prev.map((o: Order) => o.id === updated.id ? updated : o);
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("orders", JSON.stringify(updatedOrders));
-        // مزامنة فورية مع Firebase
-        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-          syncAllDataToFirebase().catch(console.error);
-        });
+    // Check if it's a Firebase order (not prefixed with 'local_')
+    if (!updated.id.startsWith('local_')) {
+      // Update in Firebase
+      try {
+        if (db) {
+          const orderRef = doc(db, 'orders', updated.id);
+          
+          // Map status back to English
+          const statusMapReverse: Record<Order['status'], string> = {
+            'جديد': 'pending',
+            'قيد التنفيذ': 'confirmed',
+            'مكتمل': 'completed',
+            'ملغي': 'cancelled'
+          };
+          
+          await updateDoc(orderRef, {
+            status: statusMapReverse[updated.status] || 'pending',
+            'customer.name': updated.customer,
+            'customer.phone': updated.phone,
+            total: updated.total,
+            deliveryFee: updated.deliveryFee,
+            paymentType: updated.paymentType,
+            updatedAt: new Date()
+          });
+        }
+      } catch (error) {
+        console.error('Error updating order in Firebase:', error);
+        alert('فشل تحديث الطلب');
+        return;
       }
-      return updatedOrders;
-    });
+    } else {
+      // Update in localStorage for legacy orders
+      setOrders(prev => {
+        const updatedOrders = prev.map((o: Order) => o.id === updated.id ? updated : o);
+        if (typeof window !== "undefined") {
+          // Remove 'local_' prefix before saving to localStorage
+          const localOrders = updatedOrders
+            .filter(o => o.id.startsWith('local_'))
+            .map(o => ({ ...o, id: o.id.replace('local_', '') }));
+          window.localStorage.setItem("orders", JSON.stringify(localOrders));
+        }
+        return updatedOrders;
+      });
+    }
     setEditOrder(null);
   };
 
-  // حذف الطلب (الفاتورة) من localStorage
-  const handleDeleteOrder = async (orderId: number) => {
+  // حذف الطلب (الفاتورة)
+  const handleDeleteOrder = async (orderId: string) => {
     if (window.confirm('هل أنت متأكد من حذف الفاتورة؟')) {
-      setOrders(prev => {
-        const updated = prev.filter(o => o.id !== orderId);
-        if (typeof window !== 'undefined') {
-          window.localStorage.setItem('orders', JSON.stringify(updated));
-          // مزامنة فورية مع Firebase
-          import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-            syncAllDataToFirebase().catch(console.error);
-          });
+      // Check if it's a Firebase order
+      if (!orderId.startsWith('local_')) {
+        // Delete from Firebase
+        try {
+          if (db) {
+            const orderRef = doc(db, 'orders', orderId);
+            await deleteDoc(orderRef);
+          }
+        } catch (error) {
+          console.error('Error deleting order from Firebase:', error);
+          alert('فشل حذف الطلب');
         }
-        return updated;
-      });
+      } else {
+        // Delete from localStorage for legacy orders
+        setOrders(prev => {
+          const updated = prev.filter(o => o.id !== orderId);
+          if (typeof window !== 'undefined') {
+            const localOrders = updated
+              .filter(o => o.id.startsWith('local_'))
+              .map(o => ({ ...o, id: o.id.replace('local_', '') }));
+            window.localStorage.setItem('orders', JSON.stringify(localOrders));
+          }
+          return updated;
+        });
+      }
     }
   };
 

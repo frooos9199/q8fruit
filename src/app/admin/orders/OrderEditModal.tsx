@@ -10,12 +10,14 @@ interface OrderProduct {
 }
 
 interface Order {
-  id: number;
+  id: string;
   customer: string;
   total: number;
   status: "جديد" | "قيد التنفيذ" | "مكتمل" | "ملغي";
   date: string;
   products: OrderProduct[];
+  deliveryFee?: number;
+  paymentType?: string;
 }
 
 interface Props {

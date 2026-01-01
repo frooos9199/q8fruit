@@ -64,12 +64,24 @@ export const sendInvoiceViaWhatsApp = async (order: any, recipient: 'admin' | 'c
     
     const targetNumber = recipient === 'admin' ? adminNumber : customerNumber;
     
+    // Extract numeric ID from order.id (can be "local_123" or Firebase ID)
+    let displayId = 1000;
+    if (order.id) {
+      if (typeof order.id === 'string' && order.id.startsWith('local_')) {
+        displayId = 1000 + parseInt(order.id.replace('local_', ''));
+      } else if (typeof order.id === 'string') {
+        displayId = parseInt(order.id.slice(-6), 16); // Use last 6 chars as hex
+      } else {
+        displayId = 1000 + order.id;
+      }
+    }
+    
     // تنسيق رسالة الفاتورة
     const message = `
 🍎 *فاتورة متجر الفواكه والخضار - Q8 Fruit*
 
 📋 *تفاصيل الطلب:*
-رقم الطلب: #${1000 + order.id}
+رقم الطلب: ${order.orderNumber || `#${displayId}`}
 التاريخ: ${order.date}
 
 👤 *بيانات العميل:*

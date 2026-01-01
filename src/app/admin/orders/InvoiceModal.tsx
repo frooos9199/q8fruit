@@ -10,7 +10,7 @@ interface OrderProduct {
 
 interface InvoiceProps {
   order: {
-    id: number;
+    id: string;
     customer: string;
     phone?: string;
     address?: string;
