@@ -157,6 +157,15 @@ export default function ProductTable() {
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== id);
       saveProductsToStorage(updated);
+      
+      // 🔥 حذف من Firebase أيضاً
+      if (db) {
+        const productRef = doc(db, 'products', id.toString());
+        updateDoc(productRef, {
+          active: false // بدل الحذف، نعطله
+        }).catch(err => console.error('❌ خطأ في تعطيل المنتج في Firebase:', err));
+      }
+      
       return updated;
     });
   };
@@ -188,6 +197,17 @@ export default function ProductTable() {
       });
       
       saveProductsToStorage(updated);
+      
+      // 🔥 تحديث Firebase أيضاً
+      const updatedProduct = updated.find(p => p.id === productId);
+      if (updatedProduct && db) {
+        const productRef = doc(db, 'products', productId.toString());
+        updateDoc(productRef, {
+          categories: updatedProduct.categories,
+          category: updatedProduct.category
+        }).catch(err => console.error('❌ خطأ في تحديث الفئات في Firebase:', err));
+      }
+      
       return updated;
     });
   };
@@ -303,10 +323,41 @@ export default function ProductTable() {
 
       saveProductsToStorage(newProducts);
 
-      // مزامنة يدوية فقط - معطلة تلقائياً
-      // import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-      //   syncAllDataToFirebase().catch(console.error);
-      // });
+      // 🔥 إضافة المنتج إلى Firebase مباشرة
+      if (db) {
+        const productRef = doc(db, 'products', newId.toString());
+        updateDoc(productRef, {
+          name: productWithId.name,
+          units: productWithId.units,
+          category: productWithId.category,
+          categories: productWithId.categories || [productWithId.category],
+          active: productWithId.active !== false, // true by default
+          image: productWithId.image || '',
+          images: productWithId.images || [],
+          hasOffer: productWithId.hasOffer || false,
+          discount: productWithId.discount || 0,
+          order: newOrder
+        }).catch(async (err) => {
+          // إذا المنتج مو موجود، أنشئه
+          if (err.code === 'not-found') {
+            const { setDoc } = await import('firebase/firestore');
+            await setDoc(productRef, {
+              name: productWithId.name,
+              units: productWithId.units,
+              category: productWithId.category,
+              categories: productWithId.categories || [productWithId.category],
+              active: productWithId.active !== false,
+              image: productWithId.image || '',
+              images: productWithId.images || [],
+              hasOffer: productWithId.hasOffer || false,
+              discount: productWithId.discount || 0,
+              order: newOrder
+            });
+          } else {
+            console.error('❌ خطأ في إضافة المنتج لـ Firebase:', err);
+          }
+        });
+      }
 
       return newProducts;
     });
