@@ -3,6 +3,8 @@ import { useState } from "react";
 import ProductEditModal from "./ProductEditModal";
 import { useEffect, useState as useStateReact } from "react";
 import CateringTable from "../catering/CateringTable";
+import { db } from "../../../lib/firebase";
+import { doc, updateDoc } from "firebase/firestore";
 
 interface ProductUnit {
   name: string;
@@ -138,10 +140,14 @@ export default function ProductTable() {
       console.log(`تم تغيير حالة المنتج ${id} إلى:`, updated.find(p => p.id === id)?.active);
       saveProductsToStorage(updated);
       
-      // مزامنة يدوية فقط - معطلة تلقائياً
-      // import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-      //   syncAllDataToFirebase().catch(console.error);
-      // });
+      // 🔥 حفظ في Firebase للتطبيق
+      const updatedProduct = updated.find(p => p.id === id);
+      if (updatedProduct && db) {
+        const productRef = doc(db, 'products', id.toString());
+        updateDoc(productRef, {
+          active: updatedProduct.active
+        }).catch(err => console.error('❌ خطأ في تحديث Firebase:', err));
+      }
       
       return updated;
     });
@@ -201,6 +207,17 @@ export default function ProductTable() {
       });
       
       saveProductsToStorage(updated);
+      
+      // 🔥 حفظ في Firebase للتطبيق
+      const updatedProduct = updated.find(p => p.id === productId);
+      if (updatedProduct && db) {
+        const productRef = doc(db, 'products', productId.toString());
+        updateDoc(productRef, {
+          hasOffer: updatedProduct.hasOffer || false,
+          discount: updatedProduct.discount || 0
+        }).catch(err => console.error('❌ خطأ في تحديث Firebase:', err));
+      }
+      
       return updated;
     });
   };
@@ -225,6 +242,17 @@ export default function ProductTable() {
       });
       
       saveProductsToStorage(updated);
+      
+      // 🔥 حفظ في Firebase للتطبيق
+      const updatedProduct = updated.find(p => p.id === productId);
+      if (updatedProduct && db) {
+        const productRef = doc(db, 'products', productId.toString());
+        updateDoc(productRef, {
+          hasOffer: updatedProduct.hasOffer || false,
+          discount: updatedProduct.discount || 0
+        }).catch(err => console.error('❌ خطأ في تحديث Firebase:', err));
+      }
+      
       return updated;
     });
   };
@@ -233,6 +261,23 @@ export default function ProductTable() {
     setProducts((prev) => {
       const newProducts = prev.map((p) => (p.id === updated.id ? updated : p));
       saveProductsToStorage(newProducts);
+      
+      // 🔥 حفظ في Firebase للتطبيق
+      if (db) {
+        const productRef = doc(db, 'products', updated.id.toString());
+        updateDoc(productRef, {
+          name: updated.name,
+          units: updated.units,
+          category: updated.category,
+          categories: updated.categories,
+          active: updated.active,
+          image: updated.image,
+          images: updated.images,
+          hasOffer: updated.hasOffer || false,
+          discount: updated.discount || 0
+        }).catch(err => console.error('❌ خطأ في تحديث Firebase:', err));
+      }
+      
       return newProducts;
     });
     setEditProduct(null);
