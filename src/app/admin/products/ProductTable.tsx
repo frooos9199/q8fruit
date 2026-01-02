@@ -60,36 +60,7 @@ export default function ProductTable() {
       };
 
       loadProducts();
-
-      // مراقبة تغييرات localStorage
-      const handleStorageChange = (e: StorageEvent) => {
-        console.log('🔄 حدث storage:', e.key, e.newValue ? JSON.parse(e.newValue).length + ' منتج' : 'null');
-        if (e.key === 'products' && e.newValue) {
-          try {
-            const parsed = JSON.parse(e.newValue);
-            console.log('📦 تحديث المنتجات من storage:', parsed.length);
-
-            // إضافة ترتيب افتراضي للمنتجات الجديدة
-            const withOrder = parsed.map((p: Product, index: number) => ({
-              ...p,
-              order: p.order ?? index
-            }));
-
-            // ترتيب المنتجات حسب الـ order
-            withOrder.sort((a: Product, b: Product) => (a.order || 0) - (b.order || 0));
-
-            setProducts(withOrder);
-          } catch (error) {
-            console.error('خطأ في تحليل بيانات المنتجات:', error);
-          }
-        }
-      };
-
-      window.addEventListener('storage', handleStorageChange);
-
-      return () => {
-        window.removeEventListener('storage', handleStorageChange);
-      };
+      // تم إزالة مراقب storage لمنع التداخل مع التحديثات المباشرة
     }
   }, []);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
