@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إضافة الفئات والمنتجات</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        button { background: #22c55e; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        button:hover { background: #16a34a; }
+        .success { color: #22c55e; font-weight: bold; margin: 10px 0; }
+        .section { border: 1px solid #ddd; padding: 15px; margin: 15px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏪 إعداد المتجر الكامل</h1>
+        
+        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <h3>🔗 الانتقال بين الصفحات:</h3>
+            <button onclick="window.location.href='add-fruit-products.html'" style="background: #22c55e;">🍎 إضافة الفواكه</button>
+            <button onclick="window.location.href='sync-to-firebase.html'" style="background: #f59e0b;">🔗 ربط مع Firebase</button>
+            <button onclick="window.location.href='/'" style="background: #8b5cf6;">🏠 الصفحة الرئيسية</button>
+        </div>
+        
+        <div class="section">
+            <h3>الفئات:</h3>
+            <button onclick="addCategories()">إضافة جميع الفئات</button>
+            <button onclick="showCategories()">عرض الفئات</button>
+        </div>
+        
+        <div class="section">
+            <h3>المنتجات:</h3>
+            <button onclick="addAllProducts()">إضافة جميع المنتجات</button>
+            <button onclick="showProducts()">عرض المنتجات</button>
+        </div>
+        
+        <div class="section">
+            <h3>إدارة البيانات:</h3>
+            <button onclick="clearAll()">مسح جميع البيانات</button>
+            <button onclick="exportData()">تصدير البيانات</button>
+        </div>
+        
+        <div id="result"></div>
+        <div id="data-display"></div>
+    </div>
+
+    <script>
+        const categories = [
+            { id: 1, name: "فواكه", icon: "🍎", active: true },
+            { id: 2, name: "خضار", icon: "🥕", active: true },
+            { id: 3, name: "خضار ورقية", icon: "🥬", active: true },
+            { id: 4, name: "بقوليات", icon: "🫘", active: true },
+            { id: 5, name: "أعشاب", icon: "🌿", active: true }
+        ];
+
+        const allProducts = [
+            // فواكه
+            { name: "تفاح أحمر", category: "فواكه", units: [{ name: "كيلو", price: 1.250 }, { name: "حبة", price: 0.150 }], quantity: 500, active: true, images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop"] },
+            { name: "موز", category: "فواكه", units: [{ name: "كيلو", price: 0.800 }, { name: "حبة", price: 0.100 }], quantity: 300, active: true, images: ["https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop"] },
+            { name: "برتقال", category: "فواكه", units: [{ name: "كيلو", price: 1.000 }, { name: "حبة", price: 0.120 }], quantity: 400, active: true, images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=400&fit=crop"] },
+            { name: "فراولة", category: "فواكه", units: [{ name: "كيلو", price: 3.500 }, { name: "علبة", price: 1.750 }], quantity: 150, active: true, images: ["https://images.unsplash.com/photo-1464965911861-746a04b4bca6?w=400&h=400&fit=crop"] },
+            { name: "عنب أحمر", category: "فواكه", units: [{ name: "كيلو", price: 2.250 }, { name: "عنقود", price: 1.500 }], quantity: 200, active: true, images: ["https://images.unsplash.com/photo-1537640538966-79f369143f8f?w=400&h=400&fit=crop"] },
+            
+            // خضار
+            { name: "طماطم", category: "خضار", units: [{ name: "كيلو", price: 0.750 }, { name: "حبة", price: 0.100 }], quantity: 400, active: true, images: ["https://images.unsplash.com/photo-1546470427-e26264be0b0d?w=400&h=400&fit=crop"] },
+            { name: "خيار", category: "خضار", units: [{ name: "كيلو", price: 0.500 }, { name: "حبة", price: 0.080 }], quantity: 350, active: true, images: ["https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=400&h=400&fit=crop"] },
+            { name: "بصل", category: "خضار", units: [{ name: "كيلو", price: 0.600 }, { name: "حبة", price: 0.100 }], quantity: 300, active: true, images: ["https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=400&fit=crop"] },
+            { name: "جزر", category: "خضار", units: [{ name: "كيلو", price: 0.800 }, { name: "حبة", price: 0.120 }], quantity: 250, active: true, images: ["https://images.unsplash.com/photo-1445282768818-728615cc910a?w=400&h=400&fit=crop"] },
+            { name: "بطاطس", category: "خضار", units: [{ name: "كيلو", price: 0.650 }, { name: "حبة", price: 0.100 }], quantity: 500, active: true, images: ["https://images.unsplash.com/photo-1518977676601-b53f82aba655?w=400&h=400&fit=crop"] },
+            
+            // خضار ورقية
+            { name: "خس", category: "خضار ورقية", units: [{ name: "حبة", price: 0.500 }, { name: "كيس", price: 0.300 }], quantity: 100, active: true, images: ["https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&h=400&fit=crop"] },
+            { name: "سبانخ", category: "خضار ورقية", units: [{ name: "حزمة", price: 0.400 }, { name: "كيس", price: 0.250 }], quantity: 80, active: true, images: ["https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=400&fit=crop"] },
+            { name: "جرجير", category: "خضار ورقية", units: [{ name: "حزمة", price: 0.350 }], quantity: 60, active: true, images: ["https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=400&h=400&fit=crop"] },
+            
+            // بقوليات
+            { name: "فاصولياء خضراء", category: "بقوليات", units: [{ name: "كيلو", price: 1.500 }], quantity: 120, active: true, images: ["https://images.unsplash.com/photo-1553621042-f6e147245754?w=400&h=400&fit=crop"] },
+            { name: "بازلاء", category: "بقوليات", units: [{ name: "كيلو", price: 2.000 }], quantity: 100, active: true, images: ["https://images.unsplash.com/photo-1587735243615-c03f25aaff15?w=400&h=400&fit=crop"] }
+        ];
+
+        function addCategories() {
+            localStorage.setItem('categories', JSON.stringify(categories));
+            document.getElementById('result').innerHTML = 
+                `<div class="success">✅ تم إضافة ${categories.length} فئة بنجاح!</div>`;
+            showCategories();
+        }
+
+        function addAllProducts() {
+            const productsWithIds = allProducts.map((product, index) => ({
+                ...product,
+                id: index + 1
+            }));
+            
+            localStorage.setItem('products', JSON.stringify(productsWithIds));
+            document.getElementById('result').innerHTML = 
+                `<div class="success">✅ تم إضافة ${productsWithIds.length} منتج بنجاح!</div>`;
+            showProducts();
+        }
+
+        function showCategories() {
+            const stored = localStorage.getItem('categories');
+            if (!stored) {
+                document.getElementById('data-display').innerHTML = '<p>لا توجد فئات محفوظة</p>';
+                return;
+            }
+
+            const cats = JSON.parse(stored);
+            let html = `<h3>الفئات المحفوظة (${cats.length}):</h3>`;
+            cats.forEach(cat => {
+                html += `<div style="padding: 5px; border: 1px solid #ddd; margin: 5px; border-radius: 3px;">
+                    ${cat.icon} ${cat.name} - ${cat.active ? 'مفعل' : 'موقوف'}
+                </div>`;
+            });
+            document.getElementById('data-display').innerHTML = html;
+        }
+
+        function showProducts() {
+            const stored = localStorage.getItem('products');
+            if (!stored) {
+                document.getElementById('data-display').innerHTML = '<p>لا توجد منتجات محفوظة</p>';
+                return;
+            }
+
+            const products = JSON.parse(stored);
+            let html = `<h3>المنتجات المحفوظة (${products.length}):</h3>`;
+            
+            const groupedByCategory = products.reduce((acc, product) => {
+                if (!acc[product.category]) acc[product.category] = [];
+                acc[product.category].push(product);
+                return acc;
+            }, {});
+
+            Object.keys(groupedByCategory).forEach(category => {
+                html += `<h4>${category} (${groupedByCategory[category].length}):</h4>`;
+                groupedByCategory[category].forEach(product => {
+                    html += `<div style="padding: 5px; border: 1px solid #ddd; margin: 5px; border-radius: 3px;">
+                        ${product.name} - ${product.units.map(u => `${u.name}: ${u.price} د.ك`).join(', ')}
+                    </div>`;
+                });
+            });
+            
+            document.getElementById('data-display').innerHTML = html;
+        }
+
+        function clearAll() {
+            if (confirm('هل أنت متأكد من حذف جميع البيانات؟')) {
+                localStorage.removeItem('products');
+                localStorage.removeItem('categories');
+                document.getElementById('result').innerHTML = 
+                    '<div class="success">🗑️ تم حذف جميع البيانات</div>';
+                document.getElementById('data-display').innerHTML = '';
+            }
+        }
+
+        function exportData() {
+            const products = JSON.parse(localStorage.getItem('products') || '[]');
+            const categories = JSON.parse(localStorage.getItem('categories') || '[]');
+            
+            const data = { products, categories };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'store-data.json';
+            a.click();
+            
+            document.getElementById('result').innerHTML = 
+                '<div class="success">📁 تم تصدير البيانات</div>';
+        }
+
+        // عرض البيانات عند تحميل الصفحة
+        window.onload = function() {
+            showCategories();
+            showProducts();
+        };
+    </script>
+</body>
+</html>

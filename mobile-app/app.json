@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "فكهاني الكويت",
+    "slug": "fruitq8-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#22c55e"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.Fruitq8.summitkw",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "NSCameraUsageDescription": "هذا التطبيق يحتاج للكاميرا لتصوير المنتجات",
+        "NSPhotoLibraryUsageDescription": "هذا التطبيق يحتاج للوصول للصور لاختيار صور المنتجات"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#22c55e"
+      },
+      "package": "com.fruitq8.summitkw",
+      "versionCode": 1,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-splash-screen",
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "fruitq8-mobile-app"
+      }
+    }
+  }
+}

@@ -76,6 +76,32 @@ export const syncCategoriesToFirebase = async (categories: any[]) => {
   }
 };
 
+// مزامنة فئات الكيترنج مع Firebase (كمجموعة منفصلة)
+export const syncCateringToFirebase = async (cateringCategories: any[]) => {
+  try {
+    // حذف جميع الفئات القديمة
+    const cateringRef = collection(db!, 'cateringCategories');
+    const existingDocs = await getDocs(cateringRef);
+    const deletePromises = existingDocs.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+    
+    // إضافة الفئات الجديدة
+    const addPromises = cateringCategories.map(category => 
+      setDoc(doc(db!, 'cateringCategories', category.id.toString()), {
+        ...category,
+        updatedAt: new Date().toISOString()
+      })
+    );
+    await Promise.all(addPromises);
+    
+    console.log(`✅ تم مزامنة ${cateringCategories.length} فئة كيترنج مع Firebase`);
+    return true;
+  } catch (error) {
+    console.error('❌ خطأ في مزامنة فئات الكيترنج:', error);
+    return false;
+  }
+};
+
 // جلب التصنيفات من Firebase
 export const getCategoriesFromFirebase = async () => {
   try {
@@ -282,11 +308,14 @@ export const syncAllDataToFirebase = async () => {
       }
     }
     
-    // مزامنة التصنيفات
-    const categories = localStorage.getItem('cateringCategories');
-    if (categories) {
-      const parsedCategories = JSON.parse(categories);
-      await syncCategoriesToFirebase(parsedCategories);
+    // مزامنة فئات الكيترنج
+    const cateringCategories = localStorage.getItem('cateringCategories');
+    if (cateringCategories) {
+      const parsedCateringCategories = JSON.parse(cateringCategories);
+      if (Array.isArray(parsedCateringCategories) && parsedCateringCategories.length > 0) {
+        await syncCateringToFirebase(parsedCateringCategories);
+        console.log(`✅ تم مزامنة ${parsedCateringCategories.length} فئة كيترنج`);
+      }
     }
     
     // مزامنة البانرات

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ربط المنتجات مع Firebase</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        button { background: #22c55e; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 10px 5px; }
+        button:hover { background: #16a34a; }
+        .success { color: #22c55e; font-weight: bold; margin: 10px 0; }
+        .error { color: #ef4444; font-weight: bold; margin: 10px 0; }
+        .loading { color: #3b82f6; font-weight: bold; margin: 10px 0; }
+        .product { border: 1px solid #ddd; padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .config { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; }
+        input { width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 ربط المنتجات مع Firebase</h1>
+        
+        <div style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+            <h3>🔗 الانتقال بين الصفحات:</h3>
+            <button onclick="window.location.href='setup-store.html'" style="background: #3b82f6;">🏪 إعداد المتجر الكامل</button>
+            <button onclick="window.location.href='add-fruit-products.html'" style="background: #22c55e;">🍎 إضافة الفواكه</button>
+            <button onclick="window.location.href='/'" style="background: #8b5cf6;">🏠 الصفحة الرئيسية</button>
+        </div>
+        
+        <div class="config">
+            <h3>إعدادات Firebase:</h3>
+            <input type="text" id="apiKey" placeholder="API Key">
+            <input type="text" id="authDomain" placeholder="Auth Domain">
+            <input type="text" id="projectId" placeholder="Project ID">
+            <input type="text" id="storageBucket" placeholder="Storage Bucket">
+            <input type="text" id="messagingSenderId" placeholder="Messaging Sender ID">
+            <input type="text" id="appId" placeholder="App ID">
+            <button onclick="saveConfig()">حفظ الإعدادات</button>
+        </div>
+        
+        <button onclick="syncToFirebase()">رفع المنتجات إلى Firebase</button>
+        <button onclick="loadFromFirebase()">تحميل من Firebase</button>
+        <button onclick="showLocalProducts()">عرض المنتجات المحلية</button>
+        
+        <div id="result"></div>
+        <div id="products-list"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        let db = null;
+        let app = null;
+
+        // تحميل الإعدادات المحفوظة
+        window.onload = function() {
+            loadConfig();
+            showLocalProducts();
+        };
+
+        function loadConfig() {
+            const config = localStorage.getItem('firebaseConfig');
+            if (config) {
+                const parsed = JSON.parse(config);
+                document.getElementById('apiKey').value = parsed.apiKey || '';
+                document.getElementById('authDomain').value = parsed.authDomain || '';
+                document.getElementById('projectId').value = parsed.projectId || '';
+                document.getElementById('storageBucket').value = parsed.storageBucket || '';
+                document.getElementById('messagingSenderId').value = parsed.messagingSenderId || '';
+                document.getElementById('appId').value = parsed.appId || '';
+                
+                // تهيئة Firebase تلقائياً
+                initFirebase(parsed);
+            }
+        }
+
+        window.saveConfig = function() {
+            const config = {
+                apiKey: document.getElementById('apiKey').value,
+                authDomain: document.getElementById('authDomain').value,
+                projectId: document.getElementById('projectId').value,
+                storageBucket: document.getElementById('storageBucket').value,
+                messagingSenderId: document.getElementById('messagingSenderId').value,
+                appId: document.getElementById('appId').value
+            };
+
+            localStorage.setItem('firebaseConfig', JSON.stringify(config));
+            initFirebase(config);
+            
+            document.getElementById('result').innerHTML = 
+                '<div class="success">✅ تم حفظ إعدادات Firebase</div>';
+        };
+
+        function initFirebase(config) {
+            try {
+                app = initializeApp(config);
+                db = getFirestore(app);
+                console.log('Firebase initialized successfully');
+            } catch (error) {
+                console.error('Firebase initialization error:', error);
+                document.getElementById('result').innerHTML = 
+                    `<div class="error">❌ خطأ في تهيئة Firebase: ${error.message}</div>`;
+            }
+        }
+
+        window.syncToFirebase = async function() {
+            if (!db) {
+                document.getElementById('result').innerHTML = 
+                    '<div class="error">❌ يجب إعداد Firebase أولاً</div>';
+                return;
+            }
+
+            const products = JSON.parse(localStorage.getItem('products') || '[]');
+            if (products.length === 0) {
+                document.getElementById('result').innerHTML = 
+                    '<div class="error">❌ لا توجد منتجات محلية للرفع</div>';
+                return;
+            }
+
+            document.getElementById('result').innerHTML = 
+                '<div class="loading">⏳ جاري رفع المنتجات...</div>';
+
+            try {
+                let successCount = 0;
+                
+                for (const product of products) {
+                    await setDoc(doc(db, 'products', product.id.toString()), {
+                        ...product,
+                        createdAt: new Date(),
+                        updatedAt: new Date()
+                    });
+                    successCount++;
+                }
+
+                document.getElementById('result').innerHTML = 
+                    `<div class="success">✅ تم رفع ${successCount} منتج إلى Firebase بنجاح!</div>`;
+                    
+            } catch (error) {
+                console.error('Sync error:', error);
+                document.getElementById('result').innerHTML = 
+                    `<div class="error">❌ خطأ في الرفع: ${error.message}</div>`;
+            }
+        };
+
+        window.loadFromFirebase = async function() {
+            if (!db) {
+                document.getElementById('result').innerHTML = 
+                    '<div class="error">❌ يجب إعداد Firebase أولاً</div>';
+                return;
+            }
+
+            document.getElementById('result').innerHTML = 
+                '<div class="loading">⏳ جاري تحميل المنتجات...</div>';
+
+            try {
+                const querySnapshot = await getDocs(collection(db, 'products'));
+                const products = [];
+                
+                querySnapshot.forEach((doc) => {
+                    products.push({ id: doc.id, ...doc.data() });
+                });
+
+                localStorage.setItem('products', JSON.stringify(products));
+                
+                document.getElementById('result').innerHTML = 
+                    `<div class="success">✅ تم تحميل ${products.length} منتج من Firebase</div>`;
+                    
+                showLocalProducts();
+                
+            } catch (error) {
+                console.error('Load error:', error);
+                document.getElementById('result').innerHTML = 
+                    `<div class="error">❌ خطأ في التحميل: ${error.message}</div>`;
+            }
+        };
+
+        window.showLocalProducts = function() {
+            const stored = localStorage.getItem('products');
+            if (!stored) {
+                document.getElementById('products-list').innerHTML = '<p>لا توجد منتجات محفوظة محلياً</p>';
+                return;
+            }
+
+            const products = JSON.parse(stored);
+            let html = `<h3>المنتجات المحلية (${products.length}):</h3>`;
+            
+            products.forEach(product => {
+                const imageUrl = product.images && product.images[0] ? product.images[0] : 
+                               (product.image || 'https://via.placeholder.com/60x60?text=صورة');
+                
+                html += `
+                    <div class="product">
+                        <img src="${imageUrl}" alt="${product.name}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px;" onerror="this.src='https://via.placeholder.com/60x60?text=صورة'">
+                        <strong>${product.name}</strong> - ${product.category}
+                        <br>الأسعار: ${product.units.map(u => `${u.name}: ${u.price} د.ك`).join(', ')}
+                        <br>الكمية: ${product.quantity} | الحالة: ${product.active ? 'مفعل' : 'موقوف'}
+                    </div>
+                `;
+            });
+            
+            document.getElementById('products-list').innerHTML = html;
+        };
+    </script>
+</body>
+</html>
