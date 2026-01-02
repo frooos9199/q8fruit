@@ -92,12 +92,29 @@ export default function ProductTable() {
     }
   }, []);
 
-  const saveProductsToStorage = (prods: Product[]) => {
+  const saveProductsToStorage = async (prods: Product[]) => {
     console.log('💾 حفظ المنتجات في localStorage:', prods.length);
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('products', JSON.stringify(prods));
-      // لا نرسل storage event لأنه يسبب تحديث دوري ويلغي التعديلات
-      // البيانات محفوظة في localStorage و state معاً
+      
+      // 🌐 حفظ في API للتطبيق
+      try {
+        const response = await fetch('/api/products', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(prods),
+        });
+        
+        if (response.ok) {
+          console.log('✅ تم حفظ المنتجات في API');
+        } else {
+          console.error('❌ خطأ في حفظ API:', response.status);
+        }
+      } catch (apiError) {
+        console.error('❌ خطأ في الاتصال بـ API:', apiError);
+      }
     }
   };
 
