@@ -4,7 +4,7 @@ import ProductEditModal from "./ProductEditModal";
 import { useEffect, useState as useStateReact } from "react";
 import CateringTable from "../catering/CateringTable";
 import { db } from "../../../lib/firebase";
-import { doc, updateDoc } from "firebase/firestore";
+import { doc, updateDoc, setDoc } from "firebase/firestore";
 
 interface ProductUnit {
   name: string;
@@ -310,7 +310,7 @@ export default function ProductTable() {
       // 🔥 إضافة المنتج إلى Firebase مباشرة
       if (db) {
         const productRef = doc(db, 'products', newId.toString());
-        updateDoc(productRef, {
+        setDoc(productRef, {
           name: productWithId.name,
           units: productWithId.units,
           category: productWithId.category,
@@ -322,24 +322,7 @@ export default function ProductTable() {
           discount: productWithId.discount || 0,
           order: newOrder
         }).catch(async (err) => {
-          // إذا المنتج مو موجود، أنشئه
-          if (err.code === 'not-found') {
-            const { setDoc } = await import('firebase/firestore');
-            await setDoc(productRef, {
-              name: productWithId.name,
-              units: productWithId.units,
-              category: productWithId.category,
-              categories: productWithId.categories || [productWithId.category],
-              active: productWithId.active !== false,
-              image: productWithId.image || '',
-              images: productWithId.images || [],
-              hasOffer: productWithId.hasOffer || false,
-              discount: productWithId.discount || 0,
-              order: newOrder
-            });
-          } else {
-            console.error('❌ خطأ في إضافة المنتج لـ Firebase:', err);
-          }
+          console.error('❌ خطأ في إضافة المنتج لـ Firebase:', err);
         });
       }
 
