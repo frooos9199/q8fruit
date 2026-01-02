@@ -1,10 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth } from "../../lib/firebase";
+import { auth, db } from "../../lib/firebase";
 import { getUserProfile, updateUserProfile, logoutUser } from "../../lib/auth";
 import { useRouter } from "next/navigation";
 import BackToHome from "../../components/BackToHome";
+import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
 
 interface UserProfile {
   uid: string;
@@ -24,6 +25,8 @@ export default function AccountPage() {
   const [form, setForm] = useState({ name: "", phone: "", address: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [orders, setOrders] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'profile' | 'orders'>('profile');
   const router = useRouter();
 
   useEffect(() => {

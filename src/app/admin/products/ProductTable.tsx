@@ -7,6 +7,7 @@ import CateringTable from "../catering/CateringTable";
 interface ProductUnit {
   name: string;
   price: number;
+  originalPrice?: number; // السعر الأصلي قبل الخصم
 }
 
 interface Product {
@@ -20,6 +21,8 @@ interface Product {
   category: string;
   categories?: string[];
   order?: number; // ترتيب المنتج
+  hasOffer?: boolean; // هل المنتج عليه عرض
+  discount?: number; // نسبة الخصم (مثال: 15 = 15%)
 }
 
 export default function ProductTable() {
@@ -135,12 +138,10 @@ export default function ProductTable() {
       console.log(`تم تغيير حالة المنتج ${id} إلى:`, updated.find(p => p.id === id)?.active);
       saveProductsToStorage(updated);
       
-      // مزامنة فورية مع Firebase
-      if (typeof window !== 'undefined') {
-        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-          syncAllDataToFirebase().catch(console.error);
-        });
-      }
+      // مزامنة يدوية فقط - معطلة تلقائياً
+      // import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+      //   syncAllDataToFirebase().catch(console.error);
+      // });
       
       return updated;
     });
@@ -150,12 +151,6 @@ export default function ProductTable() {
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== id);
       saveProductsToStorage(updated);
-      
-      // مزامنة فورية مع Firebase عند حذف منتج
-      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-        syncAllDataToFirebase().catch(console.error);
-      });
-      
       return updated;
     });
   };
@@ -187,12 +182,49 @@ export default function ProductTable() {
       });
       
       saveProductsToStorage(updated);
-      
-      // مزامنة فورية مع Firebase عند تغيير التصنيفات
-      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-        syncAllDataToFirebase().catch(console.error);
+      return updated;
+    });
+  };
+
+  // 🎁 تفعيل/إلغاء العرض
+  const toggleOffer = async (productId: number) => {
+    setProducts((prev) => {
+      const updated = prev.map((product) => {
+        if (product.id === productId) {
+          return {
+            ...product,
+            hasOffer: !product.hasOffer,
+            discount: product.hasOffer ? undefined : product.discount || 15
+          };
+        }
+        return product;
       });
       
+      saveProductsToStorage(updated);
+      return updated;
+    });
+  };
+
+  // 💰 تحديث نسبة الخصم
+  const updateDiscount = async (productId: number, discount: number) => {
+    if (discount < 0 || discount > 100) {
+      alert('يجب أن تكون نسبة الخصم بين 0 و 100');
+      return;
+    }
+
+    setProducts((prev) => {
+      const updated = prev.map((product) => {
+        if (product.id === productId) {
+          return {
+            ...product,
+            discount: discount > 0 ? discount : undefined,
+            hasOffer: discount > 0
+          };
+        }
+        return product;
+      });
+      
+      saveProductsToStorage(updated);
       return updated;
     });
   };
@@ -201,12 +233,6 @@ export default function ProductTable() {
     setProducts((prev) => {
       const newProducts = prev.map((p) => (p.id === updated.id ? updated : p));
       saveProductsToStorage(newProducts);
-      
-      // مزامنة فورية مع Firebase عند تعديل المنتج
-      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-        syncAllDataToFirebase().catch(console.error);
-      });
-      
       return newProducts;
     });
     setEditProduct(null);
@@ -232,10 +258,10 @@ export default function ProductTable() {
 
       saveProductsToStorage(newProducts);
 
-      // مزامنة فورية مع Firebase عند إضافة منتج
-      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-        syncAllDataToFirebase().catch(console.error);
-      });
+      // مزامنة يدوية فقط - معطلة تلقائياً
+      // import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
+      //   syncAllDataToFirebase().catch(console.error);
+      // });
 
       return newProducts;
     });
@@ -269,12 +295,6 @@ export default function ProductTable() {
       const reordered = newProducts.map((p, index) => ({ ...p, order: index }));
       
       saveProductsToStorage(reordered);
-      
-      // مزامنة مع Firebase
-      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-        syncAllDataToFirebase().catch(console.error);
-      });
-      
       return reordered;
     });
     
@@ -349,6 +369,7 @@ export default function ProductTable() {
             <th className="p-2">الوحدات والأسعار</th>
             <th className="p-2">الكمية</th>
             <th className="p-2">الكاترينج</th>
+            <th className="p-2">العروض 🎁</th>
             <th className="p-2">الحالة</th>
             <th className="p-2">تفعيل/إيقاف</th>
             <th className="p-2">تعديل</th>
@@ -418,6 +439,44 @@ export default function ProductTable() {
                       </label>
                     );
                   })}
+                </div>
+              </td>
+              <td className="p-2">
+                <div className="flex flex-col gap-2 items-center min-w-[140px]">
+                  {/* زر تفعيل/إلغاء العرض */}
+                  <button
+                    onClick={() => toggleOffer(product.id)}
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                      product.hasOffer
+                        ? "bg-red-500 text-white hover:bg-red-600"
+                        : "bg-gray-300 text-gray-700 hover:bg-gray-400"
+                    }`}
+                  >
+                    {product.hasOffer ? "🎁 عرض مفعل" : "تفعيل عرض"}
+                  </button>
+                  
+                  {/* إدخال نسبة الخصم */}
+                  {product.hasOffer && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={product.discount || 0}
+                        onChange={(e) => updateDiscount(product.id, parseInt(e.target.value) || 0)}
+                        className="w-16 px-2 py-1 border rounded text-center text-sm"
+                        placeholder="15"
+                      />
+                      <span className="text-xs text-gray-600">%</span>
+                    </div>
+                  )}
+                  
+                  {/* عرض نسبة الخصم */}
+                  {product.hasOffer && product.discount && (
+                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-bold">
+                      خصم {product.discount}%
+                    </span>
+                  )}
                 </div>
               </td>
               <td className="p-2">
