@@ -125,12 +125,8 @@ export default function ProductTable() {
     console.log('💾 حفظ المنتجات في localStorage:', prods.length);
     if (typeof window !== 'undefined') {
       window.localStorage.setItem('products', JSON.stringify(prods));
-      // إرسال حدث مخصص لتحديث الواجهة
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'products',
-        newValue: JSON.stringify(prods),
-        storageArea: window.localStorage
-      }));
+      // لا نرسل storage event لأنه يسبب تحديث دوري ويلغي التعديلات
+      // البيانات محفوظة في localStorage و state معاً
     }
   };
 
