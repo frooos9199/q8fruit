@@ -1,0 +1,21 @@
+# Mobile Apps - Not part of web deployment
+mobile-app/
+mobile-app-rn/
+
+# Testing and Development
+test-*.js
+check-*.js
+*.test.ts
+*.test.tsx
+__tests__/
+
+# Documentation
+*.md
+!README.md
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+.DS_Store

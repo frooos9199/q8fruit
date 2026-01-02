@@ -38,6 +38,10 @@
     ".next/dev/dev/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "mobile-app",
+    "mobile-app-rn",
+    "android",
+    "ios"
   ]
 }
