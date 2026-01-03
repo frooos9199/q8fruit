@@ -11,7 +11,7 @@ interface User {
   email: string;
   phone: string;
   active: boolean;
-  role: "عميل" | "مدير";
+  role: "عميل" | "مدير" | "مندوب";
   password: string;
 }
 

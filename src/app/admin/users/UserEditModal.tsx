@@ -7,7 +7,7 @@ interface User {
   email: string;
   phone: string;
   active: boolean;
-  role: "عميل" | "مدير";
+  role: "عميل" | "مدير" | "مندوب";
   password: string;
 }
 
@@ -95,6 +95,7 @@ export default function UserEditModal({ user, onSave, onClose }: Props) {
             >
               <option value="عميل">عميل</option>
               <option value="مدير">مدير</option>
+              <option value="مندوب">مندوب</option>
             </select>
           </label>
           <label>

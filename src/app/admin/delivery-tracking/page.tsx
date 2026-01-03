@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
+import DeliveryMap from '../../../components/DeliveryMap';
 
 interface DeliveryDriver {
   userId: string;
@@ -164,32 +165,12 @@ export default function DeliveryTrackingPage() {
                   🗺️ الخريطة
                 </h2>
                 
-                {/* Placeholder للخريطة */}
-                <div className="w-full h-[600px] bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                      🗺️ خريطة Google Maps
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500">
-                      سيتم إضافة خريطة Google Maps التفاعلية هنا
-                    </p>
-                    <div className="mt-6 space-y-2">
-                      {drivers.map((driver, index) => (
-                        <div key={driver.userId} className="bg-white dark:bg-gray-800 rounded p-3 text-sm">
-                          <span className="font-bold">مندوب {index + 1}:</span>{' '}
-                          <a
-                            href={`https://www.google.com/maps?q=${driver.location.latitude},${driver.location.longitude}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            فتح في خرائط Google →
-                          </a>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                {/* Google Maps Component */}
+                <DeliveryMap 
+                  drivers={drivers}
+                  selectedDriver={selectedDriver}
+                  onDriverSelect={setSelectedDriver}
+                />
               </div>
             </div>
           </div>
