@@ -12,7 +12,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 
-// مزامنة المنتجات مع Firebase (تحديث بدلاً من حذف وإعادة إنشاء)
+// مزامنة المنتجات مع Firebase (تحديث فوري وموثوق)
 export const syncProductsToFirebase = async (products: any[]) => {
   if (!db) {
     console.error('❌ Firebase db غير متاح');
@@ -20,20 +20,35 @@ export const syncProductsToFirebase = async (products: any[]) => {
   }
 
   try {
+    console.log('🔄 بدء مزامنة المنتجات مع Firebase:', products.length);
     const productsRef = collection(db!, 'products');
     
-    // تحديث/إضافة المنتجات بدلاً من حذف الكل
-    for (const product of products) {
-      await setDoc(doc(productsRef, product.id.toString()), {
+    // تحديث/إضافة المنتجات مع ضمان الحفظ
+    const updatePromises = products.map(async (product) => {
+      const productData = {
         ...product,
-        updatedAt: new Date().toISOString()
-      }, { merge: true }); // merge: true للحفاظ على البيانات الموجودة
-    }
+        updatedAt: new Date().toISOString(),
+        // ضمان وجود البيانات الأساسية
+        name: product.name || '',
+        units: Array.isArray(product.units) ? product.units : [],
+        category: product.category || '',
+        active: product.active !== false,
+        images: Array.isArray(product.images) ? product.images : [],
+        hasOffer: product.hasOffer || false,
+        discount: product.discount || 0
+      };
+      
+      console.log(`💾 حفظ المنتج ${product.id}:`, productData.name, productData.units);
+      
+      return setDoc(doc(productsRef, product.id.toString()), productData, { merge: false });
+    });
     
-    console.log('تم مزامنة المنتجات مع Firebase');
+    await Promise.all(updatePromises);
+    
+    console.log('✅ تم مزامنة جميع المنتجات مع Firebase');
     return true;
   } catch (error) {
-    console.error('خطأ في مزامنة المنتجات:', error);
+    console.error('❌ خطأ في مزامنة المنتجات:', error);
     return false;
   }
 };

@@ -4,7 +4,7 @@ import ProductEditModal from "./ProductEditModal";
 import { useEffect, useState as useStateReact } from "react";
 import CateringTable from "../catering/CateringTable";
 import { db } from "../../../lib/firebase";
-import { doc, updateDoc, setDoc } from "firebase/firestore";
+import { doc, updateDoc, setDoc, getDocs, collection } from "firebase/firestore";
 
 interface ProductUnit {
   name: string;
@@ -52,35 +52,34 @@ export default function ProductTable() {
           setProducts(withOrder);
         }
 
-        // 2️⃣ تحميل من Firebase (المصدر الرئيسي) + استمع للتحديثات
-        const { db } = await import('../../../lib/firebase');
+        // 2️⃣ تحميل من Firebase (المصدر الرئيسي) بدون Real-time listener
         if (db) {
-          const { collection, onSnapshot } = await import('firebase/firestore');
-          
-          // استماع فوري للتحديثات من Firebase
-          unsubscribe = onSnapshot(
-            collection(db, 'products'), 
-            (snapshot) => {
-              const firebaseProducts = snapshot.docs.map(doc => ({
-                id: parseInt(doc.id),
-                ...doc.data(),
-                order: doc.data().order ?? 0
-              })) as Product[];
-              
-              firebaseProducts.sort((a, b) => (a.order || 0) - (b.order || 0));
-              
-              console.log('🔥 تحديث من Firebase:', firebaseProducts.length);
+          try {
+            const snapshot = await getDocs(collection(db, 'products'));
+            const firebaseProducts = snapshot.docs.map(doc => ({
+              id: parseInt(doc.id),
+              ...doc.data(),
+              order: doc.data().order ?? 0
+            })) as Product[];
+            
+            firebaseProducts.sort((a, b) => (a.order || 0) - (b.order || 0));
+            
+            console.log('🔥 تحميل من Firebase:', firebaseProducts.length);
+            
+            // فقط إذا كان Firebase يحتوي على بيانات أحدث
+            const localTimestamp = window.localStorage.getItem('productsLastUpdate');
+            const shouldUpdate = !localTimestamp || !stored || firebaseProducts.length !== JSON.parse(stored).length;
+            
+            if (shouldUpdate) {
               setProducts(firebaseProducts);
-              
-              // حفظ في localStorage
               window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
-              setLoading(false);
-            },
-            (error) => {
-              console.error('❌ خطأ في الاستماع لـ Firebase:', error);
-              setLoading(false);
+              window.localStorage.setItem('productsLastUpdate', new Date().toISOString());
             }
-          );
+            setLoading(false);
+          } catch (error) {
+            console.error('❌ خطأ في تحميل Firebase:', error);
+            setLoading(false);
+          }
         } else {
           setLoading(false);
         }
@@ -132,43 +131,32 @@ export default function ProductTable() {
   const saveProductsToStorage = async (prods: Product[]) => {
     console.log('💾 حفظ المنتجات في localStorage:', prods.length);
     if (typeof window !== 'undefined') {
+      // حفظ في localStorage فوراً
       window.localStorage.setItem('products', JSON.stringify(prods));
+      window.localStorage.setItem('productsLastUpdate', new Date().toISOString());
       
-      // 🌐 حفظ في API للتطبيق
+      // 🔥 مزامنة فورية مع Firebase
       try {
-        const response = await fetch('/api/products', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(prods),
-        });
-        
-        if (response.ok) {
-          console.log('✅ تم حفظ المنتجات في API');
-        } else {
-          console.error('❌ خطأ في حفظ API:', response.status);
-        }
-      } catch (apiError) {
-        console.error('❌ خطأ في الاتصال بـ API:', apiError);
+        const { syncProductsToFirebase } = await import('../../../lib/firebaseSync');
+        await syncProductsToFirebase(prods);
+        console.log('✅ تم مزامنة Firebase فوراً');
+      } catch (firebaseError) {
+        console.error('❌ خطأ في مزامنة Firebase:', firebaseError);
       }
     }
   };
 
   const toggleActive = async (id: number) => {
+    console.log(`🔄 تغيير حالة المنتج ${id}`);
+    
     setProducts((prev) => {
       const updated = prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p));
-      console.log(`تم تغيير حالة المنتج ${id} إلى:`, updated.find(p => p.id === id)?.active);
-      saveProductsToStorage(updated);
-      
-      // 🔥 حفظ في Firebase للتطبيق
       const updatedProduct = updated.find(p => p.id === id);
-      if (updatedProduct && db) {
-        const productRef = doc(db, 'products', id.toString());
-        updateDoc(productRef, {
-          active: updatedProduct.active
-        }).catch(err => console.error('❌ خطأ في تحديث Firebase:', err));
-      }
+      
+      console.log(`✅ حالة جديدة للمنتج ${id}:`, updatedProduct?.active);
+      
+      // حفظ فوري في localStorage و Firebase
+      saveProductsToStorage(updated);
       
       return updated;
     });
@@ -263,12 +251,13 @@ export default function ProductTable() {
     });
   };
 
-  // 💰 تحديث نسبة الخصم
   const updateDiscount = async (productId: number, discount: number) => {
     if (discount < 0 || discount > 100) {
       alert('يجب أن تكون نسبة الخصم بين 0 و 100');
       return;
     }
+
+    console.log(`💰 تحديث خصم المنتج ${productId} إلى ${discount}%`);
 
     setProducts((prev) => {
       const updated = prev.map((product) => {
@@ -282,46 +271,43 @@ export default function ProductTable() {
         return product;
       });
       
+      // حفظ فوري
       saveProductsToStorage(updated);
-      
-      // 🔥 حفظ في Firebase للتطبيق
-      const updatedProduct = updated.find(p => p.id === productId);
-      if (updatedProduct && db) {
-        const productRef = doc(db, 'products', productId.toString());
-        updateDoc(productRef, {
-          hasOffer: updatedProduct.hasOffer || false,
-          discount: updatedProduct.discount || 0
-        }).catch(err => console.error('❌ خطأ في تحديث Firebase:', err));
-      }
       
       return updated;
     });
   };
 
   const handleEditSave = async (updated: Product) => {
-    setProducts((prev) => {
-      const newProducts = prev.map((p) => (p.id === updated.id ? updated : p));
-      saveProductsToStorage(newProducts);
+    console.log('💾 حفظ تعديل المنتج:', updated);
+    
+    try {
+      setProducts((prev) => {
+        const newProducts = prev.map((p) => (p.id === updated.id ? updated : p));
+        saveProductsToStorage(newProducts);
+        return newProducts;
+      });
       
-      // 🔥 حفظ في Firebase للتطبيق
+      // 🔥 حفظ في Firebase فوراً مع جميع البيانات
       if (db) {
         const productRef = doc(db, 'products', updated.id.toString());
-        updateDoc(productRef, {
-          name: updated.name,
-          units: updated.units,
-          category: updated.category,
-          categories: updated.categories,
-          active: updated.active,
-          image: updated.image,
-          images: updated.images,
-          hasOffer: updated.hasOffer || false,
-          discount: updated.discount || 0
-        }).catch(err => console.error('❌ خطأ في تحديث Firebase:', err));
+        await setDoc(productRef, {
+          ...updated,
+          updatedAt: new Date().toISOString()
+        }, { merge: false });
+        
+        console.log('✅ تم حفظ المنتج في Firebase:', updated.id);
+        window.localStorage.setItem('productsLastUpdate', new Date().toISOString());
+        alert(`✅ تم حفظ تعديلات المنتج "${updated.name}" بنجاح!`);
+      } else {
+        alert(`✅ تم حفظ تعديلات المنتج "${updated.name}" محلياً!`);
       }
       
-      return newProducts;
-    });
-    setEditProduct(null);
+      setEditProduct(null);
+    } catch (err) {
+      console.error('❌ خطأ في حفظ المنتج:', err);
+      alert('❌ خطأ في حفظ التعديلات. يرجى المحاولة مرة أخرى.');
+    }
   };
 
   const handleAddSave = async (newProduct: Product) => {

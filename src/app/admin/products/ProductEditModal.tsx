@@ -113,28 +113,38 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
       return;
     }
 
-    const products = JSON.parse(localStorage.getItem('products') || '[]');
-    const currentProduct = products.find((p: Product) => p.id === form.id);
-    const latestImages = currentProduct?.images || form.images || [];
-
+    // استخدام البيانات الحالية مباشرة بدون جلب من localStorage
     const updatedForm = {
       ...form,
-      images: latestImages,
       name: form.name.trim(),
-      category: form.category.trim()
+      category: form.category.trim(),
+      units: form.units.map(u => ({
+        name: u.name.trim(),
+        price: Number(u.price) || 0
+      }))
     };
 
-    console.log('✅ المنتج المحدث:', updatedForm);
+    console.log('✅ المنتج المحدث النهائي:', updatedForm);
     onSave(updatedForm);
   }, [form, onSave]);
 
   const handleUnitChange = useCallback((idx: number, field: keyof ProductUnit, value: string | number) => {
-    setForm((prev) => {
-      const units = prev.units.map((unit, i) =>
-        i === idx ? { ...unit, [field]: field === "price" ? Number(value) : value } : unit
-      );
-      return { ...prev, units };
-    });
+    try {
+      console.log(`💰 تغيير الوحدة ${idx}:`, field, '=', value);
+      
+      setForm((prev) => {
+        const units = [...prev.units];
+        if (units[idx]) {
+          units[idx] = {
+            ...units[idx],
+            [field]: field === "price" ? (Number(value) || 0) : String(value).trim()
+          };
+        }
+        return { ...prev, units };
+      });
+    } catch (error) {
+      console.error('خطأ في تغيير الوحدة:', error);
+    }
   }, []);
 
   const addUnit = useCallback(() => {
