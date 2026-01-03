@@ -240,46 +240,77 @@ export default function Home() {
 
   const fetchProducts = async () => {
     if (typeof window !== "undefined") {
-      // جلب المنتجات من Firebase أولاً (Real-time data)
       try {
+        console.log('🔄 بدء جلب المنتجات...');
+        
+        // محاولة جلب المنتجات من Firebase
         const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
         const firebaseSuccess = await loadAllDataFromFirebase();
 
-        if (firebaseSuccess) {
-          // جلب المنتجات المحدثة من localStorage (بعد التحميل من Firebase)
-          const updatedProducts = window.localStorage.getItem("products");
-          if (updatedProducts) {
-            try {
-              const parsed = JSON.parse(updatedProducts);
-              const firebaseProducts = Array.isArray(parsed)
-                ? parsed.filter(
-                    (p) =>
-                      typeof p === "object" &&
-                      typeof p.id === "number" &&
-                      typeof p.name === "string" &&
-                      Array.isArray(p.units) &&
-                      p.units.every(
-                        (u: Unit) =>
-                          typeof u === "object" &&
-                          typeof u.name === "string" &&
-                          typeof u.price === "number"
-                      ) &&
-                      typeof p.quantity === "number" &&
-                      typeof p.active === "boolean" &&
-                      typeof p.category === "string"
-                  )
-                : [];
-              setProducts(firebaseProducts);
-              return;
-            } catch {
-              // فشل في قراءة المنتجات من Firebase
+        console.log('📊 نتيجة Firebase:', firebaseSuccess ? 'نجاح' : 'فشل');
+
+        // جلب المنتجات من localStorage (سواء من Firebase أو Cache القديم)
+        const storedProducts = window.localStorage.getItem("products");
+        
+        if (storedProducts) {
+          try {
+            const parsed = JSON.parse(storedProducts);
+            console.log(`📦 عدد المنتجات في localStorage: ${Array.isArray(parsed) ? parsed.length : 0}`);
+            
+            const validProducts = Array.isArray(parsed)
+              ? parsed.filter(
+                  (p) =>
+                    typeof p === "object" &&
+                    p !== null &&
+                    typeof p.id === "number" &&
+                    typeof p.name === "string" &&
+                    Array.isArray(p.units) &&
+                    p.units.length > 0 &&
+                    p.units.every(
+                      (u: Unit) =>
+                        typeof u === "object" &&
+                        u !== null &&
+                        typeof u.name === "string" &&
+                        typeof u.price === "number"
+                    ) &&
+                    typeof p.active === "boolean" &&
+                    typeof p.category === "string"
+                )
+              : [];
+            
+            console.log(`✅ عدد المنتجات الصالحة: ${validProducts.length}`);
+            setProducts(validProducts);
+            
+            if (validProducts.length === 0) {
+              console.warn('⚠️ لا توجد منتجات صالحة للعرض');
             }
+            
+            return;
+          } catch (parseError) {
+            console.error('❌ خطأ في قراءة المنتجات من localStorage:', parseError);
           }
+        } else {
+          console.warn('⚠️ لا توجد منتجات في localStorage');
         }
-        // إذا لم تنجح العملية، لا تعرض أي منتجات إطلاقاً
+        
+        // في حالة عدم وجود منتجات، اعرض مصفوفة فارغة
         setProducts([]);
       } catch (error) {
-        // في حالة الخطأ، لا تعرض أي منتجات إطلاقاً
+        console.error('❌ خطأ في جلب المنتجات:', error);
+        
+        // محاولة أخيرة: جلب من localStorage مباشرة
+        try {
+          const fallbackProducts = window.localStorage.getItem("products");
+          if (fallbackProducts) {
+            const parsed = JSON.parse(fallbackProducts);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              console.log('🔄 استخدام المنتجات المخزنة كـ Fallback');
+              setProducts(parsed);
+              return;
+            }
+          }
+        } catch {}
+        
         setProducts([]);
       }
     }

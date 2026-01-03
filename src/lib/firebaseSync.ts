@@ -8,8 +8,7 @@ import {
   onSnapshot, 
   updateDoc,
   deleteDoc,
-  query,
-  orderBy
+  query
 } from 'firebase/firestore';
 
 // مزامنة المنتجات مع Firebase (تحديث فوري وموثوق)
@@ -56,18 +55,36 @@ export const syncProductsToFirebase = async (products: any[]) => {
 // جلب المنتجات من Firebase (فقط عند الحاجة للاستعادة)
 export const getProductsFromFirebase = async () => {
   try {
+    console.log('🔍 جلب المنتجات من Firebase...');
     const productsRef = collection(db!, 'products');
-    const q = query(productsRef, orderBy('id'));
-    const snapshot = await getDocs(q);
     
-    const products = snapshot.docs.map(doc => ({
-      ...doc.data(),
-      id: parseInt(doc.id)
-    }));
+    // جلب بدون orderBy لتجنب مشاكل الـ index
+    const snapshot = await getDocs(productsRef);
     
+    console.log(`📦 عدد المنتجات المسترجعة: ${snapshot.docs.length}`);
+    
+    const products = snapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        ...data,
+        id: parseInt(doc.id),
+        // التأكد من وجود الحقول الأساسية
+        name: data.name || '',
+        units: Array.isArray(data.units) ? data.units : [],
+        category: data.category || '',
+        categories: Array.isArray(data.categories) ? data.categories : [data.category || ''],
+        active: data.active !== false,
+        images: Array.isArray(data.images) ? data.images : (data.image ? [data.image] : []),
+        hasOffer: data.hasOffer || false,
+        discount: data.discount || 0,
+        quantity: data.quantity || 0
+      };
+    }).sort((a, b) => a.id - b.id); // ترتيب يدوي بعد الجلب
+    
+    console.log('✅ تم جلب المنتجات بنجاح:', products.length);
     return products;
   } catch (error) {
-    console.error('خطأ في جلب المنتجات:', error);
+    console.error('❌ خطأ في جلب المنتجات:', error);
     return [];
   }
 };
@@ -221,13 +238,12 @@ export const syncUsersToFirebase = async (users: any[]) => {
 export const getUsersFromFirebase = async () => {
   try {
     const usersRef = collection(db!, 'users');
-    const q = query(usersRef, orderBy('id'));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(usersRef);
     
     const users = snapshot.docs.map(doc => ({
       ...doc.data(),
       id: parseInt(doc.id)
-    }));
+    })).sort((a, b) => a.id - b.id);
     
     return users;
   } catch (error) {
@@ -260,13 +276,12 @@ export const syncOrdersToFirebase = async (orders: any[]) => {
 export const getOrdersFromFirebase = async () => {
   try {
     const ordersRef = collection(db!, 'orders');
-    const q = query(ordersRef, orderBy('id'));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(ordersRef);
     
     const orders = snapshot.docs.map(doc => ({
       ...doc.data(),
       id: parseInt(doc.id)
-    }));
+    })).sort((a, b) => a.id - b.id);
     
     return orders;
   } catch (error) {
@@ -383,36 +398,45 @@ export const loadAllDataFromFirebase = async () => {
   if (typeof window === 'undefined') return false;
   
   try {
-    console.log('📱 جلب البيانات للموبايل من Firebase...');
+    console.log('📱 جلب البيانات من Firebase...');
     
     // جلب المنتجات
     const products = await getProductsFromFirebase();
+    console.log(`📦 تم جلب ${products.length} منتج من Firebase`);
+    
     if (products.length > 0) {
       localStorage.setItem('products', JSON.stringify(products));
+      console.log('✅ تم حفظ المنتجات في localStorage');
+    } else {
+      console.warn('⚠️ لم يتم العثور على منتجات في Firebase');
+      // لا تحذف المنتجات الموجودة في localStorage
     }
     
     // جلب التصنيفات
     const categories = await getCategoriesFromFirebase();
     if (categories.length > 0) {
       localStorage.setItem('cateringCategories', JSON.stringify(categories));
+      console.log('✅ تم حفظ التصنيفات في localStorage');
     }
     
     // جلب البانرات
     const banners = await getBannersFromFirebase();
     if (banners.length > 0) {
       localStorage.setItem('banners', JSON.stringify(banners));
+      console.log('✅ تم حفظ البانرات في localStorage');
     }
     
     // جلب الشعار
     const logo = await getLogoFromFirebase();
     if (logo) {
       localStorage.setItem('siteLogo', logo);
+      console.log('✅ تم حفظ الشعار في localStorage');
     }
     
-    console.log('✅ تم جلب البيانات للموبايل من Firebase');
-    return true;
+    console.log('✅ اكتمل جلب البيانات من Firebase');
+    return products.length > 0; // نجاح فقط إذا كان هناك منتجات
   } catch (error) {
-    console.error('❌ خطأ في جلب البيانات للموبايل:', error);
+    console.error('❌ خطأ في جلب البيانات من Firebase:', error);
     return false;
   }
 };
