@@ -404,12 +404,12 @@ export const loadAllDataFromFirebase = async () => {
     const products = await getProductsFromFirebase();
     console.log(`📦 تم جلب ${products.length} منتج من Firebase`);
     
+    // حفظ المنتجات حتى لو كانت فارغة (لا تحذف البيانات الموجودة)
     if (products.length > 0) {
       localStorage.setItem('products', JSON.stringify(products));
       console.log('✅ تم حفظ المنتجات في localStorage');
     } else {
-      console.warn('⚠️ لم يتم العثور على منتجات في Firebase');
-      // لا تحذف المنتجات الموجودة في localStorage
+      console.warn('⚠️ لم يتم العثور على منتجات في Firebase - الاحتفاظ بالبيانات الموجودة');
     }
     
     // جلب التصنيفات
@@ -434,7 +434,7 @@ export const loadAllDataFromFirebase = async () => {
     }
     
     console.log('✅ اكتمل جلب البيانات من Firebase');
-    return products.length > 0; // نجاح فقط إذا كان هناك منتجات
+    return true; // نجاح دائماً - حتى لو لم تكن هناك منتجات جديدة
   } catch (error) {
     console.error('❌ خطأ في جلب البيانات من Firebase:', error);
     return false;

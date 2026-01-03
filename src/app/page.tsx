@@ -459,13 +459,9 @@ export default function Home() {
   };
   
   useEffect(() => {
-    // عرض المنتجات الافتراضية فوراً لسرعة التحميل
-    setProducts(defaultProducts);
-    setCategories([
-      { id: 1, name: "فواكه" },
-      { id: 2, name: "خضار" },
-      { id: 3, name: "ورقيات" }
-    ]);
+    // لا تعرض المنتجات الافتراضية - انتظر البيانات الحقيقية
+    setProducts([]);
+    setCategories([]);
     
     // تحقق من التوافق وبدء التزامن
     if (checkCompatibility()) {
