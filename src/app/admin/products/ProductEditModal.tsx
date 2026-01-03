@@ -119,7 +119,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
       name: form.name.trim(),
       category: form.category.trim(),
       units: form.units.map(u => ({
-        name: u.name.trim(),
+        name: u.name.trim(), // trim يزيل المسافات من البداية والنهاية فقط، ليس من الوسط
         price: Number(u.price) || 0
       }))
     };
@@ -137,7 +137,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
         if (units[idx]) {
           units[idx] = {
             ...units[idx],
-            [field]: field === "price" ? (Number(value) || 0) : String(value).trim()
+            [field]: field === "price" ? (Number(value) || 0) : String(value)
           };
         }
         return { ...prev, units };
