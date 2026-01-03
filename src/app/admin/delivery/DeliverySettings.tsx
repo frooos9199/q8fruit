@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { db } from "../../../lib/firebase";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function DeliverySettings() {
   const [deliveryNote, setDeliveryNote] = useState("التوصيل خلال ساعتين");
@@ -26,14 +28,29 @@ export default function DeliverySettings() {
   const [saved, setSaved] = useState(false);
 
   // حفظ قيمة التوصيل في localStorage عند كل تغيير
-  const saveDeliveryPrice = (price: number) => {
+  const saveDeliveryPrice = async (price: number) => {
     if (typeof window !== "undefined") {
       window.localStorage.setItem("deliveryPrice", String(price));
+    }
+    
+    // حفظ في Firebase أيضاً
+    if (db) {
+      try {
+        await setDoc(doc(db, 'settings', 'delivery'), {
+          price: price,
+          note: deliveryNote,
+          time: deliveryTime,
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
+        console.log('✅ تم حفظ سعر التوصيل في Firebase:', price);
+      } catch (error) {
+        console.error('❌ خطأ في حفظ سعر التوصيل في Firebase:', error);
+      }
     }
   };
 
   const handleSave = async () => {
-    saveDeliveryPrice(deliveryPrice);
+    await saveDeliveryPrice(deliveryPrice);
     saveDeliveryTime(deliveryTime);
     
     // مزامنة فورية مع Firebase
@@ -87,6 +104,9 @@ export default function DeliverySettings() {
           min={0}
           step={0.1}
         />
+        <p className="text-xs text-gray-500 mt-1">
+          💡 يتم الحفظ تلقائياً في Firebase للتطبيق
+        </p>
       </label>
       <button
         onClick={handleSave}
