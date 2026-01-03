@@ -37,7 +37,8 @@ export default function DeliverySettings() {
     if (db) {
       try {
         await setDoc(doc(db, 'settings', 'delivery'), {
-          price: price,
+          deliveryPrice: price, // ✅ استخدام deliveryPrice بدلاً من price
+          price: price, // للتوافق مع الإصدارات القديمة
           note: deliveryNote,
           time: deliveryTime,
           updatedAt: new Date().toISOString(),
