@@ -30,37 +30,61 @@ interface Product {
 export default function ProductTable() {
   const [products, setProducts] = useState<Product[]>([]);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const loadProducts = () => {
-        const stored = window.localStorage.getItem('products');
-        if (stored) {
-          try {
+      const loadProducts = async () => {
+        try {
+          // 1️⃣ جرب تحميل من localStorage أولاً (عرض سريع)
+          const stored = window.localStorage.getItem('products');
+          if (stored) {
             const parsed = JSON.parse(stored);
-            console.log('📦 تحميل المنتجات من localStorage:', parsed.length);
-
-            // إضافة ترتيب افتراضي للمنتجات القديمة
+            console.log('📦 عرض مؤقت من localStorage:', parsed.length);
             const withOrder = parsed.map((p: Product, index: number) => ({
               ...p,
               order: p.order ?? index
             }));
-
-            // ترتيب المنتجات حسب الـ order
             withOrder.sort((a: Product, b: Product) => (a.order || 0) - (b.order || 0));
             setProducts(withOrder);
-          } catch (error) {
-            console.error('خطأ في تحليل بيانات المنتجات:', error);
-            setProducts([]);
           }
-        } else {
-          console.log('⚠️ لا توجد منتجات في localStorage');
-          setProducts([]);
+
+          // 2️⃣ تحميل من Firebase (المصدر الرئيسي) + استمع للتحديثات
+          const { db } = await import('../../../lib/firebase');
+          if (db) {
+            const { collection, onSnapshot } = await import('firebase/firestore');
+            
+            // استماع فوري للتحديثات من Firebase
+            const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
+              const firebaseProducts = snapshot.docs.map(doc => ({
+                id: parseInt(doc.id),
+                ...doc.data(),
+                order: doc.data().order ?? 0
+              })) as Product[];
+              
+              firebaseProducts.sort((a, b) => (a.order || 0) - (b.order || 0));
+              
+              console.log('🔥 تحديث من Firebase:', firebaseProducts.length);
+              setProducts(firebaseProducts);
+              
+              // حفظ في localStorage
+              window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
+              setLoading(false);
+            }, (error) => {
+              console.error('❌ خطأ في الاستماع لـ Firebase:', error);
+              setLoading(false);
+            });
+
+            // تنظيف عند إلغاء الكومبوننت
+            return () => unsubscribe();
+          }
+        } catch (error) {
+          console.error('❌ خطأ في تحميل المنتجات:', error);
+          setLoading(false);
         }
       };
 
       loadProducts();
-      // تم إزالة مراقب storage لمنع التداخل مع التحديثات المباشرة
     }
   }, []);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -375,6 +399,12 @@ export default function ProductTable() {
 
   return (
     <div>
+      {loading && (
+        <div className="bg-blue-100 dark:bg-blue-800 border border-blue-400 text-blue-700 dark:text-blue-200 px-4 py-3 rounded mb-4 text-center">
+          <p className="font-bold">🔄 جاري التحميل من Firebase...</p>
+        </div>
+      )}
+      
       <div className="flex flex-wrap gap-4 mb-4 items-end">
         <button
           className="px-4 py-2 bg-green-600 text-white rounded font-bold"

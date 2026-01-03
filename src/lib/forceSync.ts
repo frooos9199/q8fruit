@@ -26,18 +26,8 @@ export const forceLoadAllData = async () => {
     const success = await loadAllDataFromFirebase();
 
     if (success) {
-      // إرسال إشعارات التحديث
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'products',
-        newValue: localStorage.getItem('products'),
-        storageArea: localStorage
-      }));
-
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'cateringCategories', 
-        newValue: localStorage.getItem('cateringCategories'),
-        storageArea: localStorage
-      }));
+      // ✅ تم إزالة Storage Events - التحديث الآن عبر Real-time Listeners
+      console.log('✅ تم تحميل البيانات من Firebase - سيتم التحديث التلقائي');
 
       // إعادة تحميل الصفحة للتأكد
       setTimeout(() => {
