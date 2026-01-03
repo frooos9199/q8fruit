@@ -33,29 +33,34 @@ export default function ProductTable() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const loadProducts = async () => {
-        try {
-          // 1️⃣ جرب تحميل من localStorage أولاً (عرض سريع)
-          const stored = window.localStorage.getItem('products');
-          if (stored) {
-            const parsed = JSON.parse(stored);
-            console.log('📦 عرض مؤقت من localStorage:', parsed.length);
-            const withOrder = parsed.map((p: Product, index: number) => ({
-              ...p,
-              order: p.order ?? index
-            }));
-            withOrder.sort((a: Product, b: Product) => (a.order || 0) - (b.order || 0));
-            setProducts(withOrder);
-          }
+    if (typeof window === 'undefined') return;
 
-          // 2️⃣ تحميل من Firebase (المصدر الرئيسي) + استمع للتحديثات
-          const { db } = await import('../../../lib/firebase');
-          if (db) {
-            const { collection, onSnapshot } = await import('firebase/firestore');
-            
-            // استماع فوري للتحديثات من Firebase
-            const unsubscribe = onSnapshot(collection(db, 'products'), (snapshot) => {
+    let unsubscribe: (() => void) | undefined;
+
+    const loadProducts = async () => {
+      try {
+        // 1️⃣ جرب تحميل من localStorage أولاً (عرض سريع)
+        const stored = window.localStorage.getItem('products');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          console.log('📦 عرض مؤقت من localStorage:', parsed.length);
+          const withOrder = parsed.map((p: Product, index: number) => ({
+            ...p,
+            order: p.order ?? index
+          }));
+          withOrder.sort((a: Product, b: Product) => (a.order || 0) - (b.order || 0));
+          setProducts(withOrder);
+        }
+
+        // 2️⃣ تحميل من Firebase (المصدر الرئيسي) + استمع للتحديثات
+        const { db } = await import('../../../lib/firebase');
+        if (db) {
+          const { collection, onSnapshot } = await import('firebase/firestore');
+          
+          // استماع فوري للتحديثات من Firebase
+          unsubscribe = onSnapshot(
+            collection(db, 'products'), 
+            (snapshot) => {
               const firebaseProducts = snapshot.docs.map(doc => ({
                 id: parseInt(doc.id),
                 ...doc.data(),
@@ -70,23 +75,31 @@ export default function ProductTable() {
               // حفظ في localStorage
               window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
               setLoading(false);
-            }, (error) => {
+            },
+            (error) => {
               console.error('❌ خطأ في الاستماع لـ Firebase:', error);
               setLoading(false);
-            });
-
-            // تنظيف عند إلغاء الكومبوننت
-            return () => unsubscribe();
-          }
-        } catch (error) {
-          console.error('❌ خطأ في تحميل المنتجات:', error);
+            }
+          );
+        } else {
           setLoading(false);
         }
-      };
+      } catch (error) {
+        console.error('❌ خطأ في تحميل المنتجات:', error);
+        setLoading(false);
+      }
+    };
 
-      loadProducts();
-    }
+    loadProducts();
+
+    // تنظيف عند إلغاء الكومبوننت
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
   }, []);
+
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [filterName, setFilterName] = useState("");
