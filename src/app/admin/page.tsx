@@ -290,10 +290,11 @@ export default function AdminDashboard() {
           <span>⚡</span>
           روابط سريعة
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <QuickLink href="/admin/orders" icon="📦" text="الطلبات" />
           <QuickLink href="/admin/products" icon="🛒" text="المنتجات" />
           <QuickLink href="/admin/users" icon="👥" text="المستخدمين" />
+          <QuickLink href="/admin/delivery-tracking" icon="🗺️" text="تتبع المندوبين" color="from-blue-500 to-cyan-500" />
           <QuickLink href="/admin/settings" icon="⚙️" text="الإعدادات" />
         </div>
       </div>
@@ -321,11 +322,14 @@ function StatCard({ icon, title, value, color, bgColor }: {
 }
 
 // مكون الرابط السريع
-function QuickLink({ href, icon, text }: { href: string; icon: string; text: string }) {
+function QuickLink({ href, icon, text, color }: { href: string; icon: string; text: string; color?: string }) {
+  const gradientClass = color || "from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600";
+  const hoverClass = color ? "hover:opacity-90" : "hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900";
+  
   return (
     <a 
       href={href}
-      className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-lg p-3 text-center hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900 transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-600 hover:shadow-md"
+      className={`bg-gradient-to-r ${gradientClass} rounded-lg p-3 text-center ${hoverClass} transition-all transform hover:scale-105 border border-gray-200 dark:border-gray-600 hover:shadow-md`}
     >
       <div className="text-xl mb-1">{icon}</div>
       <div className="text-sm font-medium text-gray-700 dark:text-gray-300">{text}</div>

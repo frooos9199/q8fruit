@@ -101,6 +101,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavLink href="/admin/users" icon="👥" text="المستخدمين" />
           <NavLink href="/admin/products" icon="🛒" text="المنتجات" />
           <NavLink href="/admin/delivery" icon="🚚" text="التوصيل" />
+          <NavLink href="/admin/delivery-tracking" icon="🗺️" text="تتبع المندوبين" highlight />
           <NavLink href="/admin/catering" icon="🍽️" text="الكَاتِرِينج" />
           <NavLink href="/admin/bulk-message" icon="📢" text="رسائل جماعية" />
           <NavLink href="/admin/settings" icon="⚙️" text="الإعدادات" />
@@ -147,7 +148,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 }
 
 // مكون رابط التنقل
-function NavLink({ href, icon, text, special = false }: { href: string; icon: string; text: string; special?: boolean }) {
+function NavLink({ href, icon, text, special = false, highlight = false }: { href: string; icon: string; text: string; special?: boolean; highlight?: boolean }) {
   return (
     <Link 
       href={href} 
@@ -155,6 +156,8 @@ function NavLink({ href, icon, text, special = false }: { href: string; icon: st
         py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center gap-3 group
         ${special 
           ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900 dark:to-purple-900 text-blue-600 dark:text-blue-400 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-800 dark:hover:to-purple-800 border border-blue-200 dark:border-blue-700' 
+          : highlight
+          ? 'bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-800 dark:to-cyan-800 text-blue-700 dark:text-blue-300 hover:from-blue-200 hover:to-cyan-200 dark:hover:from-blue-700 dark:hover:to-cyan-700 border-2 border-blue-400 dark:border-blue-500 shadow-md'
           : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400'
         }
         transform hover:scale-105 hover:shadow-md
