@@ -240,47 +240,13 @@ export default function Home() {
 
   const fetchProducts = async () => {
     if (typeof window !== "undefined") {
-      // جلب المنتجات من localStorage أولاً، ثم من Firebase إذا لم توجد
-      const storedProducts = window.localStorage.getItem("products");
-      
-      if (storedProducts) {
-        try {
-          const parsed = JSON.parse(storedProducts);
-          const validProducts = Array.isArray(parsed)
-            ? parsed.filter(
-                (p) =>
-                  typeof p === "object" &&
-                  typeof p.id === "number" &&
-                  typeof p.name === "string" &&
-                  Array.isArray(p.units) &&
-                  p.units.every(
-                    (u: Unit) =>
-                      typeof u === "object" &&
-                      typeof u.name === "string" &&
-                      typeof u.price === "number"
-                  ) &&
-                  typeof p.quantity === "number" &&
-                  typeof p.active === "boolean" &&
-                  typeof p.category === "string"
-              )
-            : [];
-          
-          if (validProducts.length > 0) {
-            setProducts(validProducts);
-            return; // استخدم البيانات المحلية إذا كانت صحيحة
-          }
-        } catch {
-          // فشل في قراءة البيانات المحلية، جرب Firebase
-        }
-      }
-
-      // جلب المنتجات من Firebase فقط إذا لم توجد بيانات محلية صحيحة
+      // جلب المنتجات من Firebase أولاً (Real-time data)
       try {
         const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
         const firebaseSuccess = await loadAllDataFromFirebase();
 
         if (firebaseSuccess) {
-          // جلب المنتجات من Firebase (يجب أن يقوم loadAllDataFromFirebase بتخزينها في مكان ما أو إرجاعها)
+          // جلب المنتجات المحدثة من localStorage (بعد التحميل من Firebase)
           const updatedProducts = window.localStorage.getItem("products");
           if (updatedProducts) {
             try {
