@@ -80,16 +80,26 @@ function OrdersTable() {
 
     // Build address from delivery object
     let address = '';
-    if (data.delivery) {
-      const parts = [];
-      if (data.delivery.area) parts.push(data.delivery.area);
-      if (data.delivery.block) parts.push(`قطعة ${data.delivery.block}`);
-      if (data.delivery.street) parts.push(`شارع ${data.delivery.street}`);
-      if (data.delivery.building) parts.push(`بناية ${data.delivery.building}`);
-      if (data.delivery.floor) parts.push(`دور ${data.delivery.floor}`);
-      if (data.delivery.apartment) parts.push(`شقة ${data.delivery.apartment}`);
-      address = parts.join('، ');
-      if (data.delivery.notes) address += ` - ${data.delivery.notes}`;
+    
+    // التحقق من deliveryAddress (من التطبيق) أو delivery (من الموقع)
+    const deliveryData = data.deliveryAddress || data.delivery;
+    
+    if (deliveryData) {
+      // إذا كان هناك fullAddress جاهز، استخدمه مباشرة
+      if (deliveryData.fullAddress) {
+        address = deliveryData.fullAddress;
+      } else {
+        // بناء العنوان من الحقول المنفصلة
+        const parts = [];
+        if (deliveryData.area) parts.push(deliveryData.area);
+        if (deliveryData.block) parts.push(`قطعة ${deliveryData.block}`);
+        if (deliveryData.street) parts.push(`شارع ${deliveryData.street}`);
+        if (deliveryData.building) parts.push(`بناية ${deliveryData.building}`);
+        if (deliveryData.floor) parts.push(`دور ${deliveryData.floor}`);
+        if (deliveryData.apartment) parts.push(`شقة ${deliveryData.apartment}`);
+        address = parts.join('، ');
+        if (deliveryData.notes) address += ` - ${deliveryData.notes}`;
+      }
     }
 
     // Get products from items or products field
@@ -141,7 +151,7 @@ function OrdersTable() {
       customer: customerName,
       phone: phone,
       email: data.customer?.email || data.email || '',
-      address: address || data.delivery?.address || data.address || 'غير محدد',
+      address: address || data.deliveryAddress?.fullAddress || data.delivery?.address || data.address || 'غير محدد',
       total: data.pricing?.total || data.total || 0,
       status: statusMap[data.status] || 'جديد',
       date,
