@@ -155,7 +155,7 @@ export default function CartPage() {
     }
   };
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     // تحقق من تعبئة الحقول الأساسية فقط (الاسم ورقم الهاتف)
     if (!userInfo.name.trim() || !userInfo.phone.trim()) {
       alert("يرجى تعبئة الاسم ورقم الهاتف على الأقل");
@@ -166,8 +166,35 @@ export default function CartPage() {
       const invoices = JSON.parse(window.localStorage.getItem("invoices") || "[]");
       const currentUser = window.localStorage.getItem("currentUser");
       const userEmail = currentUser ? JSON.parse(currentUser).email : undefined;
+      
+      // الحصول على رقم الطلب التالي (يبدأ من 100)
+      let orderNumber = 100;
+      try {
+        const { db } = await import('../../lib/firebase');
+        if (db) {
+          const { doc, getDoc, setDoc, increment } = await import('firebase/firestore');
+          const counterDoc = await getDoc(doc(db, 'settings', 'orderCounter'));
+          
+          if (counterDoc.exists()) {
+            orderNumber = counterDoc.data().lastOrderNumber + 1;
+          }
+          
+          // تحديث العداد في Firebase
+          await setDoc(doc(db, 'settings', 'orderCounter'), {
+            lastOrderNumber: orderNumber,
+            updatedAt: new Date().toISOString(),
+          }, { merge: true });
+          
+          console.log('✅ رقم الطلب الجديد:', orderNumber);
+        }
+      } catch (error) {
+        console.error('❌ خطأ في الحصول على رقم الطلب:', error);
+        // fallback: استخدام timestamp
+        orderNumber = Date.now();
+      }
+      
       const invoice = {
-        id: Date.now(),
+        id: orderNumber,
         date: new Date().toLocaleString(),
         items: cart,
         total: total + deliveryPrice,
