@@ -491,154 +491,110 @@ export default function ProductTable() {
             </thead>
             <tbody>
               {filteredProducts.map((product, index) => (
-                <tr 
-                  key={`product-${product.id}-${index}`} 
+                <tr
+                  key={`product-${product.id}-${index}`}
                   className={`border-b cursor-move hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
                     draggedItem === product.id ? 'opacity-50' : ''
                   }`}
                   draggable
                   onDragStart={(e) => handleDragStart(e, product.id)}
                   onDragOver={handleDragOver}
-                  onDrop={(e) => handleDrop(e, product.id)}
                 >
-                  {/* ...existing code for table row... */}
+                  <td className="p-2 font-bold text-gray-600">{index + 1}</td>
+                  <td className="p-2">{product.id}</td>
+                  <td className="p-2">
+                    {product.images && product.images.length > 0 ? (
+                      <img src={product.images[0]} alt={product.name} className="w-16 h-16 object-cover rounded mx-auto" />
+                    ) : product.image ? (
+                      <img src={product.image} alt={product.name} className="w-16 h-16 object-cover rounded mx-auto" />
+                    ) : (
+                      <span className="text-gray-400">بدون صورة</span>
+                    )}
+                  </td>
+                  <td className="p-2">{product.name}</td>
+                  <td className="p-2">
+                    {product.units.map((unit, idx) => (
+                      <div key={idx} className="flex flex-col items-center">
+                        <span>{unit.name}</span>
+                        <span className="text-green-600 font-bold">{unit.price} د.ك</span>
+                      </div>
+                    ))}
+                  </td>
+                  <td className="p-2">{product.quantity}</td>
+                  <td className="p-2">
+                    {categories.map((category) => {
+                      const isSelected = (product.categories || [product.category]).includes(category.name);
+                      return (
+                        <label key={category.id} className="inline-flex items-center mr-2">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => updateProductCategories(product.id, category.name, e.target.checked)}
+                          />
+                          <span className="ml-1">{category.name}</span>
+                        </label>
+                      );
+                    })}
+                  </td>
+                  <td className="p-2">
+                    <button
+                      className={`px-2 py-1 rounded ${product.hasOffer ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+                      onClick={() => toggleOffer(product.id)}
+                    >
+                      {product.hasOffer ? "🎁 عرض مفعل" : "تفعيل عرض"}
+                    </button>
+                    {product.hasOffer && (
+                      <div className="mt-2">
+                        <input
+                          type="number"
+                          min={0}
+                          max={100}
+                          value={product.discount || 0}
+                          onChange={(e) => updateDiscount(product.id, parseInt(e.target.value) || 0)}
+                          className="border rounded p-1 w-16 text-center"
+                        />
+                        <span className="ml-1">%</span>
+                      </div>
+                    )}
+                    {product.hasOffer && product.discount && (
+                      <div className="text-xs text-green-700 mt-1">خصم {product.discount}%</div>
+                    )}
+                  </td>
+                  <td className="p-2">
+                    <span className={product.active ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
+                      {product.active ? "مفعل" : "موقوف"}
+                    </span>
+                  </td>
+                  <td className="p-2">
+                    <button
+                      className="px-2 py-1 bg-blue-500 text-white rounded"
+                      onClick={() => toggleActive(product.id)}
+                    >
+                      {product.active ? "إيقاف" : "تفعيل"}
+                    </button>
+                  </td>
+                  <td className="p-2">
+                    <button
+                      className="px-2 py-1 bg-yellow-500 text-white rounded"
+                      onClick={() => setEditProduct(product)}
+                    >
+                      تعديل
+                    </button>
+                  </td>
+                  <td className="p-2">
+                    <button
+                      className="px-2 py-1 bg-red-500 text-white rounded"
+                      onClick={() => removeProduct(product.id)}
+                    >
+                      حذف
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
-              onDrop={(e) => handleDrop(e, product.id)}
-            >
-              <td className="p-2 text-gray-400">
-                <div className="flex items-center justify-center">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z"/>
-                  </svg>
-                </div>
-              </td>
-              <td className="p-2 font-bold text-gray-600">{index + 1}</td>
-              <td className="p-2">
-                {product.images && product.images.length > 0 ? (
-                  <img src={product.images[0]} alt={product.name} className="w-16 h-16 object-cover rounded mx-auto" />
-                ) : product.image ? (
-                  <img src={product.image} alt={product.name} className="w-16 h-16 object-cover rounded mx-auto" />
-                ) : (
-                  <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded mx-auto flex items-center justify-center">
-                    <span className="text-gray-400 text-xs">لا توجد صورة</span>
-                  </div>
-                )}
-              </td>
-              <td className="p-2">{product.name}</td>
-              <td className="p-2">
-                {product.units.map((unit, idx) => (
-                  <div key={idx} className="flex gap-2 items-center justify-center">
-                    <span className="font-bold">{unit.name}:</span>
-                    <span>{unit.price} د.ك</span>
-                  </div>
-                ))}
-              </td>
-              <td className="p-2">{product.quantity}</td>
-              <td className="p-2">
-                <div className="flex flex-wrap gap-1 max-w-48">
-                  {categories.map((category) => {
-                    const isSelected = (product.categories || [product.category]).includes(category.name);
-                    return (
-                      <label key={category.id} className="flex items-center gap-1 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => updateProductCategories(product.id, category.name, e.target.checked)}
-                          className="w-3 h-3 text-green-600 rounded focus:ring-green-500"
-                        />
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          isSelected 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
-                            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
-                        }`}>
-                          {category.name}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </td>
-              <td className="p-2">
-                <div className="flex flex-col gap-2 items-center min-w-[140px]">
-                  {/* زر تفعيل/إلغاء العرض */}
-                  <button
-                    onClick={() => toggleOffer(product.id)}
-                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
-                      product.hasOffer
-                        ? "bg-red-500 text-white hover:bg-red-600"
-                        : "bg-gray-300 text-gray-700 hover:bg-gray-400"
-                    }`}
-                  >
-                    {product.hasOffer ? "🎁 عرض مفعل" : "تفعيل عرض"}
-                  </button>
-                  
-                  {/* إدخال نسبة الخصم */}
-                  {product.hasOffer && (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={product.discount || 0}
-                        onChange={(e) => updateDiscount(product.id, parseInt(e.target.value) || 0)}
-                        className="w-16 px-2 py-1 border rounded text-center text-sm"
-                        placeholder="15"
-                      />
-                      <span className="text-xs text-gray-600">%</span>
-                    </div>
-                  )}
-                  
-                  {/* عرض نسبة الخصم */}
-                  {product.hasOffer && product.discount && (
-                    <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded-full font-bold">
-                      خصم {product.discount}%
-                    </span>
-                  )}
-                </div>
-              </td>
-              <td className="p-2">
-                {product.active ? (
-                  <span className="text-green-600 font-bold">مفعل</span>
-                ) : (
-                  <span className="text-red-600 font-bold">موقوف</span>
-                )}
-              </td>
-              <td className="p-2">
-                <button
-                  onClick={() => toggleActive(product.id)}
-                  className={`px-3 py-1 rounded text-white font-bold transition-colors ${
-                    product.active 
-                      ? "bg-red-500 hover:bg-red-600" 
-                      : "bg-green-500 hover:bg-green-600"
-                  }`}
-                >
-                  {product.active ? "إيقاف" : "تفعيل"}
-                </button>
-              </td>
-              <td className="p-2">
-                <button
-                  onClick={() => setEditProduct(product)}
-                  className="px-3 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white font-bold transition-colors"
-                >
-                  تعديل
-                </button>
-              </td>
-              <td className="p-2">
-                <button
-                  onClick={() => removeProduct(product.id)}
-                  className="px-3 py-1 rounded bg-red-500 hover:bg-red-600 text-white font-bold transition-colors"
-                >
-                  حذف
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      </div>
       {editProduct && (
         <ProductEditModal
           product={editProduct}
@@ -663,7 +619,7 @@ export default function ProductTable() {
           categories={categories}
         />
       )}
-      </div>
     </div>
   );
+}
 }
