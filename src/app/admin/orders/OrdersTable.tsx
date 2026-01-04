@@ -354,6 +354,27 @@ function OrdersTable() {
     }
   };
 
+  // ترتيب الطلبات: الأحدث أولاً (حسب createdAt أو timestamp أو date)
+  const sortedOrders = [...orders].sort((a, b) => {
+    // الأفضلية: timestamp > createdAt > date
+    const getTime = (order: Order) => {
+      if (order.timestamp) return order.timestamp;
+      if (order.createdAt && typeof order.createdAt.toDate === 'function') return order.createdAt.toDate().getTime();
+      if (order.date) return new Date(order.date).getTime();
+      return 0;
+    };
+    return getTime(b) - getTime(a);
+  });
+
+  // دالة تنسيق التاريخ والوقت بشكل احترافي
+  function formatDateTime(dateStr: string) {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('ar-KW', { year: 'numeric', month: 'short', day: 'numeric' }) +
+      ' - ' + d.toLocaleTimeString('ar-KW', { hour: '2-digit', minute: '2-digit' });
+  }
+
   return (
     <div className="space-y-6">
       {/* إحصائيات سريعة */}
@@ -403,9 +424,9 @@ function OrdersTable() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order, index) => (
+              {sortedOrders.map((order, index) => (
                 <tr key={order.id} className={`border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'}`}>
-                  <td className="p-4 font-bold text-blue-600 dark:text-blue-400">#{1000 + order.id}</td>
+                  <td className="p-4 font-bold text-blue-600 dark:text-blue-400">{order.orderNumber || `#${order.id}`}</td>
                   <td className="p-4 font-medium">{order.customer}</td>
                   <td className="p-4 text-gray-600 dark:text-gray-400">{order.phone || 'غير محدد'}</td>
                   <td className="p-4 font-bold text-green-600 dark:text-green-400">{((order.total || 0) + (order.deliveryFee || 0)).toFixed(3)} د.ك</td>
@@ -419,7 +440,7 @@ function OrdersTable() {
                       {order.status}
                     </span>
                   </td>
-                  <td className="p-4 text-gray-600 dark:text-gray-400">{order.date}</td>
+                  <td className="p-4 text-gray-600 dark:text-gray-400">{formatDateTime(order.date)}</td>
                   <td className="p-4">
                     <div className="flex flex-wrap gap-2 justify-center">
                       {/* تعديل */}

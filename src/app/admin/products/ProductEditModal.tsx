@@ -108,9 +108,22 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
       return;
     }
 
-    if (!form.units || form.units.length === 0 || form.units.some(u => !u.name.trim() || u.price <= 0)) {
+
+    if (!form.units || form.units.length === 0) {
       alert('يرجى إدخال وحدات صحيحة مع أسعار');
       return;
+    }
+    // إذا كان هناك وحدة سعرها فارغ أو <= 0، يتم تعيينه تلقائيًا إلى 0.001 مع تنبيه
+    let unitsFixed = false;
+    const fixedUnits = form.units.map(u => {
+      if (!u.name.trim() || Number(u.price) <= 0) {
+        unitsFixed = true;
+        return { ...u, price: 0.001 };
+      }
+      return { ...u, price: Number(u.price) };
+    });
+    if (unitsFixed) {
+      alert('تم تصحيح بعض الأسعار الفارغة أو غير الصحيحة تلقائيًا إلى 0.001 د.ك. يرجى مراجعة الأسعار.');
     }
 
     // استخدام البيانات الحالية مباشرة بدون جلب من localStorage
@@ -118,9 +131,9 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
       ...form,
       name: form.name.trim(),
       category: form.category.trim(),
-      units: form.units.map(u => ({
-        name: u.name.trim(), // trim يزيل المسافات من البداية والنهاية فقط، ليس من الوسط
-        price: Number(u.price) || 0
+      units: fixedUnits.map(u => ({
+        name: u.name.trim(),
+        price: Number(u.price)
       }))
     };
 

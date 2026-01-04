@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useMemo } from "react";
 import ProductEditModal from "./ProductEditModal";
 import { useEffect, useState as useStateReact } from "react";
 import CateringTable from "../catering/CateringTable";
@@ -101,7 +101,11 @@ export default function ProductTable() {
 
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [addModalOpen, setAddModalOpen] = useState(false);
-  const [filterName, setFilterName] = useState("");
+  // فلتر بحث احترافي (debounced)
+  const [inputValue, setInputValue] = useState(""); // النص الفوري
+  const [search, setSearch] = useState(""); // النص الفعلي للبحث
+  const [searching, setSearching] = useState(false);
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [categories, setCategories] = useStateReact<{ id: number; name: string }[]>([]);
 
@@ -387,14 +391,18 @@ export default function ProductTable() {
     setDraggedItem(null);
   };
 
-  const filteredProducts = products.filter((product) => {
-    const nameMatch = filterName === "" || product.name.toLowerCase().includes(filterName.toLowerCase());
-    const statusMatch =
-      filterStatus === "all" ||
-      (filterStatus === "active" && product.active) ||
-      (filterStatus === "inactive" && !product.active);
-    return nameMatch && statusMatch;
-  });
+  // فلترة المنتجات بكفاءة
+  const filteredProducts = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return products.filter((product) => {
+      const nameMatch = q === "" || product.name.toLowerCase().includes(q);
+      const statusMatch =
+        filterStatus === "all" ||
+        (filterStatus === "active" && product.active) ||
+        (filterStatus === "inactive" && !product.active);
+      return nameMatch && statusMatch;
+    });
+  }, [products, search, filterStatus]);
 
   return (
     <div>
@@ -431,8 +439,16 @@ export default function ProductTable() {
           <label className="block text-sm font-bold mb-1">بحث بالاسم</label>
           <input
             type="text"
-            value={filterName}
-            onChange={e => setFilterName(e.target.value)}
+            value={inputValue}
+            onChange={e => {
+              setInputValue(e.target.value);
+              setSearching(true);
+              if (searchTimeout.current) clearTimeout(searchTimeout.current);
+              searchTimeout.current = setTimeout(() => {
+                setSearch(e.target.value);
+                setSearching(false);
+              }, 350);
+            }}
             className="border rounded p-2 min-w-[180px]"
             placeholder="اسم المنتج... (فارغ لعرض الكل)"
           />
@@ -451,33 +467,46 @@ export default function ProductTable() {
         </div>
       </div>
       <div className="overflow-x-auto">
-      <table className="min-w-full border text-center rtl">
-        <thead>
-          <tr className="bg-gray-100 dark:bg-gray-800">
-            <th className="p-2">↕️</th>
-            <th className="p-2">#</th>
-            <th className="p-2">الصورة</th>
-            <th className="p-2">اسم المنتج</th>
-            <th className="p-2">الوحدات والأسعار</th>
-            <th className="p-2">الكمية</th>
-            <th className="p-2">الكاترينج</th>
-            <th className="p-2">العروض 🎁</th>
-            <th className="p-2">الحالة</th>
-            <th className="p-2">تفعيل/إيقاف</th>
-            <th className="p-2">تعديل</th>
-            <th className="p-2">حذف</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredProducts.map((product, index) => (
-            <tr 
-              key={`product-${product.id}-${index}`} 
-              className={`border-b cursor-move hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
-                draggedItem === product.id ? 'opacity-50' : ''
-              }`}
-              draggable
-              onDragStart={(e) => handleDragStart(e, product.id)}
-              onDragOver={handleDragOver}
+        {searching ? (
+          <div className="text-center text-green-600 font-bold py-6">جاري البحث...</div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="text-center text-gray-500 font-bold py-6">لا توجد منتجات مطابقة</div>
+        ) : (
+          <table className="min-w-full border text-center rtl">
+            <thead>
+              <tr className="bg-gray-100 dark:bg-gray-800">
+                <th className="p-2">↕️</th>
+                <th className="p-2">#</th>
+                <th className="p-2">الصورة</th>
+                <th className="p-2">اسم المنتج</th>
+                <th className="p-2">الوحدات والأسعار</th>
+                <th className="p-2">الكمية</th>
+                <th className="p-2">الكاترينج</th>
+                <th className="p-2">العروض 🎁</th>
+                <th className="p-2">الحالة</th>
+                <th className="p-2">تفعيل/إيقاف</th>
+                <th className="p-2">تعديل</th>
+                <th className="p-2">حذف</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map((product, index) => (
+                <tr 
+                  key={`product-${product.id}-${index}`} 
+                  className={`border-b cursor-move hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                    draggedItem === product.id ? 'opacity-50' : ''
+                  }`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, product.id)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, product.id)}
+                >
+                  {/* ...existing code for table row... */}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
               onDrop={(e) => handleDrop(e, product.id)}
             >
               <td className="p-2 text-gray-400">

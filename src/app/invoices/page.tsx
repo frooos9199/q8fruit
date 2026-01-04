@@ -48,8 +48,16 @@ export default function InvoicesPage() {
       const invStr = window.localStorage.getItem("invoices");
       if (invStr) {
         try {
-          const allInvoices = JSON.parse(invStr);
-          return allInvoices.filter((inv: Invoice) => inv.userEmail === user.email);
+          const allInvoices = JSON.parse(invStr).filter((inv: Invoice) => inv.userEmail === user.email);
+          // ترتيب الفواتير من الأحدث للأقدم
+          return allInvoices.sort((a: any, b: any) => {
+            const getTime = (inv: any) => {
+              if (inv.timestamp) return inv.timestamp;
+              if (inv.date) return new Date(inv.date).getTime();
+              return 0;
+            };
+            return getTime(b) - getTime(a);
+          });
         } catch {
           return [];
         }
@@ -71,9 +79,17 @@ export default function InvoicesPage() {
           {invoices.map((inv, i) => (
             <li key={i} className="border rounded p-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
               <div>
-                <span className="font-bold">رقم الفاتورة:</span> {inv.id}
+                <span className="font-bold">رقم الفاتورة:</span> {inv.orderNumber || inv.id}
                 <span className="font-bold ml-4">المجموع:</span> {inv.total} د.ك
-                <span className="font-bold ml-4">تاريخ:</span> {inv.date}
+                <span className="font-bold ml-4">تاريخ:</span> {formatDateTime(inv.date)}
+// دالة تنسيق التاريخ والوقت بشكل احترافي (مطابقة للأدمن)
+function formatDateTime(dateStr: string) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('ar-KW', { year: 'numeric', month: 'short', day: 'numeric' }) +
+    ' - ' + d.toLocaleTimeString('ar-KW', { hour: '2-digit', minute: '2-digit' });
+}
               </div>
               <button
                 className="px-3 py-1 rounded bg-green-600 text-white font-bold hover:bg-green-800"

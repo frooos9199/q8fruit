@@ -361,30 +361,34 @@ export default function CartPage() {
             </div>
             <div className="space-y-4">
               {cart.map((item) => (
-                <div key={item.id} className="flex items-center bg-gray-900 rounded-2xl shadow-lg p-4 gap-4 border-2 border-gray-700 relative group">
-                  <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-full border-2 border-green-400 shadow-md" />
-                  <div className="flex-1 flex flex-col gap-1">
-                    <div className="font-bold text-lg text-white">{item.name}</div>
-                    <div className="text-sm text-gray-300">{item.unit}</div>
-                    <div className="flex items-center gap-2 mt-2">
+                <div key={item.id} className="flex items-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-xl p-4 gap-4 border-2 border-green-200/30 hover:border-green-400 transition-all relative group font-sans">
+                  <div className="flex-shrink-0 flex flex-col items-center justify-center">
+                    <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-xl border-2 border-green-400 shadow-md bg-white" />
+                  </div>
+                  <div className="flex-1 flex flex-col gap-1 min-w-0">
+                    <div className="font-bold text-lg sm:text-xl text-green-500 truncate">{item.name}</div>
+                    <div className="text-xs sm:text-sm text-gray-400 font-medium">{item.unit}</div>
+                    <div className="flex items-center gap-2 mt-3">
                       <button
                         onClick={() => handleQuantity(item.id, -1)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-700 text-xl font-bold text-white hover:bg-green-600 active:bg-green-700 transition-all border-2 border-green-400"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-800 text-xl font-bold text-green-400 hover:bg-green-600 hover:text-white active:bg-green-700 transition-all border-2 border-green-300 shadow"
+                        aria-label="نقص الكمية"
                       >
                         -
                       </button>
-                      <span className="w-10 text-center font-bold text-xl text-white">{item.quantity}</span>
+                      <span className="w-10 text-center font-extrabold text-xl text-white select-none">{item.quantity}</span>
                       <button
                         onClick={() => handleQuantity(item.id, 1)}
-                        className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-700 text-xl font-bold text-white hover:bg-green-600 active:bg-green-700 transition-all border-2 border-green-400"
+                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-800 text-xl font-bold text-green-400 hover:bg-green-600 hover:text-white active:bg-green-700 transition-all border-2 border-green-300 shadow"
+                        aria-label="زيادة الكمية"
                       >
                         +
                       </button>
                     </div>
                   </div>
-                  <div className="flex flex-col items-end gap-2">
-                    <div className="text-green-300 font-bold text-lg">{(item.price * item.quantity).toFixed(3)} د.ك</div>
-                    <button onClick={() => handleRemove(item.id)} className="w-8 h-8 flex items-center justify-center rounded-full bg-red-600 text-white font-bold text-xl shadow hover:bg-red-800 transition-all">&times;</button>
+                  <div className="flex flex-col items-end gap-3 min-w-[70px]">
+                    <div className="text-green-400 font-extrabold text-lg sm:text-xl drop-shadow">{(item.price * item.quantity).toFixed(3)} <span className="text-xs font-bold">د.ك</span></div>
+                    <button onClick={() => handleRemove(item.id)} className="w-8 h-8 flex items-center justify-center rounded-full bg-red-600 text-white font-extrabold text-xl shadow hover:bg-red-800 transition-all border-2 border-red-300" aria-label="حذف المنتج">&times;</button>
                   </div>
                 </div>
               ))}

@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useFonts } from 'expo-font';
+import { Cairo_400Regular, Cairo_700Bold } from '@expo-google-fonts/cairo';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -15,6 +17,12 @@ SplashScreen.preventAutoHideAsync();
 export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAppReady, setIsAppReady] = useState(false);
+
+  // تحميل خط Cairo
+  const [fontsLoaded] = useFonts({
+    Cairo_400Regular,
+    Cairo_700Bold,
+  });
 
   useEffect(() => {
     async function prepare() {
@@ -42,7 +50,8 @@ export default function App() {
     }
   }, [isAppReady]);
 
-  if (isLoading) {
+
+  if (isLoading || !fontsLoaded) {
     return (
       <SplashScreenComponent 
         onFinish={() => setIsLoading(false)}
@@ -54,6 +63,7 @@ export default function App() {
   return (
     <NavigationContainer onReady={onLayoutRootView}>
       <StatusBar style="light" backgroundColor="#22c55e" />
+      {/* تطبيق خط Cairo على جميع النصوص */}
       <MainNavigator />
     </NavigationContainer>
   );

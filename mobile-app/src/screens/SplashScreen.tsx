@@ -1,71 +1,51 @@
+
 import React, { useEffect, useRef } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Animated,
-  Dimensions,
-  StatusBar,
-} from 'react-native';
+import { View, Text, StatusBar, StyleSheet, Dimensions, Animated } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import * as Animatable from 'react-native-animatable';
 
 const { width, height } = Dimensions.get('window');
 
-interface SplashScreenProps {
-  onFinish: () => void;
-  onLayoutRootView?: () => void;
-}
-
-const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, onLayoutRootView }) => {
+const SplashScreen = ({ onFinish = () => {} }) => {
+  // Animations
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.3)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const slideAnim = useRef(new Animated.Value(40)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // تشغيل الأنيميشن المتسلسل
-    Animated.sequence([
-      // ظهور الشعار
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 1200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          tension: 50,
-          friction: 7,
-          useNativeDriver: true,
-        }),
-      ]),
-      // انزلاق النص
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 800,
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1200,
         useNativeDriver: true,
       }),
-      // شريط التحميل
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 5,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 1200,
+        useNativeDriver: true,
+      }),
       Animated.timing(progressAnim, {
         toValue: 1,
-        duration: 1500,
+        duration: 3500,
         useNativeDriver: false,
       }),
     ]).start();
 
-    // إنهاء الشاشة بعد 4 ثواني
     const timer = setTimeout(() => {
       onFinish();
     }, 4000);
-
     return () => clearTimeout(timer);
   }, []);
 
   return (
-    <View style={styles.container} onLayout={onLayoutRootView}>
+    <View style={styles.container} onLayout={() => {}}>
       <StatusBar barStyle="light-content" backgroundColor="#22c55e" />
-      
       {/* الخلفية المتدرجة */}
       <LinearGradient
         colors={['#22c55e', '#16a34a', '#15803d']}
@@ -73,7 +53,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, onLayoutRootView 
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       />
-
       {/* النجوم المتحركة في الخلفية */}
       <View style={styles.starsContainer}>
         {[...Array(20)].map((_, i) => (
@@ -88,14 +67,13 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, onLayoutRootView 
                 left: Math.random() * width,
                 top: Math.random() * height,
                 animationDelay: `${i * 200}ms`,
-              }
+              },
             ]}
           >
             ✨
           </Animatable.Text>
         ))}
       </View>
-
       {/* المحتوى الرئيسي */}
       <View style={styles.content}>
         {/* الشعار والأيقونة */}
@@ -117,7 +95,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, onLayoutRootView 
             <Text style={styles.icon}>🍎</Text>
             <View style={styles.iconGlow} />
           </Animatable.View>
-          
           <Animated.Text
             style={[
               styles.title,
@@ -128,7 +105,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, onLayoutRootView 
           >
             فكهاني الكويت
           </Animated.Text>
-          
           <Animated.Text
             style={[
               styles.subtitle,
@@ -139,7 +115,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, onLayoutRootView 
           >
             طازج • طبيعي • صحي
           </Animated.Text>
-
           <Animated.Text
             style={[
               styles.slogan,
@@ -151,7 +126,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, onLayoutRootView 
             من المزرعة إلى بيتك 🚚
           </Animated.Text>
         </Animated.View>
-
         {/* مؤشر التحميل المتقدم */}
         <Animated.View
           style={[
@@ -173,7 +147,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, onLayoutRootView 
             />
             <View style={styles.loadingShine} />
           </View>
-          
           <Animatable.Text
             animation="pulse"
             iterationCount="infinite"
@@ -182,7 +155,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, onLayoutRootView 
             جاري تحضير أطيب الفواكه...
           </Animatable.Text>
         </Animated.View>
-
         {/* معلومات التواصل */}
         <Animatable.View
           animation="fadeInUp"
@@ -193,7 +165,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish, onLayoutRootView 
             <Text style={styles.phoneNumber}>📞 98899426</Text>
             <Text style={styles.location}>📍 الكويت</Text>
           </View>
-          
           <View style={styles.brandInfo}>
             <Text style={styles.footerText}>صُنع بـ ❤️ في الكويت 🇰🇼</Text>
             <Text style={styles.version}>الإصدار 1.0.0</Text>
