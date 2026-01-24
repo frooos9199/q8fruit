@@ -167,16 +167,23 @@ export default function ProductTable() {
   };
 
   const removeProduct = async (id: number) => {
+    if (!confirm(`هل أنت متأكد من حذف المنتج؟`)) return;
+    
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== id);
       saveProductsToStorage(updated);
       
-      // 🔥 حذف من Firebase أيضاً
+      // 🔥 حذف من Firebase
       if (db) {
-        const productRef = doc(db, 'products', id.toString());
-        updateDoc(productRef, {
-          active: false // بدل الحذف، نعطله
-        }).catch(err => console.error('❌ خطأ في تعطيل المنتج في Firebase:', err));
+        try {
+          const { deleteDoc, doc } = require('firebase/firestore');
+          const productRef = doc(db, 'products', id.toString());
+          deleteDoc(productRef).catch((err: any) => {
+            console.error('❌ خطأ في حذف المنتج من Firebase:', err);
+          });
+        } catch (err) {
+          console.error('❌ خطأ في حذف المنتج:', err);
+        }
       }
       
       return updated;
