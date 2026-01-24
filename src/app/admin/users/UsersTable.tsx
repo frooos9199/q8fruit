@@ -5,21 +5,18 @@ import { db } from "../../../lib/firebase";
 import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string;
   active: boolean;
-  role: "عميل" | "مدير" | "مندوب";
-  password: string;
+  isAdmin?: boolean;
+  isBlocked?: boolean;
+  role?: "عميل" | "مدير" | "مندوب";
+  password?: string;
 }
 
-const initialUsers: User[] = [
-  { id: 1, name: "محمد أحمد", email: "mohamed@email.com", phone: "55512345", active: true, role: "عميل", password: "1234" },
-  { id: 2, name: "سارة علي", email: "sara@email.com", phone: "55567890", active: true, role: "عميل", password: "1234" },
-  { id: 3, name: "مدير النظام", email: "summit_kw@hotmail.com", phone: "55500000", active: true, role: "مدير", password: "admin1234" },
-  { id: 4, name: "خالد يوسف", email: "khaled@email.com", phone: "55522222", active: false, role: "عميل", password: "1234" },
-];
+const initialUsers: User[] = [];
 
 export default function UsersTable() {
   const [users, setUsers] = useState<User[]>([]);
@@ -38,85 +35,68 @@ export default function UsersTable() {
 
     try {
       setLoading(true);
+      console.log('🔥 بدء جلب المستخدمين من Firebase...');
       
-      // 🔥 جلب من Firebase أولاً
-      if (db) {
-        try {
-          const snapshot = await getDocs(collection(db, 'users'));
-          
-          if (!snapshot.empty) {
-            const firebaseUsers = snapshot.docs.map(doc => {
-              const data = doc.data();
-              return {
-                id: parseInt(doc.id),
-                name: data.name || '',
-                email: data.email || '',
-                phone: data.phone || '',
-                active: data.active === true,
-                role: data.role || 'عميل',
-                password: data.password || '1234'
-              } as User;
-            });
-            
-            const uniqueUsers = Array.from(
-              new Map(firebaseUsers.map(u => [u.id, u])).values()
-            ) as User[];
-            
-            console.log('✅ تم جلب المستخدمين من Firebase:', uniqueUsers);
-            setUsers(uniqueUsers);
-            window.localStorage.setItem('users', JSON.stringify(uniqueUsers));
-            setLoading(false);
-            return;
-          } else {
-            console.log('⚠️ Firebase فارغ، استخدام البيانات الافتراضية');
-          }
-        } catch (fbError) {
-          console.error('❌ خطأ Firebase:', fbError);
-        }
+      if (!db) {
+        console.error('❌ Firebase غير مهيأ');
+        setUsers([]);
+        setLoading(false);
+        return;
       }
+
+      const snapshot = await getDocs(collection(db, 'users'));
       
-      // fallback: localStorage أو initialUsers
-      const stored = window.localStorage.getItem('users');
-      if (stored) {
-        const parsed = JSON.parse(stored) as User[];
-        console.log('📦 تم جلب المستخدمين من localStorage:', parsed);
-        setUsers(parsed);
-      } else {
-        console.log('🆕 استخدام البيانات الافتراضية');
-        setUsers(initialUsers);
-        window.localStorage.setItem('users', JSON.stringify(initialUsers));
+      if (snapshot.empty) {
+        console.log('⚠️ Firebase فارغ');
+        setUsers([]);
+        setLoading(false);
+        return;
       }
+
+      const firebaseUsers = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          name: data.name || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          active: !data.isBlocked,
+          isAdmin: data.isAdmin || false,
+          isBlocked: data.isBlocked || false,
+          role: data.isAdmin ? 'مدير' : 'عميل',
+          password: data.password || ''
+        } as User;
+      });
+      
+      console.log(`✅ تم جلب ${firebaseUsers.length} مستخدم من Firebase`);
+      console.table(firebaseUsers);
+      setUsers(firebaseUsers);
+      
     } catch (error) {
-      console.error('❌ خطأ عام:', error);
-      setUsers(initialUsers);
+      console.error('❌ خطأ في جلب المستخدمين:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // تفعيل/إيقاف مستخدم
-  const toggleActive = async (id: number) => {
+  const toggleActive = async (id: string) => {
     const user = users.find(u => u.id === id);
     if (!user) return;
     
-    const newStatus = !user.active;
-    console.log(`🔄 تغيير حالة ${user.name} من ${user.active} إلى ${newStatus}`);
+    const newBlockedStatus = !user.isBlocked;
+    console.log(`🔄 تغيير حالة ${user.name} - isBlocked: ${newBlockedStatus}`);
     
     const updatedUsers = users.map(u => 
-      u.id === id ? { ...u, active: newStatus } : u
+      u.id === id ? { ...u, isBlocked: newBlockedStatus, active: !newBlockedStatus } : u
     );
     
     setUsers(updatedUsers);
-    window.localStorage.setItem('users', JSON.stringify(updatedUsers));
     
-    // حفظ في Firebase
     if (db) {
       try {
-        const userToUpdate = updatedUsers.find(u => u.id === id);
-        if (userToUpdate) {
-          await setDoc(doc(db, 'users', id.toString()), userToUpdate);
-          console.log('✅ تم تحديث الحالة في Firebase');
-        }
+        await setDoc(doc(db, 'users', id), { isBlocked: newBlockedStatus }, { merge: true });
+        console.log('✅ تم تحديث الحالة في Firebase');
       } catch (error) {
         console.error('❌ خطأ في تحديث Firebase:', error);
         alert('⚠️ تم التحديث محلياً فقط');
@@ -124,10 +104,14 @@ export default function UsersTable() {
     }
   };
 
-  // حذف مستخدم
-  const handleDeleteUser = async (id: number) => {
+  const handleDeleteUser = async (id: string) => {
     const user = users.find(u => u.id === id);
     if (!user) return;
+    
+    if (user.isAdmin) {
+      alert('❌ لا يمكن حذف المدير');
+      return;
+    }
     
     if (!confirm(`هل أنت متأكد من حذف المستخدم "${user.name}"؟`)) return;
     
@@ -135,43 +119,34 @@ export default function UsersTable() {
     
     const updatedUsers = users.filter(u => u.id !== id);
     setUsers(updatedUsers);
-    window.localStorage.setItem('users', JSON.stringify(updatedUsers));
     
-    // حذف من Firebase
     if (db) {
       try {
-        await deleteDoc(doc(db, 'users', id.toString()));
+        await deleteDoc(doc(db, 'users', id));
         console.log('✅ تم حذف المستخدم من Firebase');
         alert('✅ تم حذف المستخدم بنجاح!');
       } catch (error) {
         console.error('❌ خطأ في حذف المستخدم من Firebase:', error);
-        alert('⚠️ تم حذف المستخدم محلياً فقط');
+        alert('⚠️ فشل الحذف');
       }
-    } else {
-      alert('✅ تم حذف المستخدم بنجاح!');
     }
   };
 
-  // تعديل مستخدم
   const handleEditSave = async (updated: User) => {
     console.log('💾 حفظ تعديلات المستخدم:', updated);
     
     const updatedUsers = users.map(u => u.id === updated.id ? updated : u);
     setUsers(updatedUsers);
-    window.localStorage.setItem('users', JSON.stringify(updatedUsers));
     
-    // حفظ في Firebase
     if (db) {
       try {
-        await setDoc(doc(db, 'users', updated.id.toString()), updated);
+        await setDoc(doc(db, 'users', updated.id), updated, { merge: true });
         console.log('✅ تم تحديث المستخدم في Firebase');
         alert('✅ تم حفظ التعديلات بنجاح!');
       } catch (error) {
         console.error('❌ خطأ في تحديث Firebase:', error);
-        alert('⚠️ تم الحفظ محلياً فقط');
+        alert('⚠️ فشل الحفظ');
       }
-    } else {
-      alert('✅ تم حفظ التعديلات!');
     }
     
     setEditUser(null);
@@ -240,20 +215,20 @@ export default function UsersTable() {
                 <td className="p-2">{user.name}</td>
                 <td className="p-2">{user.email}</td>
                 <td className="p-2">{user.phone}</td>
-                <td className="p-2">{user.role}</td>
+                <td className="p-2">{user.role || (user.isAdmin ? 'مدير' : 'عميل')}</td>
                 <td className="p-2">
-                  {user.active ? (
-                    <span className="text-green-600 font-bold">مفعل</span>
+                  {user.isBlocked ? (
+                    <span className="text-red-600 font-bold">محظور</span>
                   ) : (
-                    <span className="text-red-600 font-bold">موقوف</span>
+                    <span className="text-green-600 font-bold">مفعل</span>
                   )}
                 </td>
                 <td className="p-2">
                   <button
                     onClick={() => toggleActive(user.id)}
-                    className={`px-3 py-1 rounded text-white ${user.active ? "bg-red-500" : "bg-green-500"}`}
+                    className={`px-3 py-1 rounded text-white ${user.isBlocked ? "bg-green-500" : "bg-red-500"}`}
                   >
-                    {user.active ? "إيقاف" : "تفعيل"}
+                    {user.isBlocked ? "تفعيل" : "حظر"}
                   </button>
                 </td>
                 <td className="p-2">
@@ -265,8 +240,8 @@ export default function UsersTable() {
                   </button>
                 </td>
                 <td className="p-2">
-                  {user.email === "summit_kw@hotmail.com" ? (
-                    <span className="text-gray-400 text-xs">لا يمكن حذف الأدمن</span>
+                  {user.isAdmin ? (
+                    <span className="text-gray-400 text-xs">لا يمكن حذف المدير</span>
                   ) : (
                     <button
                       onClick={() => handleDeleteUser(user.id)}

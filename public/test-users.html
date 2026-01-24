@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اختبار المستخدمين - Firebase</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+    h1 { color: #10b981; }
+    pre { background: #1f2937; color: #10b981; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    .user-card { border: 1px solid #e5e7eb; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    .loading { text-align: center; padding: 40px; font-size: 18px; }
+    button { background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin: 5px; }
+    button:hover { background: #059669; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 اختبار بيانات المستخدمين من Firebase</h1>
+    <div id="status" class="loading">⏳ جاري التحميل...</div>
+    <div id="result"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+    import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBW2-EDd8K8Nq5Uj5fJFaeAzQnchjcdbJU",
+      authDomain: "fruitq8-ba5ef.firebaseapp.com",
+      projectId: "fruitq8-ba5ef",
+      storageBucket: "fruitq8-ba5ef.firebasestorage.app",
+      messagingSenderId: "496410641214",
+      appId: "1:496410641214:web:bc829a07ac23b9ba0ae26f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadUsers() {
+      try {
+        const snapshot = await getDocs(collection(db, 'users'));
+        
+        const statusDiv = document.getElementById('status');
+        const resultDiv = document.getElementById('result');
+        
+        if (snapshot.empty) {
+          statusDiv.innerHTML = '⚠️ لا يوجد مستخدمين في Firebase';
+          return;
+        }
+
+        const users = [];
+        snapshot.forEach(doc => {
+          users.push({
+            id: doc.id,
+            ...doc.data()
+          });
+        });
+
+        statusDiv.innerHTML = `✅ تم جلب ${users.length} مستخدم من Firebase`;
+        
+        let html = '<h2>📊 البيانات الخام (Raw Data):</h2>';
+        html += '<pre>' + JSON.stringify(users, null, 2) + '</pre>';
+        
+        html += '<h2>👥 قائمة المستخدمين:</h2>';
+        users.forEach(user => {
+          html += `
+            <div class="user-card">
+              <strong>ID:</strong> ${user.id}<br>
+              <strong>الاسم:</strong> ${user.name || 'غير محدد'}<br>
+              <strong>الإيميل:</strong> ${user.email || 'غير محدد'}<br>
+              <strong>الهاتف:</strong> ${user.phone || 'غير محدد'}<br>
+              <strong>مدير:</strong> ${user.isAdmin ? '✅ نعم' : '❌ لا'}<br>
+              <strong>محظور:</strong> ${user.isBlocked ? '🚫 نعم' : '✅ لا'}<br>
+              <strong>الحالة:</strong> ${user.active !== undefined ? (user.active ? 'مفعل' : 'موقوف') : 'غير محدد'}<br>
+            </div>
+          `;
+        });
+        
+        resultDiv.innerHTML = html;
+        
+      } catch (error) {
+        document.getElementById('status').innerHTML = '❌ خطأ: ' + error.message;
+        console.error('Error:', error);
+      }
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>

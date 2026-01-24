@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <title>تنظيف وإعادة تحميل المستخدمين</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #1f2937; color: white; }
+    .container { max-width: 800px; margin: 0 auto; }
+    button { background: #10b981; color: white; padding: 15px 30px; border: none; border-radius: 5px; cursor: pointer; margin: 10px; font-size: 16px; }
+    button:hover { background: #059669; }
+    .danger { background: #ef4444; }
+    .danger:hover { background: #dc2626; }
+    pre { background: #374151; padding: 15px; border-radius: 5px; overflow-x: auto; }
+    .success { color: #10b981; }
+    .error { color: #ef4444; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🧹 تنظيف وإعادة تحميل المستخدمين</h1>
+    
+    <button onclick="clearLocalStorage()">🗑️ مسح localStorage</button>
+    <button onclick="clearSessionStorage()">🗑️ مسح sessionStorage</button>
+    <button onclick="clearAllCaches()" class="danger">🔥 مسح كل الكاش</button>
+    <button onclick="reloadPage()">🔄 إعادة تحميل الصفحة</button>
+    
+    <div id="output"></div>
+  </div>
+
+  <script>
+    const output = document.getElementById('output');
+
+    function log(message, type = 'info') {
+      const color = type === 'success' ? 'success' : type === 'error' ? 'error' : '';
+      output.innerHTML += `<div class="${color}">${message}</div>`;
+    }
+
+    function clearLocalStorage() {
+      try {
+        const before = Object.keys(localStorage).length;
+        log(`📦 عدد العناصر في localStorage: ${before}`);
+        
+        // عرض ما في localStorage
+        Object.keys(localStorage).forEach(key => {
+          log(`  - ${key}: ${localStorage.getItem(key)?.substring(0, 100)}...`);
+        });
+        
+        localStorage.clear();
+        log('✅ تم مسح localStorage بنجاح', 'success');
+      } catch (error) {
+        log('❌ خطأ في مسح localStorage: ' + error.message, 'error');
+      }
+    }
+
+    function clearSessionStorage() {
+      try {
+        sessionStorage.clear();
+        log('✅ تم مسح sessionStorage بنجاح', 'success');
+      } catch (error) {
+        log('❌ خطأ في مسح sessionStorage: ' + error.message, 'error');
+      }
+    }
+
+    async function clearAllCaches() {
+      try {
+        // مسح localStorage و sessionStorage
+        localStorage.clear();
+        sessionStorage.clear();
+        log('✅ تم مسح localStorage و sessionStorage', 'success');
+        
+        // مسح Cache API
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+          log(`✅ تم مسح ${cacheNames.length} cache`, 'success');
+        }
+        
+        // مسح IndexedDB
+        if ('indexedDB' in window) {
+          const dbs = await indexedDB.databases();
+          dbs.forEach(db => {
+            if (db.name) indexedDB.deleteDatabase(db.name);
+          });
+          log('✅ تم مسح IndexedDB', 'success');
+        }
+        
+        log('🎉 تم مسح كل الكاش بنجاح!', 'success');
+        log('⏳ سيتم إعادة تحميل الصفحة خلال 2 ثانية...');
+        
+        setTimeout(() => {
+          window.location.href = '/admin/users';
+        }, 2000);
+        
+      } catch (error) {
+        log('❌ خطأ: ' + error.message, 'error');
+      }
+    }
+
+    function reloadPage() {
+      window.location.reload(true);
+    }
+
+    // عرض محتوى localStorage عند التحميل
+    window.onload = () => {
+      log('📊 محتوى localStorage الحالي:');
+      if (Object.keys(localStorage).length === 0) {
+        log('  (فارغ)');
+      } else {
+        Object.keys(localStorage).forEach(key => {
+          const value = localStorage.getItem(key);
+          if (value) {
+            log(`  - ${key}: ${value.substring(0, 200)}${value.length > 200 ? '...' : ''}`);
+          }
+        });
+      }
+    };
+  </script>
+</body>
+</html>
