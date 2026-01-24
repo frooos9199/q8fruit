@@ -37,25 +37,53 @@ export default function UsersTable() {
     return initialUsers;
   });
 
-  // مزامنة تلقائية عند تغيير بيانات localStorage (مثلاً عند إضافة مستخدم جديد)
   useEffect(() => {
-    const syncUsers = () => {
-      const stored = window.localStorage.getItem("users");
-      if (stored) {
-        try {
-          setUsers(JSON.parse(stored));
-        } catch {
-          setUsers(initialUsers);
+    if (typeof window === 'undefined') return;
+
+    const loadUsers = async () => {
+      try {
+        // 🔥 جلب من Firebase أولاً
+        const { db } = await import('../../../lib/firebase');
+        if (db) {
+          const { collection, getDocs } = await import('firebase/firestore');
+          const snapshot = await getDocs(collection(db, 'users'));
+          
+          if (!snapshot.empty) {
+            const firebaseUsers = snapshot.docs.map(doc => ({
+              id: parseInt(doc.id) || doc.data().id,
+              ...doc.data()
+            })) as User[];
+            
+            console.log('✅ تم جلب المستخدمين من Firebase:', firebaseUsers.length);
+            setUsers(firebaseUsers);
+            window.localStorage.setItem('users', JSON.stringify(firebaseUsers));
+            return;
+          }
         }
-      } else {
-        setUsers(initialUsers);
+        
+        // fallback: localStorage
+        const stored = window.localStorage.getItem('users');
+        if (stored) {
+          setUsers(JSON.parse(stored));
+        } else {
+          setUsers(initialUsers);
+          window.localStorage.setItem('users', JSON.stringify(initialUsers));
+        }
+      } catch (error) {
+        console.error('❌ خطأ في جلب المستخدمين:', error);
+        const stored = window.localStorage.getItem('users');
+        setUsers(stored ? JSON.parse(stored) : initialUsers);
       }
     };
-    window.addEventListener("usersUpdated", syncUsers);
-    // تحديث عند الرجوع للصفحة أو إعادة تحميلها
-    syncUsers();
+
+    loadUsers();
+
+    // مزامنة تلقائية عند تغيير بيانات localStorage
+    const syncUsers = () => loadUsers();
+    window.addEventListener('usersUpdated', syncUsers);
+    
     return () => {
-      window.removeEventListener("usersUpdated", syncUsers);
+      window.removeEventListener('usersUpdated', syncUsers);
     };
   }, []);
   const [filter, setFilter] = useState("");

@@ -172,7 +172,7 @@ export default function CartPage() {
       try {
         const { db } = await import('../../lib/firebase');
         if (db) {
-          const { doc, getDoc, setDoc, increment } = await import('firebase/firestore');
+          const { doc, getDoc, setDoc } = await import('firebase/firestore');
           const counterDoc = await getDoc(doc(db, 'settings', 'orderCounter'));
           
           if (counterDoc.exists()) {
@@ -185,16 +185,24 @@ export default function CartPage() {
             updatedAt: new Date().toISOString(),
           }, { merge: true });
           
-          console.log('✅ رقم الطلب الجديد:', orderNumber);
+          console.log('✅ رقم الطلب/الفاتورة الجديد:', orderNumber);
+        } else {
+          // fallback: استخدام localStorage
+          const lastOrder = window.localStorage.getItem('lastOrderNumber');
+          orderNumber = lastOrder ? parseInt(lastOrder) + 1 : 100;
+          window.localStorage.setItem('lastOrderNumber', orderNumber.toString());
         }
       } catch (error) {
         console.error('❌ خطأ في الحصول على رقم الطلب:', error);
-        // fallback: استخدام timestamp
-        orderNumber = Date.now();
+        // fallback: استخدام localStorage
+        const lastOrder = window.localStorage.getItem('lastOrderNumber');
+        orderNumber = lastOrder ? parseInt(lastOrder) + 1 : 100;
+        window.localStorage.setItem('lastOrderNumber', orderNumber.toString());
       }
       
       const invoice = {
         id: orderNumber,
+        orderNumber: orderNumber, // رقم موحد للفاتورة والطلبية
         date: new Date().toLocaleString(),
         items: cart,
         total: total + deliveryPrice,
@@ -216,7 +224,8 @@ export default function CartPage() {
       // إضافة الطلب إلى orders (للإدارة)
       const orders = JSON.parse(window.localStorage.getItem("orders") || "[]");
       const order = {
-        id: invoice.id,
+        id: orderNumber,
+        orderNumber: orderNumber, // رقم موحد للفاتورة والطلبية
         customer: userInfo.name,
         phone: userInfo.phone,
         address: userInfo.address.trim() || "سيتم التواصل لتحديد العنوان",
