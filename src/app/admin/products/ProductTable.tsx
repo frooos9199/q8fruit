@@ -169,25 +169,31 @@ export default function ProductTable() {
   const removeProduct = async (id: number) => {
     if (!confirm(`هل أنت متأكد من حذف المنتج؟`)) return;
     
+    console.log(`🗑️ بدء حذف المنتج ${id}`);
+    
+    // 🔥 حذف من Firebase أولاً
+    if (db) {
+      try {
+        const { deleteDoc, doc } = await import('firebase/firestore');
+        const productRef = doc(db, 'products', id.toString());
+        await deleteDoc(productRef);
+        console.log(`✅ تم حذف المنتج ${id} من Firebase`);
+      } catch (err) {
+        console.error('❌ خطأ في حذف المنتج من Firebase:', err);
+        alert('❌ فشل حذف المنتج من Firebase. يرجى المحاولة مرة أخرى.');
+        return; // إيقاف العملية إذا فشل الحذف من Firebase
+      }
+    }
+    
+    // حذف من localStorage بعد نجاح حذف Firebase
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== id);
       saveProductsToStorage(updated);
-      
-      // 🔥 حذف من Firebase
-      if (db) {
-        try {
-          const { deleteDoc, doc } = require('firebase/firestore');
-          const productRef = doc(db, 'products', id.toString());
-          deleteDoc(productRef).catch((err: any) => {
-            console.error('❌ خطأ في حذف المنتج من Firebase:', err);
-          });
-        } catch (err) {
-          console.error('❌ خطأ في حذف المنتج:', err);
-        }
-      }
-      
+      console.log(`✅ تم حذف المنتج ${id} من localStorage`);
       return updated;
     });
+    
+    alert('✅ تم حذف المنتج بنجاح!');
   };
 
   const updateProductCategories = async (productId: number, categoryName: string, isChecked: boolean) => {
