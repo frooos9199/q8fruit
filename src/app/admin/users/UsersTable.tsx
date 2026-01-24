@@ -41,51 +41,54 @@ export default function UsersTable() {
       
       // 🔥 جلب من Firebase أولاً
       if (db) {
-        const snapshot = await getDocs(collection(db, 'users'));
-        
-        if (!snapshot.empty) {
-          const firebaseUsers = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-              id: parseInt(doc.id),
-              name: data.name || '',
-              email: data.email || '',
-              phone: data.phone || '',
-              active: data.active !== false,
-              role: data.role || 'عميل',
-              password: data.password || '1234'
-            } as User;
-          });
+        try {
+          const snapshot = await getDocs(collection(db, 'users'));
           
-          // إزالة المكررات بناءً على ID
-          const uniqueUsers = Array.from(
-            new Map(firebaseUsers.map(u => [u.id, u])).values()
-          ) as User[];
-          
-          console.log('✅ تم جلب المستخدمين من Firebase:', uniqueUsers.length);
-          setUsers(uniqueUsers);
-          window.localStorage.setItem('users', JSON.stringify(uniqueUsers));
-          setLoading(false);
-          return;
+          if (!snapshot.empty) {
+            const firebaseUsers = snapshot.docs.map(doc => {
+              const data = doc.data();
+              return {
+                id: parseInt(doc.id),
+                name: data.name || '',
+                email: data.email || '',
+                phone: data.phone || '',
+                active: data.active === true,
+                role: data.role || 'عميل',
+                password: data.password || '1234'
+              } as User;
+            });
+            
+            const uniqueUsers = Array.from(
+              new Map(firebaseUsers.map(u => [u.id, u])).values()
+            ) as User[];
+            
+            console.log('✅ تم جلب المستخدمين من Firebase:', uniqueUsers);
+            setUsers(uniqueUsers);
+            window.localStorage.setItem('users', JSON.stringify(uniqueUsers));
+            setLoading(false);
+            return;
+          } else {
+            console.log('⚠️ Firebase فارغ، استخدام البيانات الافتراضية');
+          }
+        } catch (fbError) {
+          console.error('❌ خطأ Firebase:', fbError);
         }
       }
       
-      // fallback: localStorage
+      // fallback: localStorage أو initialUsers
       const stored = window.localStorage.getItem('users');
       if (stored) {
         const parsed = JSON.parse(stored) as User[];
-        const uniqueUsers = Array.from(
-          new Map(parsed.map((u: User) => [u.id, u])).values()
-        ) as User[];
-        setUsers(uniqueUsers);
+        console.log('📦 تم جلب المستخدمين من localStorage:', parsed);
+        setUsers(parsed);
       } else {
+        console.log('🆕 استخدام البيانات الافتراضية');
         setUsers(initialUsers);
         window.localStorage.setItem('users', JSON.stringify(initialUsers));
       }
     } catch (error) {
-      console.error('❌ خطأ في جلب المستخدمين:', error);
-      const stored = window.localStorage.getItem('users');
-      setUsers(stored ? JSON.parse(stored) as User[] : initialUsers);
+      console.error('❌ خطأ عام:', error);
+      setUsers(initialUsers);
     } finally {
       setLoading(false);
     }
@@ -93,22 +96,18 @@ export default function UsersTable() {
 
   // تفعيل/إيقاف مستخدم
   const toggleActive = async (id: number) => {
-    console.log(`🔄 تغيير حالة المستخدم ${id}`);
+    const user = users.find(u => u.id === id);
+    if (!user) return;
     
-    const updatedUsers = users.map(u => {
-      if (u.id === id) {
-        console.log(`✅ تغيير حالة ${u.name} من ${u.active} إلى ${!u.active}`);
-        return { ...u, active: !u.active };
-      }
-      return u;
-    });
+    const newStatus = !user.active;
+    console.log(`🔄 تغيير حالة ${user.name} من ${user.active} إلى ${newStatus}`);
+    
+    const updatedUsers = users.map(u => 
+      u.id === id ? { ...u, active: newStatus } : u
+    );
     
     setUsers(updatedUsers);
-    
-    // حفظ في localStorage
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('users', JSON.stringify(updatedUsers));
-    }
+    window.localStorage.setItem('users', JSON.stringify(updatedUsers));
     
     // حفظ في Firebase
     if (db) {
@@ -116,27 +115,27 @@ export default function UsersTable() {
         const userToUpdate = updatedUsers.find(u => u.id === id);
         if (userToUpdate) {
           await setDoc(doc(db, 'users', id.toString()), userToUpdate);
-          console.log('✅ تم تحديث Firebase');
+          console.log('✅ تم تحديث الحالة في Firebase');
         }
       } catch (error) {
         console.error('❌ خطأ في تحديث Firebase:', error);
+        alert('⚠️ تم التحديث محلياً فقط');
       }
     }
   };
 
   // حذف مستخدم
   const handleDeleteUser = async (id: number) => {
-    if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    const user = users.find(u => u.id === id);
+    if (!user) return;
     
-    console.log(`🗑️ حذف المستخدم ${id}`);
+    if (!confirm(`هل أنت متأكد من حذف المستخدم "${user.name}"؟`)) return;
+    
+    console.log(`🗑️ حذف المستخدم ${id} - ${user.name}`);
     
     const updatedUsers = users.filter(u => u.id !== id);
     setUsers(updatedUsers);
-    
-    // حذف من localStorage
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('users', JSON.stringify(updatedUsers));
-    }
+    window.localStorage.setItem('users', JSON.stringify(updatedUsers));
     
     // حذف من Firebase
     if (db) {
@@ -146,7 +145,7 @@ export default function UsersTable() {
         alert('✅ تم حذف المستخدم بنجاح!');
       } catch (error) {
         console.error('❌ خطأ في حذف المستخدم من Firebase:', error);
-        alert('⚠️ تم حذف المستخدم محلياً');
+        alert('⚠️ تم حذف المستخدم محلياً فقط');
       }
     } else {
       alert('✅ تم حذف المستخدم بنجاح!');
@@ -155,22 +154,24 @@ export default function UsersTable() {
 
   // تعديل مستخدم
   const handleEditSave = async (updated: User) => {
+    console.log('💾 حفظ تعديلات المستخدم:', updated);
+    
     const updatedUsers = users.map(u => u.id === updated.id ? updated : u);
     setUsers(updatedUsers);
-    
-    // حفظ في localStorage
-    if (typeof window !== 'undefined') {
-      window.localStorage.setItem('users', JSON.stringify(updatedUsers));
-    }
+    window.localStorage.setItem('users', JSON.stringify(updatedUsers));
     
     // حفظ في Firebase
     if (db) {
       try {
         await setDoc(doc(db, 'users', updated.id.toString()), updated);
         console.log('✅ تم تحديث المستخدم في Firebase');
+        alert('✅ تم حفظ التعديلات بنجاح!');
       } catch (error) {
         console.error('❌ خطأ في تحديث Firebase:', error);
+        alert('⚠️ تم الحفظ محلياً فقط');
       }
+    } else {
+      alert('✅ تم حفظ التعديلات!');
     }
     
     setEditUser(null);
