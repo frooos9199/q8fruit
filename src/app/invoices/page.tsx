@@ -1,3 +1,11 @@
+// دالة تنسيق التاريخ والوقت بشكل احترافي (مطابقة للأدمن)
+function formatDateTime(dateStr: string) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleDateString('ar-KW', { year: 'numeric', month: 'short', day: 'numeric' }) +
+    ' - ' + d.toLocaleTimeString('ar-KW', { hour: '2-digit', minute: '2-digit' });
+}
 "use client";
 import { useEffect, useState } from "react";
 import InvoicePrint from "../admin/orders/InvoicePrint";
@@ -10,6 +18,7 @@ interface User {
 
 interface Invoice {
   id: string;
+  orderNumber?: string;
   userEmail: string;
   items?: any[];
   products?: any[];
@@ -82,14 +91,6 @@ export default function InvoicesPage() {
                 <span className="font-bold">رقم الفاتورة:</span> {inv.orderNumber || inv.id}
                 <span className="font-bold ml-4">المجموع:</span> {inv.total} د.ك
                 <span className="font-bold ml-4">تاريخ:</span> {formatDateTime(inv.date)}
-// دالة تنسيق التاريخ والوقت بشكل احترافي (مطابقة للأدمن)
-function formatDateTime(dateStr: string) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('ar-KW', { year: 'numeric', month: 'short', day: 'numeric' }) +
-    ' - ' + d.toLocaleTimeString('ar-KW', { hour: '2-digit', minute: '2-digit' });
-}
               </div>
               <button
                 className="px-3 py-1 rounded bg-green-600 text-white font-bold hover:bg-green-800"
