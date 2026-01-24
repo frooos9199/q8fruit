@@ -2,13 +2,15 @@
 import { useState, useCallback } from "react";
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   phone: string;
   active: boolean;
-  role: "عميل" | "مدير" | "مندوب";
-  password: string;
+  isAdmin?: boolean;
+  isBlocked?: boolean;
+  role?: "عميل" | "مدير" | "مندوب";
+  password?: string;
 }
 
 interface Props {
@@ -40,8 +42,15 @@ export default function UserEditModal({ user, onSave, onClose }: Props) {
         alert('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
         return;
       }
+
+      // تحديث isAdmin بناءً على الدور
+      const updatedUser = {
+        ...form,
+        isAdmin: form.role === 'مدير',
+        isBlocked: !form.active
+      };
       
-      onSave(form);
+      onSave(updatedUser);
     } catch (error) {
       console.error('خطأ في حفظ المستخدم:', error);
       alert('حدث خطأ أثناء الحفظ');
