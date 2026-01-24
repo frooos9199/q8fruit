@@ -22,28 +22,34 @@ export const syncProductsToFirebase = async (products: any[]) => {
     console.log('🔄 بدء مزامنة المنتجات مع Firebase:', products.length);
     const productsRef = collection(db!, 'products');
     
-    // تحديث/إضافة المنتجات مع ضمان الحفظ
-    const updatePromises = products.map(async (product) => {
+    // 🗑️ أولاً: حذف جميع المنتجات القديمة من Firebase
+    const existingSnapshot = await getDocs(productsRef);
+    const deletePromises = existingSnapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+    console.log(`🗑️ تم حذف ${existingSnapshot.docs.length} منتج قديم`);
+    
+    // ✅ ثانياً: إضافة المنتجات الجديدة
+    const addPromises = products.map(async (product) => {
       const productData = {
-        ...product,
-        updatedAt: new Date().toISOString(),
-        // ضمان وجود البيانات الأساسية
         name: product.name || '',
         units: Array.isArray(product.units) ? product.units : [],
         category: product.category || '',
+        categories: Array.isArray(product.categories) ? product.categories : [product.category || ''],
         active: product.active !== false,
         images: Array.isArray(product.images) ? product.images : [],
+        image: product.image || '',
         hasOffer: product.hasOffer || false,
-        discount: product.discount || 0
+        discount: product.discount || 0,
+        order: product.order || 0,
+        quantity: product.quantity || 0,
+        updatedAt: new Date().toISOString()
       };
       
-      console.log(`💾 حفظ المنتج ${product.id}:`, productData.name, productData.units);
-      
-      return setDoc(doc(productsRef, product.id.toString()), productData, { merge: false });
+      return setDoc(doc(productsRef, product.id.toString()), productData);
     });
     
-    await Promise.all(updatePromises);
-    
+    await Promise.all(addPromises);
+    console.log(`✅ تم إضافة ${products.length} منتج جديد`);
     console.log('✅ تم مزامنة جميع المنتجات مع Firebase');
     return true;
   } catch (error) {
