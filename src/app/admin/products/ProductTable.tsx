@@ -4,7 +4,7 @@ import ProductEditModal from "./ProductEditModal";
 import { useEffect, useState as useStateReact } from "react";
 import CateringTable from "../catering/CateringTable";
 import { db } from "../../../lib/firebase";
-import { doc, updateDoc, setDoc, getDocs, collection } from "firebase/firestore";
+import { doc, updateDoc, setDoc, getDocs, collection, deleteDoc } from "firebase/firestore";
 
 interface ProductUnit {
   name: string;
@@ -171,21 +171,7 @@ export default function ProductTable() {
     
     console.log(`🗑️ بدء حذف المنتج ${id}`);
     
-    // 🔥 حذف من Firebase أولاً
-    if (db) {
-      try {
-        const { deleteDoc, doc } = await import('firebase/firestore');
-        const productRef = doc(db, 'products', id.toString());
-        await deleteDoc(productRef);
-        console.log(`✅ تم حذف المنتج ${id} من Firebase`);
-      } catch (err) {
-        console.error('❌ خطأ في حذف المنتج من Firebase:', err);
-        alert('❌ فشل حذف المنتج من Firebase. يرجى المحاولة مرة أخرى.');
-        return; // إيقاف العملية إذا فشل الحذف من Firebase
-      }
-    }
-    
-    // حذف من localStorage بعد نجاح حذف Firebase
+    // حذف من localStorage أولاً (عرض فوري)
     setProducts((prev) => {
       const updated = prev.filter((p) => p.id !== id);
       saveProductsToStorage(updated);
@@ -193,7 +179,20 @@ export default function ProductTable() {
       return updated;
     });
     
-    alert('✅ تم حذف المنتج بنجاح!');
+    // 🔥 حذف من Firebase في الخلفية
+    if (db) {
+      try {
+        const productRef = doc(db, 'products', id.toString());
+        await deleteDoc(productRef);
+        console.log(`✅ تم حذف المنتج ${id} من Firebase`);
+        alert('✅ تم حذف المنتج بنجاح!');
+      } catch (err) {
+        console.error('❌ خطأ في حذف المنتج من Firebase:', err);
+        alert('⚠️ تم حذف المنتج محلياً، لكن فشل الحذف من Firebase. قد تحتاج لإعادة المحاولة.');
+      }
+    } else {
+      alert('✅ تم حذف المنتج بنجاح!');
+    }
   };
 
   const updateProductCategories = async (productId: number, categoryName: string, isChecked: boolean) => {
