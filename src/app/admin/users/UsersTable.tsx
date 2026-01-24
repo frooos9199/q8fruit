@@ -91,8 +91,18 @@ export default function UsersTable() {
   const [editUser, setEditUser] = useState<User | null>(null);
 
   const toggleActive = async (id: number) => {
+    console.log(`🔄 تغيير حالة المستخدم ${id}`);
+    
     setUsers(prev => {
-      const updated = prev.map(u => u.id === id ? { ...u, active: !u.active } : u);
+      const updated = prev.map(u => {
+        if (u.id === id) {
+          return { ...u, active: !u.active };
+        }
+        return u;
+      });
+      
+      console.log(`✅ تم تحديث المستخدم ${id}`);
+      
       if (typeof window !== 'undefined') {
         window.localStorage.setItem('users', JSON.stringify(updated));
         // مزامنة فورية مع Firebase
@@ -100,6 +110,7 @@ export default function UsersTable() {
           syncAllDataToFirebase().catch(console.error);
         });
       }
+      
       return updated;
     });
   };
