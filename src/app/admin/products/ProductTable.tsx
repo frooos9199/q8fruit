@@ -66,11 +66,8 @@ export default function ProductTable() {
             
             console.log('🔥 تحميل من Firebase:', firebaseProducts.length);
             
-            // فقط إذا كان Firebase يحتوي على بيانات أحدث
-            const localTimestamp = window.localStorage.getItem('productsLastUpdate');
-            const shouldUpdate = !localTimestamp || !stored || firebaseProducts.length !== JSON.parse(stored).length;
-            
-            if (shouldUpdate) {
+            // فقط تحديث إذا لم يكن هناك بيانات محلية
+            if (!stored) {
               setProducts(firebaseProducts);
               window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
               window.localStorage.setItem('productsLastUpdate', new Date().toISOString());
