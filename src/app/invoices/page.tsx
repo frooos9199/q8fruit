@@ -1,3 +1,7 @@
+"use client";
+import { useEffect, useState } from "react";
+import InvoicePrint from "../admin/orders/InvoicePrint";
+
 // دالة تنسيق التاريخ والوقت بشكل احترافي (مطابقة للأدمن)
 function formatDateTime(dateStr: string) {
   if (!dateStr) return '';
@@ -6,9 +10,6 @@ function formatDateTime(dateStr: string) {
   return d.toLocaleDateString('ar-KW', { year: 'numeric', month: 'short', day: 'numeric' }) +
     ' - ' + d.toLocaleTimeString('ar-KW', { hour: '2-digit', minute: '2-digit' });
 }
-"use client";
-import { useEffect, useState } from "react";
-import InvoicePrint from "../admin/orders/InvoicePrint";
 
 interface User {
   email: string;
