@@ -11,10 +11,15 @@ import {
   query
 } from 'firebase/firestore';
 
-// مزامنة المنتجات مع Firebase (تحديث فوري وموثوق)
+// مزامنة المنتجات مع Firebase (تحديث آمن)
 export const syncProductsToFirebase = async (products: any[]) => {
   if (!db) {
     console.error('❌ Firebase db غير متاح');
+    return false;
+  }
+
+  if (!products || products.length === 0) {
+    console.warn('⚠️ لا توجد منتجات للمزامنة!');
     return false;
   }
 
@@ -22,14 +27,8 @@ export const syncProductsToFirebase = async (products: any[]) => {
     console.log('🔄 بدء مزامنة المنتجات مع Firebase:', products.length);
     const productsRef = collection(db!, 'products');
     
-    // 🗑️ أولاً: حذف جميع المنتجات القديمة من Firebase
-    const existingSnapshot = await getDocs(productsRef);
-    const deletePromises = existingSnapshot.docs.map(doc => deleteDoc(doc.ref));
-    await Promise.all(deletePromises);
-    console.log(`🗑️ تم حذف ${existingSnapshot.docs.length} منتج قديم`);
-    
-    // ✅ ثانياً: إضافة المنتجات الجديدة
-    const addPromises = products.map(async (product) => {
+    // ✅ تحديث/إضافة المنتجات فقط (بدون حذف شامل)
+    const updatePromises = products.map(async (product) => {
       const productData = {
         name: product.name || '',
         units: Array.isArray(product.units) ? product.units : [],
@@ -48,9 +47,8 @@ export const syncProductsToFirebase = async (products: any[]) => {
       return setDoc(doc(productsRef, product.id.toString()), productData);
     });
     
-    await Promise.all(addPromises);
-    console.log(`✅ تم إضافة ${products.length} منتج جديد`);
-    console.log('✅ تم مزامنة جميع المنتجات مع Firebase');
+    await Promise.all(updatePromises);
+    console.log(`✅ تم مزامنة ${products.length} منتج`);
     return true;
   } catch (error) {
     console.error('❌ خطأ في مزامنة المنتجات:', error);

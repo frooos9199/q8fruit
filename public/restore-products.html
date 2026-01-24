@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>استعادة المنتجات</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #4CAF50; }
+        button { padding: 15px 30px; font-size: 18px; margin: 10px; cursor: pointer; border: none; border-radius: 5px; font-weight: bold; }
+        .restore { background: #4CAF50; color: white; }
+        .restore:hover { background: #45a049; }
+        .check { background: #2196F3; color: white; }
+        .check:hover { background: #0b7dda; }
+        pre { background: #f5f5f5; padding: 15px; border-radius: 5px; overflow-x: auto; max-height: 400px; }
+        .status { padding: 15px; margin: 10px 0; border-radius: 5px; font-weight: bold; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 استعادة المنتجات الطارئة</h1>
+        <p>هذه الصفحة تستعيد المنتجات من localStorage إلى Firebase</p>
+        
+        <button class="check" onclick="checkProducts()">1️⃣ فحص المنتجات في localStorage</button>
+        <button class="restore" onclick="restoreToFirebase()">2️⃣ استعادة إلى Firebase</button>
+        
+        <div id="status"></div>
+        <div id="result"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBW2-EDd8K8Nq5Uj5fJFaeAzQnchjcdbJU",
+            authDomain: "fruitq8-ba5ef.firebaseapp.com",
+            projectId: "fruitq8-ba5ef",
+            storageBucket: "fruitq8-ba5ef.firebasestorage.app",
+            messagingSenderId: "496410641214",
+            appId: "1:496410641214:web:bc829a07ac23b9ba0ae26f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        window.checkProducts = function() {
+            const products = localStorage.getItem('products');
+            const status = document.getElementById('status');
+            const result = document.getElementById('result');
+            
+            if (!products) {
+                status.innerHTML = '<div class="status error">❌ لا توجد منتجات في localStorage!</div>';
+                result.innerHTML = '';
+                return;
+            }
+            
+            try {
+                const parsed = JSON.parse(products);
+                status.innerHTML = `<div class="status success">✅ تم العثور على ${parsed.length} منتج في localStorage</div>`;
+                result.innerHTML = `<h3>عينة من المنتجات:</h3><pre>${JSON.stringify(parsed.slice(0, 5), null, 2)}</pre>`;
+            } catch (error) {
+                status.innerHTML = `<div class="status error">❌ خطأ في قراءة البيانات: ${error.message}</div>`;
+            }
+        };
+
+        window.restoreToFirebase = async function() {
+            const products = localStorage.getItem('products');
+            const status = document.getElementById('status');
+            
+            if (!products) {
+                status.innerHTML = '<div class="status error">❌ لا توجد منتجات للاستعادة!</div>';
+                return;
+            }
+            
+            try {
+                const parsed = JSON.parse(products);
+                status.innerHTML = `<div class="status info">🔄 جاري استعادة ${parsed.length} منتج إلى Firebase...</div>`;
+                
+                let count = 0;
+                for (const product of parsed) {
+                    await setDoc(doc(db, 'products', product.id.toString()), {
+                        name: product.name || '',
+                        units: Array.isArray(product.units) ? product.units : [],
+                        category: product.category || '',
+                        categories: Array.isArray(product.categories) ? product.categories : [product.category || ''],
+                        active: product.active !== false,
+                        images: Array.isArray(product.images) ? product.images : [],
+                        image: product.image || '',
+                        hasOffer: product.hasOffer || false,
+                        discount: product.discount || 0,
+                        order: product.order || 0,
+                        quantity: product.quantity || 0,
+                        updatedAt: new Date().toISOString()
+                    });
+                    count++;
+                    
+                    if (count % 10 === 0) {
+                        status.innerHTML = `<div class="status info">🔄 تم استعادة ${count} من ${parsed.length} منتج...</div>`;
+                    }
+                }
+                
+                status.innerHTML = `<div class="status success">✅ تم استعادة ${parsed.length} منتج بنجاح إلى Firebase!<br>الآن افتح التطبيق واسحب للأسفل لتحديث البيانات.</div>`;
+            } catch (error) {
+                status.innerHTML = `<div class="status error">❌ خطأ: ${error.message}</div>`;
+                console.error('Error:', error);
+            }
+        };
+        
+        // فحص تلقائي عند تحميل الصفحة
+        window.addEventListener('load', () => {
+            checkProducts();
+        });
+    </script>
+</body>
+</html>
