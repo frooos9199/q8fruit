@@ -1,9 +1,8 @@
 "use client";
-
-
-"use client";
 import { useState, useEffect } from "react";
 import UserEditModal from "./UserEditModal";
+import { db } from "../../../lib/firebase";
+import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
 
 interface User {
   id: number;
@@ -23,96 +22,158 @@ const initialUsers: User[] = [
 ];
 
 export default function UsersTable() {
-  const [users, setUsers] = useState<User[]>(() => {
-    if (typeof window !== "undefined") {
-      const stored = window.localStorage.getItem("users");
-      if (stored) {
-        try {
-          return JSON.parse(stored);
-        } catch {
-          return initialUsers;
-        }
-      }
-    }
-    return initialUsers;
-  });
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const loadUsers = async () => {
-      try {
-        // 🔥 جلب من Firebase أولاً
-        const { db } = await import('../../../lib/firebase');
-        if (db) {
-          const { collection, getDocs } = await import('firebase/firestore');
-          const snapshot = await getDocs(collection(db, 'users'));
-          
-          if (!snapshot.empty) {
-            const firebaseUsers = snapshot.docs.map(doc => ({
-              id: parseInt(doc.id) || doc.data().id,
-              ...doc.data()
-            })) as User[];
-            
-            console.log('✅ تم جلب المستخدمين من Firebase:', firebaseUsers.length);
-            setUsers(firebaseUsers);
-            window.localStorage.setItem('users', JSON.stringify(firebaseUsers));
-            return;
-          }
-        }
-        
-        // fallback: localStorage
-        const stored = window.localStorage.getItem('users');
-        if (stored) {
-          setUsers(JSON.parse(stored));
-        } else {
-          setUsers(initialUsers);
-          window.localStorage.setItem('users', JSON.stringify(initialUsers));
-        }
-      } catch (error) {
-        console.error('❌ خطأ في جلب المستخدمين:', error);
-        const stored = window.localStorage.getItem('users');
-        setUsers(stored ? JSON.parse(stored) : initialUsers);
-      }
-    };
-
-    loadUsers();
-
-    // مزامنة تلقائية عند تغيير بيانات localStorage
-    const syncUsers = () => loadUsers();
-    window.addEventListener('usersUpdated', syncUsers);
-    
-    return () => {
-      window.removeEventListener('usersUpdated', syncUsers);
-    };
-  }, []);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [editUser, setEditUser] = useState<User | null>(null);
 
+  // تحميل المستخدمين من Firebase
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      setLoading(true);
+      
+      // 🔥 جلب من Firebase أولاً
+      if (db) {
+        const snapshot = await getDocs(collection(db, 'users'));
+        
+        if (!snapshot.empty) {
+          const firebaseUsers = snapshot.docs.map(doc => {
+            const data = doc.data();
+            return {
+              id: parseInt(doc.id),
+              name: data.name || '',
+              email: data.email || '',
+              phone: data.phone || '',
+              active: data.active !== false,
+              role: data.role || 'عميل',
+              password: data.password || '1234'
+            } as User;
+          });
+          
+          // إزالة المكررات بناءً على ID
+          const uniqueUsers = Array.from(
+            new Map(firebaseUsers.map(u => [u.id, u])).values()
+          );
+          
+          console.log('✅ تم جلب المستخدمين من Firebase:', uniqueUsers.length);
+          setUsers(uniqueUsers);
+          window.localStorage.setItem('users', JSON.stringify(uniqueUsers));
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // fallback: localStorage
+      const stored = window.localStorage.getItem('users');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        const uniqueUsers = Array.from(
+          new Map(parsed.map((u: User) => [u.id, u])).values()
+        );
+        setUsers(uniqueUsers);
+      } else {
+        setUsers(initialUsers);
+        window.localStorage.setItem('users', JSON.stringify(initialUsers));
+      }
+    } catch (error) {
+      console.error('❌ خطأ في جلب المستخدمين:', error);
+      const stored = window.localStorage.getItem('users');
+      setUsers(stored ? JSON.parse(stored) : initialUsers);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // تفعيل/إيقاف مستخدم
   const toggleActive = async (id: number) => {
     console.log(`🔄 تغيير حالة المستخدم ${id}`);
     
-    setUsers(prev => {
-      const updated = prev.map(u => {
-        if (u.id === id) {
-          return { ...u, active: !u.active };
-        }
-        return u;
-      });
-      
-      console.log(`✅ تم تحديث المستخدم ${id}`);
-      
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('users', JSON.stringify(updated));
-        // مزامنة فورية مع Firebase
-        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-          syncAllDataToFirebase().catch(console.error);
-        });
+    const updatedUsers = users.map(u => {
+      if (u.id === id) {
+        console.log(`✅ تغيير حالة ${u.name} من ${u.active} إلى ${!u.active}`);
+        return { ...u, active: !u.active };
       }
-      
-      return updated;
+      return u;
     });
+    
+    setUsers(updatedUsers);
+    
+    // حفظ في localStorage
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('users', JSON.stringify(updatedUsers));
+    }
+    
+    // حفظ في Firebase
+    if (db) {
+      try {
+        const userToUpdate = updatedUsers.find(u => u.id === id);
+        if (userToUpdate) {
+          await setDoc(doc(db, 'users', id.toString()), userToUpdate);
+          console.log('✅ تم تحديث Firebase');
+        }
+      } catch (error) {
+        console.error('❌ خطأ في تحديث Firebase:', error);
+      }
+    }
+  };
+
+  // حذف مستخدم
+  const handleDeleteUser = async (id: number) => {
+    if (!confirm('هل أنت متأكد من حذف هذا المستخدم؟')) return;
+    
+    console.log(`🗑️ حذف المستخدم ${id}`);
+    
+    const updatedUsers = users.filter(u => u.id !== id);
+    setUsers(updatedUsers);
+    
+    // حذف من localStorage
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('users', JSON.stringify(updatedUsers));
+    }
+    
+    // حذف من Firebase
+    if (db) {
+      try {
+        await deleteDoc(doc(db, 'users', id.toString()));
+        console.log('✅ تم حذف المستخدم من Firebase');
+        alert('✅ تم حذف المستخدم بنجاح!');
+      } catch (error) {
+        console.error('❌ خطأ في حذف المستخدم من Firebase:', error);
+        alert('⚠️ تم حذف المستخدم محلياً');
+      }
+    } else {
+      alert('✅ تم حذف المستخدم بنجاح!');
+    }
+  };
+
+  // تعديل مستخدم
+  const handleEditSave = async (updated: User) => {
+    const updatedUsers = users.map(u => u.id === updated.id ? updated : u);
+    setUsers(updatedUsers);
+    
+    // حفظ في localStorage
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('users', JSON.stringify(updatedUsers));
+    }
+    
+    // حفظ في Firebase
+    if (db) {
+      try {
+        await setDoc(doc(db, 'users', updated.id.toString()), updated);
+        console.log('✅ تم تحديث المستخدم في Firebase');
+      } catch (error) {
+        console.error('❌ خطأ في تحديث Firebase:', error);
+      }
+    }
+    
+    setEditUser(null);
   };
 
   const filteredUsers = users.filter(user => {
@@ -124,20 +185,13 @@ export default function UsersTable() {
     return nameMatch && statusMatch;
   });
 
-  const handleEditSave = async (updated: User) => {
-    setUsers(prev => {
-      const updatedUsers = prev.map(u => u.id === updated.id ? updated : u);
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem('users', JSON.stringify(updatedUsers));
-        // مزامنة فورية مع Firebase
-        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-          syncAllDataToFirebase().catch(console.error);
-        });
-      }
-      return updatedUsers;
-    });
-    setEditUser(null);
-  };
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-lg">🔄 جاري التحميل...</div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -181,7 +235,7 @@ export default function UsersTable() {
           </thead>
           <tbody>
             {filteredUsers.map(user => (
-              <tr key={user.id} className="border-b">
+              <tr key={`user-${user.id}-${user.email}`} className="border-b">
                 <td className="p-2">{user.name}</td>
                 <td className="p-2">{user.email}</td>
                 <td className="p-2">{user.phone}</td>
@@ -228,8 +282,6 @@ export default function UsersTable() {
         </table>
       </div>
 
-      {/* دالة حذف المستخدم */}
-      {/* يجب أن تكون داخل جسم الدالة الرئيسية */}
       {editUser && (
         <UserEditModal
           user={editUser}
@@ -239,16 +291,4 @@ export default function UsersTable() {
       )}
     </div>
   );
-
-  function handleDeleteUser(id: number) {
-    if (typeof window === "undefined") return;
-    const updated = users.filter(u => u.id !== id);
-    setUsers(updated);
-    window.localStorage.setItem("users", JSON.stringify(updated));
-    window.dispatchEvent(new Event("usersUpdated"));
-    // مزامنة فورية مع Firebase
-    import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-      syncAllDataToFirebase().catch(console.error);
-    });
-  }
 }
