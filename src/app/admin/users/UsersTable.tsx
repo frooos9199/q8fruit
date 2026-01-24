@@ -60,7 +60,7 @@ export default function UsersTable() {
           // إزالة المكررات بناءً على ID
           const uniqueUsers = Array.from(
             new Map(firebaseUsers.map(u => [u.id, u])).values()
-          );
+          ) as User[];
           
           console.log('✅ تم جلب المستخدمين من Firebase:', uniqueUsers.length);
           setUsers(uniqueUsers);
@@ -73,10 +73,10 @@ export default function UsersTable() {
       // fallback: localStorage
       const stored = window.localStorage.getItem('users');
       if (stored) {
-        const parsed = JSON.parse(stored);
+        const parsed = JSON.parse(stored) as User[];
         const uniqueUsers = Array.from(
           new Map(parsed.map((u: User) => [u.id, u])).values()
-        );
+        ) as User[];
         setUsers(uniqueUsers);
       } else {
         setUsers(initialUsers);
@@ -85,7 +85,7 @@ export default function UsersTable() {
     } catch (error) {
       console.error('❌ خطأ في جلب المستخدمين:', error);
       const stored = window.localStorage.getItem('users');
-      setUsers(stored ? JSON.parse(stored) : initialUsers);
+      setUsers(stored ? JSON.parse(stored) as User[] : initialUsers);
     } finally {
       setLoading(false);
     }
