@@ -2,16 +2,20 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { syncData, checkCompatibility } from "../lib/dataSync";
-import { 
-  loadAllDataFromFirebase, 
-  syncAllDataToFirebase
+import {
+  getBannersFromFirebase,
+  getCategoriesFromFirebase,
+  getLogoFromFirebase,
+  getProductsFromFirebase,
+  loadAllDataFromFirebase,
+  syncAllDataToFirebase,
 } from "../lib/firebaseSync";
 import { forceLoadAllData, checkDataCompleteness, retryDataLoad } from "../lib/forceSync";
 import { syncProductImages, fullImageSync } from "../lib/imageSync";
 
 // تعريفات TypeScript أعلى الملف
 interface Product {
-  id: number;
+  id: number | string;
   name: string;
   units: { name: string; price: number }[];
   quantity: number;
@@ -36,13 +40,13 @@ interface CateringCategory {
 
 interface ProductCardProps {
   product: Product;
-  quantities: { [productId: number]: number };
-  handleQuantityChange: (productId: number, value: number) => void;
+  quantities: { [productId: string]: number };
+  handleQuantityChange: (productId: number | string, value: number) => void;
   small?: boolean;
 }
 
 function ProductCard({ product, quantities, handleQuantityChange, small = false }: ProductCardProps) {
-  const quantity = quantities[product.id] || 1;
+  const quantity = quantities[String(product.id)] || 1;
   const [selectedUnitIdx, setSelectedUnitIdx] = useState(0);
   const selectedUnit = product.units[selectedUnitIdx] || product.units[0];
 
@@ -58,7 +62,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
     }
     const unitName = selectedUnit?.name || '';
     const price = selectedUnit?.price || 0;
-    const existingIndex = cart.findIndex((item:any) => item.id === product.id && item.unit === unitName);
+    const existingIndex = cart.findIndex((item:any) => item.id == product.id && item.unit === unitName);
     if (existingIndex > -1) {
       cart[existingIndex].quantity += quantity;
     } else {
@@ -197,7 +201,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [quantities, setQuantities] = useState<{ [productId: number]: number }>({});
+  const [quantities, setQuantities] = useState<{ [productId: string]: number }>({});
   const [logo, setLogo] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -206,50 +210,47 @@ export default function Home() {
   const [banners, setBanners] = useState<string[]>([]);
 
   // دالة لتغيير كمية منتج معين
-  const handleQuantityChange = (productId: number, value: number) => {
-    setQuantities((prev) => ({ ...prev, [productId]: value }));
+  const handleQuantityChange = (productId: number | string, value: number) => {
+    setQuantities((prev) => ({ ...prev, [String(productId)]: value }));
   };
-
-  // منتجات افتراضية تظهر فوراً لسرعة التحميل
-  const defaultProducts = [
-    {
-      id: 1, name: "تفاح أحمر", units: [{ name: "كيلو", price: 1.250 }], quantity: 100, active: true, category: "فواكه",
-      images: ["https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop&crop=center"]
-    },
-    {
-      id: 2, name: "موز", units: [{ name: "كيلو", price: 0.750 }], quantity: 150, active: true, category: "فواكه",
-      images: ["https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=400&h=400&fit=crop&crop=center"]
-    },
-    {
-      id: 3, name: "برتقال", units: [{ name: "كيلو", price: 1.000 }], quantity: 120, active: true, category: "فواكه",
-      images: ["https://images.unsplash.com/photo-1547514701-42782101795e?w=400&h=400&fit=crop&crop=center"]
-    },
-    {
-      id: 4, name: "طماطم", units: [{ name: "كيلو", price: 0.800 }], quantity: 200, active: true, category: "خضار",
-      images: ["https://images.unsplash.com/photo-1546470427-e5380e2d2b8d?w=400&h=400&fit=crop&crop=center"]
-    },
-    {
-      id: 5, name: "خيار", units: [{ name: "كيلو", price: 0.600 }], quantity: 180, active: true, category: "خضار",
-      images: ["https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=400&h=400&fit=crop&crop=center"]
-    },
-    {
-      id: 6, name: "خس", units: [{ name: "حبة", price: 0.500 }], quantity: 100, active: true, category: "ورقيات",
-      images: ["https://images.unsplash.com/photo-1622206151226-18ca2c9ab4a1?w=400&h=400&fit=crop&crop=center"]
-    }
-  ];
 
   const fetchProducts = async () => {
     if (typeof window !== "undefined") {
       try {
-        console.log('🔄 بدء جلب المنتجات...');
-        
-        // محاولة جلب المنتجات من Firebase
-        const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
-        const firebaseSuccess = await loadAllDataFromFirebase();
+        console.log('🔄 بدء جلب المنتجات من Firebase...');
 
-        console.log('📊 نتيجة Firebase:', firebaseSuccess ? 'نجاح' : 'فشل');
+        const firebaseProducts = await getProductsFromFirebase();
+        const validFirebaseProducts = Array.isArray(firebaseProducts)
+          ? firebaseProducts.filter(
+              (p) =>
+                typeof p === "object" &&
+                p !== null &&
+                (typeof p.id === "number" || typeof p.id === "string") &&
+                typeof p.name === "string" &&
+                Array.isArray(p.units) &&
+                p.units.length > 0 &&
+                p.units.every(
+                  (u: Unit) =>
+                    typeof u === "object" &&
+                    u !== null &&
+                    typeof u.name === "string" &&
+                    typeof u.price === "number"
+                ) &&
+                typeof p.active === "boolean" &&
+                typeof p.category === "string"
+            )
+          : [];
 
-        // جلب المنتجات من localStorage (سواء من Firebase أو Cache القديم)
+        if (validFirebaseProducts.length > 0) {
+          console.log(`✅ عدد المنتجات من Firebase: ${validFirebaseProducts.length}`);
+          setProducts(validFirebaseProducts);
+          window.localStorage.setItem("products", JSON.stringify(validFirebaseProducts));
+          return;
+        }
+
+        console.warn('⚠️ لم يتم العثور على منتجات صالحة في Firebase، محاولة استخدام البيانات المحلية');
+
+        // جلب المنتجات من localStorage كخيار احتياطي
         const storedProducts = window.localStorage.getItem("products");
         
         if (storedProducts) {
@@ -262,7 +263,7 @@ export default function Home() {
                   (p) =>
                     typeof p === "object" &&
                     p !== null &&
-                    typeof p.id === "number" &&
+                    (typeof p.id === "number" || typeof p.id === "string") &&
                     typeof p.name === "string" &&
                     Array.isArray(p.units) &&
                     p.units.length > 0 &&
@@ -278,7 +279,7 @@ export default function Home() {
                 )
               : [];
             
-            console.log(`✅ عدد المنتجات الصالحة: ${validProducts.length}`);
+            console.log(`✅ عدد المنتجات الصالحة محلياً: ${validProducts.length}`);
             setProducts(validProducts);
             
             if (validProducts.length === 0) {
@@ -408,53 +409,76 @@ export default function Home() {
   // دالة لجلب التصنيفات
   const fetchCategories = async () => {
     if (typeof window !== 'undefined') {
-      // جلب التصنيفات من localStorage أولاً، ثم من Firebase إذا لم توجد
-      const storedCategories = window.localStorage.getItem('cateringCategories');
-      
-      if (storedCategories) {
-        try {
-          const parsed = JSON.parse(storedCategories);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const simplifiedCategories = parsed.map((cat: CateringCategory) => ({
-              id: cat.id,
-              name: cat.name
-            }));
-            setCategories(simplifiedCategories);
-            return; // استخدم البيانات المحلية إذا كانت صحيحة
-          }
-        } catch {
-          // فشل في قراءة التصنيفات المحلية، جرب Firebase
-        }
-      }
-
-      // جلب التصنيفات من Firebase فقط إذا لم توجد بيانات محلية صحيحة
       try {
-        const { loadAllDataFromFirebase } = await import('../lib/firebaseSync');
-        const firebaseSuccess = await loadAllDataFromFirebase();
+        const firebaseCategories = await getCategoriesFromFirebase();
+        if (Array.isArray(firebaseCategories) && firebaseCategories.length > 0) {
+          const simplifiedCategories = firebaseCategories.map((cat: CateringCategory) => ({
+            id: cat.id,
+            name: cat.name
+          }));
+          setCategories(simplifiedCategories);
+          window.localStorage.setItem('cateringCategories', JSON.stringify(firebaseCategories));
+          return;
+        }
 
-        if (firebaseSuccess) {
-          // إعادة جلب من localStorage بعد التحميل من Firebase
-          const updatedCategories = window.localStorage.getItem('cateringCategories');
-          if (updatedCategories) {
-            try {
-              const parsed = JSON.parse(updatedCategories);
+        // fallback إلى localStorage
+        const storedCategories = window.localStorage.getItem('cateringCategories');
+        if (storedCategories) {
+          try {
+            const parsed = JSON.parse(storedCategories);
+            if (Array.isArray(parsed) && parsed.length > 0) {
               const simplifiedCategories = parsed.map((cat: CateringCategory) => ({
                 id: cat.id,
                 name: cat.name
               }));
               setCategories(simplifiedCategories);
               return;
-            } catch {
-              // فشل في قراءة التصنيفات من Firebase
             }
+          } catch {
+            // ignore
           }
         }
-        // إذا لم تنجح العملية، لا تعرض أي تصنيفات إطلاقاً
+
         setCategories([]);
       } catch (error) {
         // في حالة الخطأ، لا تعرض أي تصنيفات إطلاقاً
         setCategories([]);
       }
+    }
+  };
+
+  const fetchBranding = async () => {
+    if (typeof window === 'undefined') return;
+
+    try {
+      const logoFromFirebase = await getLogoFromFirebase();
+      if (logoFromFirebase) {
+        setLogo(logoFromFirebase);
+        window.localStorage.setItem('siteLogo', logoFromFirebase);
+      } else {
+        const storedLogo = window.localStorage.getItem("siteLogo");
+        if (storedLogo) setLogo(storedLogo);
+      }
+
+      const bannersFromFirebase = await getBannersFromFirebase();
+      if (Array.isArray(bannersFromFirebase) && bannersFromFirebase.length > 0) {
+        setBanners(bannersFromFirebase);
+        window.localStorage.setItem('banners', JSON.stringify(bannersFromFirebase));
+      } else {
+        const storedBanners = window.localStorage.getItem("banners");
+        if (storedBanners) {
+          try {
+            const parsed = JSON.parse(storedBanners);
+            setBanners(Array.isArray(parsed) ? parsed : []);
+          } catch {
+            setBanners([]);
+          }
+        } else {
+          setBanners([]);
+        }
+      }
+    } catch {
+      // لا تفعل شيئاً إضافياً
     }
   };
   
@@ -473,69 +497,18 @@ export default function Home() {
           try {
             console.log('🔄 بدء تحميل البيانات...');
 
-            // التحقق من وجود بيانات محلية أولاً
-            const hasLocalProducts = window.localStorage.getItem('products');
-            const hasLocalCategories = window.localStorage.getItem('cateringCategories');
-
-            if (hasLocalProducts && hasLocalCategories) {
-              // استخدام البيانات المحلية أولاً (أسرع وأكثر موثوقية)
-              console.log('✅ البيانات المحلية متوفرة، جاري تحديث الواجهة...');
-              await fetchProducts();
-              await fetchCategories();
-
-              // مزامنة مع Firebase في الخلفية فقط للتحقق من التحديثات
-              setTimeout(async () => {
-                try {
-                  const firebaseSuccess = await loadAllDataFromFirebase();
-                  if (firebaseSuccess) {
-                    await fetchProducts();
-                    await fetchCategories();
-                    console.log('✅ تم تحديث البيانات من Firebase');
-                  }
-                } catch (error) {
-                  console.warn('⚠️ تعذر التحقق من التحديثات في Firebase:', error);
-                }
-              }, 3000);
-
-            } else {
-              // لا توجد بيانات محلية، تحميل من Firebase
-              console.log('📱 لا توجد بيانات محلية، جاري التحميل من Firebase...');
-              const firebaseSuccess = await loadAllDataFromFirebase();
-
-              if (firebaseSuccess) {
-                await syncProductImages();
-                await fetchProducts();
-                await fetchCategories();
-                console.log('✅ تم تحميل البيانات من Firebase بنجاح');
-              } else {
-                // فشل في التحميل من Firebase، لا تعرض أي منتجات أو تصنيفات إطلاقاً
-                setProducts([]);
-                setCategories([]);
-              }
-            }
-
-            // تحديث الشعار والبنرات
-            const storedLogo = window.localStorage.getItem("siteLogo");
-            if (storedLogo) setLogo(storedLogo);
-
-            const storedBanners = window.localStorage.getItem("banners");
-            if (storedBanners) {
-              try {
-                setBanners(JSON.parse(storedBanners));
-              } catch {
-                setBanners([]);
-              }
-            }
+            console.log('📱 تحميل البيانات الفعلية من Firebase...');
+            await loadAllDataFromFirebase();
+            await syncProductImages();
+            await fetchProducts();
+            await fetchCategories();
+            await fetchBranding();
 
           } catch (error) {
             console.error('❌ خطأ في تحميل البيانات:', error);
-            // عرض المنتجات الافتراضية عند الخطأ
-            setProducts(defaultProducts);
-            setCategories([
-              { id: 1, name: "فواكه" },
-              { id: 2, name: "خضار" },
-              { id: 3, name: "ورقيات" }
-            ]);
+            // عدم عرض بيانات افتراضية عند الخطأ
+            setProducts([]);
+            setCategories([]);
           }
         };
         
@@ -559,27 +532,12 @@ export default function Home() {
         if (storedBanners) {
           try {
             const parsed = JSON.parse(storedBanners);
-            setBanners(Array.isArray(parsed) && parsed.length > 0 ? parsed : [
-              '/banners/banner1.jpg',
-              '/banners/banner2.jpg',
-              '/banners/banner3.jpg',
-              '/banners/banner4.jpg',
-            ]);
+            setBanners(Array.isArray(parsed) ? parsed : []);
           } catch {
-            setBanners([
-              '/banners/banner1.jpg',
-              '/banners/banner2.jpg',
-              '/banners/banner3.jpg',
-              '/banners/banner4.jpg',
-            ]);
+            setBanners([]);
           }
         } else {
-          setBanners([
-            '/banners/banner1.jpg',
-            '/banners/banner2.jpg',
-            '/banners/banner3.jpg',
-            '/banners/banner4.jpg',
-          ]);
+          setBanners([]);
         }
         // تحديث رقم السلة مباشرة عند كل تغيير في localStorage (cart)
         const updateCartCount = () => {
@@ -630,20 +588,10 @@ export default function Home() {
           if (e.key === "banners") {
             try {
               const parsed = e.newValue ? JSON.parse(e.newValue) : [];
-              setBanners(Array.isArray(parsed) && parsed.length > 0 ? parsed : [
-                '/banners/banner1.jpg',
-                '/banners/banner2.jpg',
-                '/banners/banner3.jpg',
-                '/banners/banner4.jpg',
-              ]);
+              setBanners(Array.isArray(parsed) ? parsed : []);
               // لا تزامن مع Firebase عند كل تغيير
             } catch {
-              setBanners([
-                '/banners/banner1.jpg',
-                '/banners/banner2.jpg',
-                '/banners/banner3.jpg',
-                '/banners/banner4.jpg',
-              ]);
+              setBanners([]);
             }
           }
         };
@@ -844,11 +792,13 @@ export default function Home() {
               </div>
             </div>
             <div className="text-center md:text-left">
-              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-green-300">روابط سريعة</h4>
+              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-green-300">روابط مهمة</h4>
               <div className="space-y-2">
                 <Link href="/" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">الرئيسية</Link>
                 <Link href="/cart" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">السلة</Link>
                 <Link href="/login" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">تسجيل الدخول</Link>
+                <Link href="/privacy" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">سياسة الخصوصية</Link>
+                <Link href="/terms" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">الشروط والأحكام</Link>
               </div>
             </div>
           </div>

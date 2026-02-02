@@ -69,9 +69,12 @@ export const getProductsFromFirebase = async () => {
     
     const products = snapshot.docs.map(doc => {
       const data = doc.data();
+      const resolvedId = (typeof data.id === 'number' || typeof data.id === 'string')
+        ? data.id
+        : doc.id;
       return {
         ...data,
-        id: parseInt(doc.id),
+        id: resolvedId,
         // التأكد من وجود الحقول الأساسية
         name: data.name || '',
         units: Array.isArray(data.units) ? data.units : [],
@@ -83,7 +86,16 @@ export const getProductsFromFirebase = async () => {
         discount: data.discount || 0,
         quantity: data.quantity || 0
       };
-    }).sort((a, b) => a.id - b.id); // ترتيب يدوي بعد الجلب
+    }).sort((a, b) => {
+      const aNum = Number(a.id);
+      const bNum = Number(b.id);
+      const aIsNum = Number.isFinite(aNum);
+      const bIsNum = Number.isFinite(bNum);
+      if (aIsNum && bIsNum) return aNum - bNum;
+      if (aIsNum) return -1;
+      if (bIsNum) return 1;
+      return String(a.id).localeCompare(String(b.id));
+    }); // ترتيب يدوي بعد الجلب
     
     console.log('✅ تم جلب المنتجات بنجاح:', products.length);
     return products;

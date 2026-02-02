@@ -1,0 +1,8 @@
+Command line invocation:
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -workspace FruitQ8Mobile.xcworkspace -scheme FruitQ8Mobile -configuration Debug -sdk iphonesimulator -destination id=F1F6A796-1D39-481B-B3EE-9011467F4741 clean build
+
+Build settings from command line:
+    SDKROOT = iphonesimulator26.2
+
+2026-01-26 00:03:30.298 xcodebuild[13113:242678] Writing error result bundle to /var/folders/mh/k5cllcln2pld1v6q3m04kqpr0000gn/T/ResultBundle_2026-26-01_00-03-0030.xcresult
+xcodebuild: error: 'FruitQ8Mobile.xcworkspace' does not exist.

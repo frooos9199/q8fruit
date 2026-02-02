@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import BottomNav from "../components/BottomNav";
+import AppDownloadBanner from "../components/AppDownloadBanner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,13 +15,39 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://your-domain.com";
+
 export const metadata: Metadata = {
-  title: "فكهاني الكويت - أطيب الفواكه والخضار",
-  description: "متجرك المفضل للفواكه والخضار الطازجة في الكويت. جودة عالية وأسعار منافسة مع خدمة توصيل سريعة",
-  keywords: "فواكه، خضار، الكويت، توصيل، طازج، صحي",
+  metadataBase: new URL(siteUrl),
+  title: "فكهاني الكويت - Q8 Fruit | فواكه وخضار طازجة",
+  description: "متجر الفواكه والخضار الأول في الكويت. توصيل سريع، أسعار منافسة، جودة عالية",
+  keywords: "فواكه، خضار، الكويت، توصيل، Q8 Fruit، فكهاني",
   authors: [{ name: "NexDev" }],
   themeColor: "#10b981",
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "فكهاني الكويت",
+  },
+  openGraph: {
+    title: "فكهاني الكويت - Q8 Fruit",
+    description: "متجر الفواكه والخضار الأول في الكويت",
+    url: siteUrl,
+    siteName: "Q8 Fruit",
+    images: ["/og-image.jpg"],
+    locale: "ar_KW",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "فكهاني الكويت - Q8 Fruit",
+    description: "متجر الفواكه والخضار الأول في الكويت",
+    images: ["/twitter-image.jpg"],
+  },
+  other: {
+    "apple-itunes-app": "app-id=1487406440, app-argument=https://q8fruit.com",
+  },
 };
 
 export const viewport = {
@@ -33,6 +62,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const gaId = process.env.NEXT_PUBLIC_GA_ID;
+
   return (
     <html lang="ar" dir="rtl">
       <head>
@@ -54,7 +85,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-blue-50 to-green-50 dark:from-slate-900 dark:to-blue-900 overflow-x-hidden min-h-screen`}
         style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
       >
+        <AppDownloadBanner />
         {children}
+        <BottomNav />
+        {gaId ? <GoogleAnalytics gaId={gaId} /> : null}
       </body>
     </html>
   );
