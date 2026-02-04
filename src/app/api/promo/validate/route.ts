@@ -14,6 +14,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if Firebase is initialized
+    if (!db) {
+      console.error('Firebase not initialized');
+      return NextResponse.json(
+        { valid: false, message: 'خدمة الخصومات غير متاحة حالياً' },
+        { status: 503 }
+      );
+    }
+
     // Fetch promo code from Firestore
     const promoCodesRef = collection(db, 'promoCodes');
     const q = query(promoCodesRef, where('code', '==', code.toUpperCase()));

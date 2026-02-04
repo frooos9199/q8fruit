@@ -27,6 +27,16 @@ const nextConfig: NextConfig = {
   turbopack: {},
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
   transpilePackages: [],
+  // Exclude mobile app from build
+  webpack: (config, { isServer }) => {
+    config.module = config.module || {};
+    config.module.rules = config.module.rules || [];
+    config.module.rules.push({
+      test: /FruitQ8Mobile/,
+      loader: 'ignore-loader'
+    });
+    return config;
+  },
 };
 
 export default nextConfig;
