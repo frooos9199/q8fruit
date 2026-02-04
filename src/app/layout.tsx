@@ -48,7 +48,6 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  themeColor: "#10b981",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -113,6 +112,7 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  themeColor: "#10b981",
 };
 
 export default function RootLayout({
