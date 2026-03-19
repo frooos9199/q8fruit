@@ -274,6 +274,70 @@ export default function CartPage() {
       // إرسال فوري بدون تأخير
       sendInvoiceToWhatsApp(invoiceWithNote);
 
+      // إرسال إيميل للإدارة
+      // الحصول على قائمة الإيميلات من Firebase
+      let recipientEmails = ['summit_kw@hotmail.com']; // الافتراضي
+      
+      try {
+        const { db } = await import('../../lib/firebase');
+        if (db) {
+          const { doc, getDoc } = await import('firebase/firestore');
+          const settingsDoc = await getDoc(doc(db, 'settings', 'orderNotificationEmails'));
+          
+          if (settingsDoc.exists()) {
+            const data = settingsDoc.data();
+            if (data.emails && Array.isArray(data.emails) && data.emails.length > 0) {
+              recipientEmails = data.emails;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('خطأ في قراءة إيميلات الإشعارات من Firebase:', error);
+        // استخدام الإيميل الافتراضي في حالة الخطأ
+      }
+
+      fetch('/api/orders/send-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientEmails: recipientEmails, // إضافة قائمة الإيميلات
+          orderNumber: orderNumber,
+          id: orderNumber,
+          date: invoice.date,
+          customerName: userInfo.name,
+          customer: userInfo.name,
+          phone: userInfo.phone,
+          phoneNumber: userInfo.phone,
+          address: userInfo.address.trim() || "سيتم التواصل لتحديد العنوان",
+          userInfo: invoice.userInfo,
+          items: cart.map(item => ({
+            name: item.name,
+            unit: item.unit,
+            quantity: item.quantity,
+            price: item.price,
+            total: item.price * item.quantity
+          })),
+          subtotal: total,
+          deliveryPrice: deliveryPrice,
+          deliveryFee: deliveryPrice,
+          total: invoice.total,
+          paymentType: paymentType,
+          paymentMethod: paymentType,
+          userNote: userNote.trim() || undefined,
+          deliveryNotes: userNote.trim() || undefined,
+        }),
+      }).then(res => {
+        if (res.ok) {
+          console.log('✅ تم إرسال إيميل الطلب بنجاح');
+        } else {
+          console.error('❌ فشل إرسال إيميل الطلب');
+        }
+      }).catch(error => {
+        console.error('❌ خطأ في إرسال إيميل الطلب:', error);
+      });
+
       // رسالة تأكيد للمستخدم
       alert(`شكراً ${userInfo.name}! تم استلام طلبك بنجاح 🎉\nسيتم إرسال الفاتورة عبر الواتساب الآن`);
     }

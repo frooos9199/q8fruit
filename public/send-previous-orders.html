@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>إرسال الطلبات السابقة - Q8 Fruit</title>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      direction: rtl;
+    }
+    .container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 40px;
+      max-width: 600px;
+      width: 100%;
+    }
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 32px;
+      text-align: center;
+    }
+    .subtitle {
+      color: #666;
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .info-box {
+      background: #f0f4ff;
+      border-right: 4px solid #667eea;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+    }
+    .info-box h3 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+    .info-box ul {
+      margin-right: 20px;
+      color: #555;
+    }
+    .info-box li {
+      margin-bottom: 5px;
+    }
+    .source-section {
+      margin-bottom: 20px;
+    }
+    .source-section h3 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 18px;
+    }
+    .source-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .source-btn {
+      padding: 15px;
+      border: 2px solid #e0e0e0;
+      background: white;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-size: 16px;
+      font-weight: bold;
+      color: #555;
+    }
+    .source-btn:hover {
+      border-color: #667eea;
+      background: #f0f4ff;
+    }
+    .source-btn.active {
+      border-color: #667eea;
+      background: #667eea;
+      color: white;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #667eea;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-bottom: 10px;
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 10px;
+      font-size: 14px;
+      display: none;
+    }
+    #status.success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      display: block;
+    }
+    #status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+      display: block;
+    }
+    #status.info {
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+      display: block;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 30px;
+      background: #e0e0e0;
+      border-radius: 15px;
+      overflow: hidden;
+      margin: 20px 0;
+      display: none;
+    }
+    .progress-bar.active {
+      display: block;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      width: 0%;
+      transition: width 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 12px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📧 إرسال الطلبات السابقة</h1>
+    <p class="subtitle">إرسال جميع الطلبات إلى البريد الإلكتروني</p>
+
+    <div class="info-box">
+      <h3>ℹ️ معلومات مهمة</h3>
+      <ul>
+        <li>سيتم إرسال كل طلب في إيميل منفصل</li>
+        <li>الإيميلات ستصل إلى: summit_kw@hotmail.com</li>
+        <li>قد تستغرق العملية بضع دقائق حسب عدد الطلبات</li>
+        <li>تأكد من اتصالك بالإنترنت</li>
+      </ul>
+    </div>
+
+    <div class="source-section">
+      <h3>🗂️ اختر مصدر البيانات:</h3>
+      <div class="source-buttons">
+        <button class="source-btn active" onclick="selectSource('firebase', this)">
+          🔥 Firebase
+        </button>
+        <button class="source-btn" onclick="selectSource('local', this)">
+          💾 LocalStorage
+        </button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-box">
+        <div class="stat-number" id="totalOrders">0</div>
+        <div class="stat-label">إجمالي الطلبات</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="sentOrders">0</div>
+        <div class="stat-label">تم الإرسال</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="failedOrders">0</div>
+        <div class="stat-label">فشل</div>
+      </div>
+    </div>
+
+    <button id="loadBtn" onclick="loadOrders()">📥 تحميل الطلبات</button>
+    <button id="sendBtn" onclick="sendOrders()" disabled style="background: #28a745;">
+      📤 إرسال جميع الطلبات
+    </button>
+    <button onclick="createTestOrder()" style="background: #ff9800;">
+      🧪 إنشاء طلب تجريبي
+    </button>
+    <button onclick="checkData()" style="background: #6c757d;">
+      🔍 فحص البيانات
+    </button>
+
+    <div class="progress-bar" id="progressBar">
+      <div class="progress-fill" id="progressFill">0%</div>
+    </div>
+
+    <div id="status"></div>
+  </div>
+
+  <script>
+    let selectedSource = 'firebase';
+    let loadedOrders = [];
+    let db = null;
+
+    function selectSource(source, element) {
+      selectedSource = source;
+      document.querySelectorAll('.source-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      if (element) {
+        element.classList.add('active');
+      } else if (window.event && window.event.target) {
+        window.event.target.classList.add('active');
+      }
+      
+      // إعادة تعيين البيانات
+      loadedOrders = [];
+      document.getElementById('totalOrders').textContent = '0';
+      document.getElementById('sendBtn').disabled = true;
+      showStatus('تم تغيير المصدر. اضغط "تحميل الطلبات" للبدء', 'info');
+    }
+
+    async function initFirebase() {
+      if (db) return;
+
+      try {
+        // تكوين Firebase - ضع بياناتك هنا
+        const firebaseConfig = {
+          apiKey: "AIzaSyAacBVhKDpHBbTCOGk1wDTyR1LhFPqNJY8",
+          authDomain: "fruit-q8.firebaseapp.com",
+          projectId: "fruit-q8",
+          storageBucket: "fruit-q8.firebasestorage.app",
+          messagingSenderId: "970073111798",
+          appId: "1:970073111798:web:bfb98c99fcc42f08e4e025"
+        };
+
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+        console.log('✅ Firebase initialized');
+      } catch (error) {
+        console.error('❌ Firebase init error:', error);
+        throw error;
+      }
+    }
+
+    async function loadOrders() {
+      const loadBtn = document.getElementById('loadBtn');
+      loadBtn.disabled = true;
+      loadBtn.textContent = '⏳ جاري التحميل...';
+      showStatus('جاري تحميل الطلبات...', 'info');
+
+      try {
+        if (selectedSource === 'firebase') {
+          await initFirebase();
+          console.log('🔍 جاري البحث في Firebase collection: orders');
+          const snapshot = await db.collection('orders').get();
+          console.log('📊 عدد المستندات في Firebase:', snapshot.docs.length);
+          
+          loadedOrders = snapshot.docs.map(doc => {
+            const data = doc.data();
+            console.log('📄 بيانات الطلب:', doc.id, data);
+            return {
+              id: doc.id,
+              ...data,
+              date: data.date || data.createdAt?.toDate?.()?.toLocaleString('ar-EG') || 'غير محدد'
+            };
+          });
+        } else {
+          // LocalStorage
+          console.log('🔍 جاري البحث في LocalStorage');
+          
+          // محاولة البحث في عدة أماكن
+          let ordersData = localStorage.getItem('orders');
+          
+          if (!ordersData) {
+            console.log('⚠️ لم يتم العثور على "orders"، جاري البحث في "invoices"');
+            ordersData = localStorage.getItem('invoices');
+          }
+          
+          if (ordersData) {
+            loadedOrders = JSON.parse(ordersData);
+            console.log('📊 عدد الطلبات في LocalStorage:', loadedOrders.length);
+          } else {
+            loadedOrders = [];
+            console.log('⚠️ لم يتم العثور على طلبات في LocalStorage');
+            
+            // عرض كل المفاتيح المتاحة
+            console.log('🔑 المفاتيح المتاحة في LocalStorage:', Object.keys(localStorage));
+          }
+        }
+
+        document.getElementById('totalOrders').textContent = loadedOrders.length;
+        
+        if (loadedOrders.length > 0) {
+          document.getElementById('sendBtn').disabled = false;
+          showStatus(`✅ تم تحميل ${loadedOrders.length} طلب من ${selectedSource === 'firebase' ? 'Firebase' : 'LocalStorage'}`, 'success');
+          console.log('✅ البيانات المحملة:', loadedOrders);
+        } else {
+          const source = selectedSource === 'firebase' ? 'Firebase' : 'LocalStorage';
+          showStatus(`⚠️ لا توجد طلبات في ${source}\n\nنصيحة: ${selectedSource === 'firebase' ? 'جرب LocalStorage أو تأكد من وجود طلبات في Firebase' : 'جرب Firebase أو قم بإنشاء طلب تجريبي أولاً'}`, 'error');
+          console.warn('⚠️ لا توجد بيانات');
+        }
+
+      } catch (error) {
+        console.error('❌ Error loading orders:', error);
+        showStatus(`❌ خطأ في تحميل الطلبات: ${error.message}\n\nتحقق من Console للتفاصيل (F12)`, 'error');
+      } finally {
+        loadBtn.disabled = false;
+        loadBtn.textContent = '📥 تحميل الطلبات';
+      }
+    }
+
+    async function sendOrders() {
+      if (loadedOrders.length === 0) {
+        showStatus('⚠️ لا توجد طلبات للإرسال', 'error');
+        return;
+      }
+
+      if (!confirm(`هل أنت متأكد من إرسال ${loadedOrders.length} طلب إلى البريد الإلكتروني؟`)) {
+        return;
+      }
+
+      const sendBtn = document.getElementById('sendBtn');
+      sendBtn.disabled = true;
+      sendBtn.textContent = '⏳ جاري الإرسال...';
+      
+      const progressBar = document.getElementById('progressBar');
+      const progressFill = document.getElementById('progressFill');
+      progressBar.classList.add('active');
+
+      showStatus('🚀 جاري إرسال الطلبات...', 'info');
+
+      try {
+        const response = await fetch('/api/orders/send-all-previous', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ orders: loadedOrders }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          document.getElementById('sentOrders').textContent = data.results.sent;
+          document.getElementById('failedOrders').textContent = data.results.failed;
+          
+          progressFill.style.width = '100%';
+          progressFill.textContent = '100%';
+
+          showStatus(`✅ ${data.message}\n✓ نجح: ${data.results.sent}\n✗ فشل: ${data.results.failed}`, 'success');
+        } else {
+          showStatus(`❌ فشل الإرسال: ${data.error || 'خطأ غير معروف'}`, 'error');
+        }
+
+      } catch (error) {
+        console.error('Error sending orders:', error);
+        showStatus(`❌ خطأ في الإرسال: ${error.message}`, 'error');
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = '📤 إرسال جميع الطلبات';
+        setTimeout(() => {
+          progressBar.classList.remove('active');
+          progressFill.style.width = '0%';
+        }, 3000);
+      }
+    }
+
+    function createTestOrder() {
+      const testOrder = {
+        id: 'TEST' + Date.now(),
+        orderNumber: 'TEST' + Date.now(),
+        customer: 'عميل تجريبي',
+        customerName: 'عميل تجريبي',
+        phone: '12345678',
+        phoneNumber: '12345678',
+        address: 'عنوان تجريبي - الكويت',
+        date: new Date().toLocaleString('ar-EG'),
+        status: 'جديد',
+        total: 15.500,
+        deliveryFee: 1.000,
+        deliveryPrice: 1.000,
+        paymentType: 'cash',
+        paymentMethod: 'cash',
+        products: [
+          {
+            name: 'تفاح أحمر',
+            unit: 'كيلو',
+            quantity: 2,
+            price: 5.000,
+            total: 10.000
+          },
+          {
+            name: 'موز',
+            unit: 'كيلو',
+            quantity: 1,
+            price: 4.500,
+            total: 4.500
+          }
+        ],
+        items: [
+          {
+            name: 'تفاح أحمر',
+            unit: 'كيلو',
+            quantity: 2,
+            price: 5.000,
+            total: 10.000
+          },
+          {
+            name: 'موز',
+            unit: 'كيلو',
+            quantity: 1,
+            price: 4.500,
+            total: 4.500
+          }
+        ]
+      };
+
+      // حفظ في LocalStorage
+      let orders = [];
+      const ordersData = localStorage.getItem('orders');
+      if (ordersData) {
+        orders = JSON.parse(ordersData);
+      }
+      orders.push(testOrder);
+      localStorage.setItem('orders', JSON.stringify(orders));
+
+      showStatus(`✅ تم إنشاء طلب تجريبي برقم ${testOrder.orderNumber}\nاضغط "تحميل الطلبات" من LocalStorage`, 'success');
+      console.log('✅ تم إنشاء طلب تجريبي:', testOrder);
+    }
+
+    function checkData() {
+      console.log('🔍 === فحص البيانات ===');
+      
+      // LocalStorage
+      console.log('\n📦 LocalStorage:');
+      const orders = localStorage.getItem('orders');
+      const invoices = localStorage.getItem('invoices');
+      
+      if (orders) {
+        const ordersArr = JSON.parse(orders);
+        console.log('✅ orders:', ordersArr.length, 'طلب');
+        console.log('البيانات:', ordersArr);
+      } else {
+        console.log('❌ لا توجد "orders"');
+      }
+      
+      if (invoices) {
+        const invoicesArr = JSON.parse(invoices);
+        console.log('✅ invoices:', invoicesArr.length, 'فاتورة');
+        console.log('البيانات:', invoicesArr);
+      } else {
+        console.log('❌ لا توجد "invoices"');
+      }
+      
+      console.log('\n🔑 جميع المفاتيح في LocalStorage:');
+      console.log(Object.keys(localStorage));
+      
+      showStatus('✅ تم فحص البيانات - افتح Console (F12) لرؤية التفاصيل', 'info');
+    }
+
+    // تحميل تلقائي عند فتح الصفحة
+    window.addEventListener('load', () => {
+      showStatus('اختر المصدر واضغط "تحميل الطلبات" للبدء', 'info');
+    });
+  </script>
+</body>
+</html>
