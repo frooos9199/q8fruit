@@ -767,52 +767,52 @@ export default function Home() {
       </div>
 
 
-      <footer className="mt-16 sm:mt-24 py-8 sm:py-12 bg-gradient-to-r from-green-800 to-blue-900 text-white">
+      <footer className="mt-16 bg-gradient-to-r from-[#163f36] via-[#18584a] to-[#1b6f61] py-8 text-white sm:mt-24 sm:py-12">
         <div className="max-w-6xl mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
             <div className="text-center md:text-right">
-              <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-green-300">فكهاني الكويت</h3>
-              <p className="text-gray-200 text-sm leading-relaxed">
+              <h3 className="mb-3 text-lg font-bold text-emerald-200 sm:mb-4 sm:text-xl">فكهاني الكويت</h3>
+              <p className="text-sm leading-relaxed text-emerald-50/90">
                 متجرك المفضل للفواكه والخضار الطازجة
                 <br />
                 جودة عالية وأسعار منافسة
               </p>
             </div>
             <div className="text-center">
-              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-blue-300">تواصل معنا</h4>
+              <h4 className="mb-3 text-base font-semibold text-cyan-200 sm:mb-4 sm:text-lg">تواصل معنا</h4>
               <div className="space-y-2">
-                <a href="tel:+96598899426" className="inline-flex items-center justify-center gap-2 text-cyan-300 font-bold bg-white/10 px-4 py-2 rounded-full hover:bg-white/20 transition-all touch-manipulation">
+                <a href="tel:+96598899426" className="inline-flex items-center justify-center gap-2 rounded-full bg-white/12 px-4 py-2 font-bold text-cyan-100 transition-all hover:bg-white/20 touch-manipulation">
                   <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" d="M4 4h4l2 5-1.5 1.5a7 7 0 0 0 7 7L17 17l5 2v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"/></svg>
                   <span dir="ltr" className="text-sm sm:text-base">98899426</span>
                 </a>
-                <a href="https://wa.me/96598899426" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 text-green-300 font-bold bg-white/10 px-4 py-2 rounded-full hover:bg-white/20 transition-all touch-manipulation">
+                <a href="https://wa.me/96598899426" target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-white/12 px-4 py-2 font-bold text-emerald-100 transition-all hover:bg-white/20 touch-manipulation">
                   <svg width="16" height="16" className="sm:w-[18px] sm:h-[18px]" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
                   <span className="text-sm sm:text-base">واتساب</span>
                 </a>
               </div>
             </div>
             <div className="text-center md:text-left">
-              <h4 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-green-300">روابط مهمة</h4>
+              <h4 className="mb-3 text-base font-semibold text-emerald-200 sm:mb-4 sm:text-lg">روابط مهمة</h4>
               <div className="space-y-2">
-                <Link href="/" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">الرئيسية</Link>
-                <Link href="/cart" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">السلة</Link>
-                <Link href="/login" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">تسجيل الدخول</Link>
-                <Link href="/privacy" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">سياسة الخصوصية</Link>
-                <Link href="/terms" className="block text-gray-200 hover:text-white transition-colors text-sm sm:text-base">الشروط والأحكام</Link>
+                <Link href="/" className="block text-sm text-emerald-50/90 transition-colors hover:text-white sm:text-base">الرئيسية</Link>
+                <Link href="/cart" className="block text-sm text-emerald-50/90 transition-colors hover:text-white sm:text-base">السلة</Link>
+                <Link href="/login" className="block text-sm text-emerald-50/90 transition-colors hover:text-white sm:text-base">تسجيل الدخول</Link>
+                <Link href="/privacy" className="block text-sm text-emerald-50/90 transition-colors hover:text-white sm:text-base">سياسة الخصوصية</Link>
+                <Link href="/terms" className="block text-sm text-emerald-50/90 transition-colors hover:text-white sm:text-base">الشروط والأحكام</Link>
               </div>
             </div>
           </div>
-          <div className="border-t border-green-700 pt-4 sm:pt-6 text-center">
-            <p className="text-gray-200 mb-2 text-sm sm:text-base">
+          <div className="border-t border-white/15 pt-4 text-center sm:pt-6">
+            <p className="mb-2 text-sm text-emerald-50/90 sm:text-base">
               جميع الحقوق محفوظة &copy; {new Date().getFullYear()} فكهاني الكويت
             </p>
-            <p className="text-xs sm:text-sm text-gray-300">
+            <p className="text-xs text-emerald-100/70 sm:text-sm">
               تطوير:
               <a
                 href="https://nexdev-portfolio-one.vercel.app"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-300 font-bold hover:text-blue-200 transition-colors ml-1"
+                className="ml-1 font-bold text-cyan-200 transition-colors hover:text-white"
               >
                 NexDev
               </a>

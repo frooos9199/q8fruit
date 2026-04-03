@@ -70,21 +70,21 @@ export default function LoginPage() {
 
   if (resetSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 dark:from-slate-900 dark:to-blue-900 p-4">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 w-full max-w-md text-center">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#fffdf6] via-[#f7fbf7] to-[#eef7f2] p-4">
+        <div className="w-full max-w-md rounded-2xl border border-white/80 bg-white/92 p-8 text-center shadow-[0_20px_60px_rgba(15,118,110,0.10)] backdrop-blur-sm">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
           <h2 className="text-2xl font-bold text-blue-600 mb-2">تم إرسال الرابط!</h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">تحقق من بريدك الإلكتروني لاستعادة كلمة المرور</p>
+          <p className="mb-6 text-slate-600">تحقق من بريدك الإلكتروني لاستعادة كلمة المرور</p>
           <button
             onClick={() => {
               setResetSuccess(false);
               setResetMode(false);
             }}
-            className="px-6 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl font-semibold hover:from-green-600 hover:to-blue-600 transition-all"
+            className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-6 py-2.5 font-semibold text-white transition-all hover:from-emerald-700 hover:to-teal-600"
           >
             العودة لتسجيل الدخول
           </button>
@@ -94,13 +94,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50 dark:from-slate-900 dark:to-blue-900 p-4">
-      <form onSubmit={resetMode ? handlePasswordReset : handleSubmit} className="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#fffdf6] via-[#f7fbf7] to-[#eef7f2] p-4">
+      <form onSubmit={resetMode ? handlePasswordReset : handleSubmit} className="relative w-full max-w-md rounded-2xl border border-white/80 bg-white/92 p-8 shadow-[0_20px_60px_rgba(15,118,110,0.10)] backdrop-blur-sm">
         {/* زر إغلاق */}
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="absolute left-4 top-4 text-gray-400 hover:text-red-500 text-2xl font-bold focus:outline-none transition-colors"
+          className="absolute left-4 top-4 text-2xl font-bold text-slate-400 transition-colors hover:text-red-500 focus:outline-none"
           aria-label="إغلاق"
         >
           &times;
@@ -110,30 +110,30 @@ export default function LoginPage() {
           <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent mb-2">
             {resetMode ? "استعادة كلمة المرور" : "تسجيل الدخول"}
           </h2>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-slate-600">
             {resetMode ? "أدخل بريدك الإلكتروني لاستعادة كلمة المرور" : "أهلاً بك في فكهاني الكويت"}
           </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-red-500" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
               </svg>
-              <span className="text-red-700 dark:text-red-300 font-medium">{error}</span>
+              <span className="font-medium text-red-700">{error}</span>
             </div>
           </div>
         )}
 
         <div className="space-y-4">
           <div>
-            <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-200">البريد الإلكتروني</label>
+            <label className="mb-2 block font-semibold text-slate-700">البريد الإلكتروني</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="w-full rounded-xl p-3 border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-green-500 focus:outline-none transition-colors"
+              className="w-full rounded-xl border-2 border-slate-200 bg-white p-3 text-slate-900 transition-colors focus:border-emerald-500 focus:outline-none"
               required
               disabled={loading}
               placeholder="example@email.com"
@@ -142,13 +142,13 @@ export default function LoginPage() {
           
           {!resetMode && (
             <div>
-              <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-200">كلمة المرور</label>
+              <label className="mb-2 block font-semibold text-slate-700">كلمة المرور</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full rounded-xl p-3 pr-12 border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 focus:border-green-500 focus:outline-none transition-colors"
+                  className="w-full rounded-xl border-2 border-slate-200 bg-white p-3 pr-12 text-slate-900 transition-colors focus:border-emerald-500 focus:outline-none"
                   required
                   disabled={loading}
                   placeholder="أدخل كلمة المرور"
@@ -156,7 +156,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-green-600 focus:outline-none transition-colors"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 transform text-slate-500 transition-colors hover:text-emerald-600 focus:outline-none"
                   aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
                 >
                   {showPassword ? (
@@ -178,7 +178,7 @@ export default function LoginPage() {
         <button 
           type="submit" 
           disabled={loading}
-          className="w-full mt-8 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-bold py-3 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+          className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 py-3 font-bold text-white shadow-lg shadow-emerald-200 transition-all duration-200 hover:from-emerald-700 hover:to-teal-600 disabled:from-slate-400 disabled:to-slate-500"
         >
           {loading ? (
             <>
@@ -206,7 +206,7 @@ export default function LoginPage() {
               >
                 نسيت كلمة المرور؟
               </button>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-slate-600">
                 ليس لديك حساب؟{" "}
                 <button
                   type="button"
@@ -225,7 +225,7 @@ export default function LoginPage() {
                 setResetMode(false);
                 setError("");
               }}
-              className="text-gray-600 hover:text-green-600 font-semibold hover:underline transition-colors"
+              className="font-semibold text-slate-600 transition-colors hover:text-emerald-600 hover:underline"
               disabled={loading}
             >
               العودة لتسجيل الدخول

@@ -77,24 +77,24 @@ export default function InvoicesPage() {
   });
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
-  if (!user) return <div className="p-8 text-center text-lg">يجب تسجيل الدخول أولاً.</div>;
+  if (!user) return <div className="p-8 text-center text-lg text-slate-600">يجب تسجيل الدخول أولاً.</div>;
 
   return (
-    <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-8">
-      <h1 className="text-2xl font-bold mb-4 text-center text-green-700">فواتيري</h1>
+    <div className="mx-auto mt-8 max-w-2xl rounded-2xl border border-white/80 bg-white/92 p-6 shadow-[0_20px_60px_rgba(15,118,110,0.10)] backdrop-blur-sm">
+      <h1 className="mb-4 text-center text-2xl font-bold text-emerald-700">فواتيري</h1>
       {invoices.length === 0 ? (
-        <div className="text-gray-500">لا توجد فواتير.</div>
+        <div className="text-slate-500">لا توجد فواتير.</div>
       ) : (
         <ul className="space-y-2">
           {invoices.map((inv, i) => (
-            <li key={i} className="border rounded p-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <li key={i} className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 md:flex-row md:items-center md:justify-between">
               <div>
                 <span className="font-bold">رقم الفاتورة:</span> {inv.orderNumber || inv.id}
                 <span className="font-bold ml-4">المجموع:</span> {inv.total} د.ك
                 <span className="font-bold ml-4">تاريخ:</span> {formatDateTime(inv.date)}
               </div>
               <button
-                className="px-3 py-1 rounded bg-green-600 text-white font-bold hover:bg-green-800"
+                className="rounded-lg bg-gradient-to-r from-emerald-600 to-teal-500 px-3 py-1 font-bold text-white transition-all hover:from-emerald-700 hover:to-teal-600"
                 onClick={() => setSelectedInvoice(inv)}
               >
                 عرض الفاتورة
@@ -105,7 +105,7 @@ export default function InvoicesPage() {
       )}
       {selectedInvoice && (
         <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
-          <div className="bg-white rounded-lg shadow-lg p-4 max-w-full relative">
+          <div className="relative max-w-full rounded-2xl bg-white p-4 shadow-2xl">
             <button
               className="absolute top-2 left-2 text-gray-500 hover:text-red-600 font-bold border border-gray-300 rounded-full w-8 h-8 flex items-center justify-center"
               onClick={() => setSelectedInvoice(null)}

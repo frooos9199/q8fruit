@@ -424,25 +424,25 @@ export default function CartPage() {
   };
 
   return (
-  <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-4 sm:py-8 px-2 flex flex-col items-center" dir="rtl">
+  <div className="flex min-h-screen flex-col items-center bg-gradient-to-br from-[#fffdf6] via-[#f7fbf7] to-[#eef7f2] px-2 py-4 text-slate-800 sm:py-8" dir="rtl">
       {/* زر إغلاق الصفحة */}
       <button
         onClick={() => router.push("/")}
-        className="absolute top-2 sm:top-4 right-2 sm:right-4 z-10 text-white bg-green-600 hover:bg-green-800 rounded-full w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center text-xl sm:text-2xl font-bold shadow-lg focus:outline-none"
+        className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 text-xl font-bold text-white shadow-lg shadow-emerald-200 focus:outline-none hover:from-emerald-700 hover:to-teal-600 sm:right-4 sm:top-4 sm:h-10 sm:w-10 sm:text-2xl"
         aria-label="إغلاق الصفحة"
       >
         &times;
       </button>
-  <h1 className="text-2xl sm:text-3xl font-extrabold text-green-500 mb-4 sm:mb-6 text-center tracking-tight drop-shadow-lg">سلة المشتريات</h1>
+  <h1 className="mb-4 bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-center text-2xl font-extrabold tracking-tight text-transparent sm:mb-6 sm:text-3xl">سلة المشتريات</h1>
       
       {/* خطوات الشراء */}
       {cart.length > 0 && (
         <div className="w-full max-w-2xl mb-8">
           <div className="flex items-center justify-between relative">
             {/* الخط الواصل */}
-            <div className="absolute top-5 right-0 left-0 h-1 bg-gray-700 -z-10">
+            <div className="absolute left-0 right-0 top-5 -z-10 h-1 rounded-full bg-emerald-100">
               <div 
-                className="h-full bg-green-500 transition-all duration-300"
+                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-300"
                 style={{ width: `${((currentStep - 1) / 3) * 100}%` }}
               ></div>
             </div>
@@ -450,11 +450,11 @@ export default function CartPage() {
             {/* الخطوة 1: السلة */}
             <div className="flex flex-col items-center flex-1">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                currentStep >= 1 ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+                currentStep >= 1 ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-200' : 'bg-white text-slate-400 border border-slate-200'
               }`}>
                 {currentStep > 1 ? '✓' : '1'}
               </div>
-              <span className={`mt-2 text-xs font-bold ${currentStep >= 1 ? 'text-green-400' : 'text-gray-500'}`}>
+              <span className={`mt-2 text-xs font-bold ${currentStep >= 1 ? 'text-emerald-700' : 'text-slate-500'}`}>
                 السلة
               </span>
             </div>
@@ -462,11 +462,11 @@ export default function CartPage() {
             {/* الخطوة 2: العنوان */}
             <div className="flex flex-col items-center flex-1">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                currentStep >= 2 ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+                currentStep >= 2 ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-200' : 'bg-white text-slate-400 border border-slate-200'
               }`}>
                 {currentStep > 2 ? '✓' : '2'}
               </div>
-              <span className={`mt-2 text-xs font-bold ${currentStep >= 2 ? 'text-green-400' : 'text-gray-500'}`}>
+              <span className={`mt-2 text-xs font-bold ${currentStep >= 2 ? 'text-emerald-700' : 'text-slate-500'}`}>
                 العنوان
               </span>
             </div>
@@ -474,11 +474,11 @@ export default function CartPage() {
             {/* الخطوة 3: الدفع */}
             <div className="flex flex-col items-center flex-1">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                currentStep >= 3 ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+                currentStep >= 3 ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-200' : 'bg-white text-slate-400 border border-slate-200'
               }`}>
                 {currentStep > 3 ? '✓' : '3'}
               </div>
-              <span className={`mt-2 text-xs font-bold ${currentStep >= 3 ? 'text-green-400' : 'text-gray-500'}`}>
+              <span className={`mt-2 text-xs font-bold ${currentStep >= 3 ? 'text-emerald-700' : 'text-slate-500'}`}>
                 الدفع
               </span>
             </div>
@@ -486,11 +486,11 @@ export default function CartPage() {
             {/* الخطوة 4: التأكيد */}
             <div className="flex flex-col items-center flex-1">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                currentStep >= 4 ? 'bg-green-500 text-white' : 'bg-gray-700 text-gray-400'
+                currentStep >= 4 ? 'bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-200' : 'bg-white text-slate-400 border border-slate-200'
               }`}>
                 {currentStep > 4 ? '✓' : '4'}
               </div>
-              <span className={`mt-2 text-xs font-bold ${currentStep >= 4 ? 'text-green-400' : 'text-gray-500'}`}>
+              <span className={`mt-2 text-xs font-bold ${currentStep >= 4 ? 'text-emerald-700' : 'text-slate-500'}`}>
                 تأكيد
               </span>
             </div>
@@ -500,38 +500,38 @@ export default function CartPage() {
 
       {/* السلة */}
       {showAlert && (
-        <div className="mb-4 text-center text-white bg-red-600 rounded-lg py-2 px-4 font-bold shadow animate-pulse">تم حذف {deletedName} من السلة</div>
+        <div className="mb-4 rounded-lg bg-red-500 px-4 py-2 text-center font-bold text-white shadow animate-pulse">تم حذف {deletedName} من السلة</div>
       )}
       <div className="w-full max-w-md">
         {cart.length === 0 ? (
-          <div className="text-center text-gray-400 bg-gray-800 rounded-xl py-8 shadow-inner font-bold text-lg">سلتك فارغة</div>
+          <div className="rounded-xl border border-slate-200 bg-white/92 py-8 text-center text-lg font-bold text-slate-500 shadow-inner">سلتك فارغة</div>
         ) : (
           <>
             <div className="flex justify-between items-center mb-4">
-              <span className="text-base text-gray-200">عدد المنتجات: <span className="font-bold text-green-400">{totalItems}</span></span>
-              <button onClick={handleClear} className="text-red-200 hover:text-white font-bold text-sm bg-red-700 px-4 py-1 rounded-full shadow transition-all">إفراغ السلة</button>
+              <span className="text-base text-slate-600">عدد المنتجات: <span className="font-bold text-emerald-700">{totalItems}</span></span>
+              <button onClick={handleClear} className="rounded-full bg-red-500 px-4 py-1 text-sm font-bold text-white shadow transition-all hover:bg-red-600">إفراغ السلة</button>
             </div>
             <div className="space-y-4">
               {cart.map((item) => (
-                <div key={item.id} className="flex items-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-xl p-4 gap-4 border-2 border-green-200/30 hover:border-green-400 transition-all relative group font-sans">
+                <div key={item.id} className="group relative flex items-center gap-4 rounded-2xl border border-white/80 bg-white/92 p-4 font-sans shadow-[0_18px_40px_rgba(15,118,110,0.10)] transition-all hover:border-emerald-300">
                   <div className="flex-shrink-0 flex flex-col items-center justify-center">
-                    <img src={item.image} alt={item.name} className="w-20 h-20 object-cover rounded-xl border-2 border-green-400 shadow-md bg-white" />
+                    <img src={item.image} alt={item.name} className="h-20 w-20 rounded-xl border-2 border-emerald-200 bg-white object-cover shadow-md" />
                   </div>
                   <div className="flex-1 flex flex-col gap-1 min-w-0">
-                    <div className="font-bold text-lg sm:text-xl text-green-500 truncate">{item.name}</div>
-                    <div className="text-xs sm:text-sm text-gray-400 font-medium">{item.unit}</div>
+                    <div className="truncate text-lg font-bold text-emerald-700 sm:text-xl">{item.name}</div>
+                    <div className="text-xs font-medium text-slate-500 sm:text-sm">{item.unit}</div>
                     <div className="flex items-center gap-2 mt-3">
                       <button
                         onClick={() => handleQuantity(item.id, -1)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-800 text-xl font-bold text-green-400 hover:bg-green-600 hover:text-white active:bg-green-700 transition-all border-2 border-green-300 shadow"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-emerald-200 bg-emerald-50 text-xl font-bold text-emerald-700 shadow transition-all hover:bg-emerald-600 hover:text-white active:bg-emerald-700"
                         aria-label="نقص الكمية"
                       >
                         -
                       </button>
-                      <span className="w-10 text-center font-extrabold text-xl text-white select-none">{item.quantity}</span>
+                      <span className="w-10 select-none text-center text-xl font-extrabold text-slate-800">{item.quantity}</span>
                       <button
                         onClick={() => handleQuantity(item.id, 1)}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-gray-800 text-xl font-bold text-green-400 hover:bg-green-600 hover:text-white active:bg-green-700 transition-all border-2 border-green-300 shadow"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-emerald-200 bg-emerald-50 text-xl font-bold text-emerald-700 shadow transition-all hover:bg-emerald-600 hover:text-white active:bg-emerald-700"
                         aria-label="زيادة الكمية"
                       >
                         +
@@ -539,18 +539,18 @@ export default function CartPage() {
                     </div>
                   </div>
                   <div className="flex flex-col items-end gap-3 min-w-[70px]">
-                    <div className="text-green-400 font-extrabold text-lg sm:text-xl drop-shadow">{(item.price * item.quantity).toFixed(3)} <span className="text-xs font-bold">د.ك</span></div>
-                    <button onClick={() => handleRemove(item.id)} className="w-8 h-8 flex items-center justify-center rounded-full bg-red-600 text-white font-extrabold text-xl shadow hover:bg-red-800 transition-all border-2 border-red-300" aria-label="حذف المنتج">&times;</button>
+                    <div className="text-lg font-extrabold text-emerald-700 drop-shadow sm:text-xl">{(item.price * item.quantity).toFixed(3)} <span className="text-xs font-bold">د.ك</span></div>
+                    <button onClick={() => handleRemove(item.id)} className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-red-200 bg-red-500 text-xl font-extrabold text-white shadow transition-all hover:bg-red-600" aria-label="حذف المنتج">&times;</button>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* مربع الملاحظات تحت المنتجات مباشرة */}
-            <div className="mt-4 bg-gray-800 rounded-xl p-4 border-2 border-gray-700">
-              <label className="block text-gray-200 mb-2 font-bold text-sm">📝 ملاحظات خاصة بالطلب:</label>
+            <div className="mt-4 rounded-xl border border-slate-200 bg-white/92 p-4">
+              <label className="mb-2 block text-sm font-bold text-slate-700">📝 ملاحظات خاصة بالطلب:</label>
               <textarea
-                className="w-full rounded-lg p-3 bg-gray-900 border-2 border-green-300 text-white min-h-[80px] focus:ring-2 focus:ring-green-400 outline-none transition-all resize-none"
+                className="min-h-[80px] w-full resize-none rounded-lg border-2 border-emerald-200 bg-white p-3 text-slate-900 outline-none transition-all focus:ring-2 focus:ring-emerald-300"
                 value={userNote}
                 onChange={e => setUserNote(e.target.value)}
                 placeholder="مثال: أحتاج التوصيل صباحاً، أو طلبات إضافية..."
@@ -564,26 +564,26 @@ export default function CartPage() {
       {cart.length > 0 && (
         <>
           {/* عرض الإجمالي - يظهر دائماً */}
-          <div className="flex items-center justify-end gap-2 text-base font-bold text-green-400 text-right mt-6 w-full max-w-md">
+          <div className="mt-6 flex w-full max-w-md items-center justify-end gap-2 text-right text-base font-bold text-emerald-700">
             {deliveryNote && (
-              <span className="text-xs font-normal text-green-700 dark:text-green-200 bg-green-50 dark:bg-green-900 rounded-full px-3 py-0.5 border border-green-200 dark:border-green-700 ml-2">{deliveryNote}</span>
+              <span className="ml-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-0.5 text-xs font-normal text-emerald-700">{deliveryNote}</span>
             )}
             {deliveryTime && (
-              <span className="text-xs font-normal text-green-700 dark:text-green-200 bg-green-50 dark:bg-green-900 rounded-full px-3 py-0.5 border border-green-200 dark:border-green-700 ml-2">{deliveryTime}</span>
+              <span className="ml-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-0.5 text-xs font-normal text-emerald-700">{deliveryTime}</span>
             )}
             <span>التوصيل: {deliveryPrice.toFixed(3)} د.ك</span>
           </div>
-          <div className="text-xl font-extrabold text-green-300 text-left mt-4 w-full max-w-md">الإجمالي: {(total + deliveryPrice).toFixed(3)} د.ك</div>
+          <div className="mt-4 w-full max-w-md text-left text-xl font-extrabold text-emerald-700">الإجمالي: {(total + deliveryPrice).toFixed(3)} د.ك</div>
 
           {/* نموذج بيانات المستخدم - الخطوة 2 */}
           {currentStep >= 2 && (
-            <div className="bg-gray-800 rounded-2xl p-6 mt-8 mb-2 border-2 border-green-400 w-full max-w-md flex flex-col items-center">
-              <h2 className="text-lg font-bold text-green-400 mb-3">معلومات التوصيل</h2>
+            <div className="mt-8 mb-2 flex w-full max-w-md flex-col items-center rounded-2xl border border-white/80 bg-white/92 p-6 shadow-[0_18px_40px_rgba(15,118,110,0.10)]">
+              <h2 className="mb-3 text-lg font-bold text-emerald-700">معلومات التوصيل</h2>
               <div className="mb-2 w-full">
-                <label className="block text-gray-200 mb-1">الاسم *</label>
+                <label className="mb-1 block text-slate-700">الاسم *</label>
                 <input
                   type="text"
-                  className="w-full rounded-full p-3 bg-gray-900 border-2 border-green-300 text-white text-lg focus:ring-2 focus:ring-green-400 outline-none transition-all"
+                  className="w-full rounded-full border-2 border-emerald-200 bg-white p-3 text-lg text-slate-900 outline-none transition-all focus:ring-2 focus:ring-emerald-300"
                   value={userInfo.name}
                   onChange={e => setUserInfo({ ...userInfo, name: e.target.value })}
                   placeholder="اكتب اسمك هنا..."
@@ -591,10 +591,10 @@ export default function CartPage() {
                 />
               </div>
               <div className="mb-2 w-full">
-                <label className="block text-gray-200 mb-1">رقم الهاتف *</label>
+                <label className="mb-1 block text-slate-700">رقم الهاتف *</label>
                 <input
                   type="tel"
-                  className="w-full rounded-full p-3 bg-gray-900 border-2 border-green-300 text-white text-lg focus:ring-2 focus:ring-green-400 outline-none transition-all"
+                  className="w-full rounded-full border-2 border-emerald-200 bg-white p-3 text-lg text-slate-900 outline-none transition-all focus:ring-2 focus:ring-emerald-300"
                   value={userInfo.phone}
                   onChange={e => setUserInfo({ ...userInfo, phone: e.target.value })}
                   placeholder="مثال: 98899426"
@@ -602,9 +602,9 @@ export default function CartPage() {
                 />
               </div>
               <div className="mb-2 w-full">
-                <label className="block text-gray-200 mb-1">العنوان (اختياري)</label>
+                <label className="mb-1 block text-slate-700">العنوان (اختياري)</label>
                 <textarea
-                  className="w-full rounded-xl p-3 bg-gray-900 border-2 border-green-300 text-white min-h-[48px] focus:ring-2 focus:ring-green-400 outline-none transition-all"
+                  className="min-h-[48px] w-full rounded-xl border-2 border-emerald-200 bg-white p-3 text-slate-900 outline-none transition-all focus:ring-2 focus:ring-emerald-300"
                   value={userInfo.address}
                   onChange={e => setUserInfo({ ...userInfo, address: e.target.value })}
                   placeholder="يمكنك كتابة العنوان هنا أو إرساله عبر الواتساب لاحقاً"
@@ -617,7 +617,7 @@ export default function CartPage() {
           {currentStep >= 3 && (
             <div className="flex flex-row gap-8 mt-4 mb-2 justify-center items-center w-full max-w-md">
               <label className={`flex items-center gap-2 cursor-pointer px-6 py-3 rounded-full font-bold transition border-2 text-lg shadow-lg 
-                ${paymentType === "cash" ? "bg-green-600 border-green-600 text-white" : "bg-gray-900 border-gray-700 text-white hover:bg-green-700 hover:border-green-600"}`}
+                ${paymentType === "cash" ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50"}`}
               >
                 <input
                   type="radio"
@@ -630,7 +630,7 @@ export default function CartPage() {
                 <span>الدفع نقدي عند الاستلام</span>
               </label>
               <label className={`flex items-center gap-2 cursor-pointer px-6 py-3 rounded-full font-bold transition border-2 text-lg shadow-lg 
-                ${paymentType === "knet" ? "bg-green-600 border-green-600 text-white" : "bg-gray-900 border-gray-700 text-white hover:bg-green-700 hover:border-green-600"}`}
+                ${paymentType === "knet" ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50"}`}
               >
                 <input
                   type="radio"
@@ -647,41 +647,41 @@ export default function CartPage() {
 
           {/* ملخص الطلب في الخطوة 4 */}
           {currentStep === 4 && (
-            <div className="bg-gradient-to-br from-green-900 to-green-800 rounded-2xl p-6 mt-6 mb-2 border-2 border-green-400 w-full max-w-md">
-              <h2 className="text-xl font-bold text-green-300 mb-4 text-center">📋 مراجعة الطلب</h2>
+            <div className="mt-6 mb-2 w-full max-w-md rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50 p-6">
+              <h2 className="mb-4 text-center text-xl font-bold text-emerald-700">📋 مراجعة الطلب</h2>
               
-              <div className="space-y-3 bg-gray-900/50 rounded-xl p-4 mb-4">
-                <div className="flex justify-between text-white">
-                  <span className="text-gray-300">👤 الاسم:</span>
+              <div className="mb-4 space-y-3 rounded-xl bg-white/80 p-4">
+                <div className="flex justify-between text-slate-800">
+                  <span className="text-slate-500">👤 الاسم:</span>
                   <span className="font-bold">{userInfo.name}</span>
                 </div>
-                <div className="flex justify-between text-white">
-                  <span className="text-gray-300">📱 الهاتف:</span>
+                <div className="flex justify-between text-slate-800">
+                  <span className="text-slate-500">📱 الهاتف:</span>
                   <span className="font-bold">{userInfo.phone}</span>
                 </div>
                 {userInfo.address && (
-                  <div className="flex justify-between text-white">
-                    <span className="text-gray-300">📍 العنوان:</span>
+                  <div className="flex justify-between text-slate-800">
+                    <span className="text-slate-500">📍 العنوان:</span>
                     <span className="font-bold text-sm">{userInfo.address}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-white border-t border-gray-700 pt-3">
-                  <span className="text-gray-300">💳 طريقة الدفع:</span>
-                  <span className={`font-bold ${paymentType === 'knet' ? 'text-blue-400' : 'text-green-400'}`}>
+                <div className="flex justify-between border-t border-slate-200 pt-3 text-slate-800">
+                  <span className="text-slate-500">💳 طريقة الدفع:</span>
+                  <span className={`font-bold ${paymentType === 'knet' ? 'text-cyan-700' : 'text-emerald-700'}`}>
                     {paymentType === "knet" ? "رابط كنت" : "نقدي عند الاستلام"}
                   </span>
                 </div>
-                <div className="flex justify-between text-white border-t border-gray-700 pt-3">
-                  <span className="text-gray-300">📦 عدد المنتجات:</span>
-                  <span className="font-bold text-green-400">{totalItems}</span>
+                <div className="flex justify-between border-t border-slate-200 pt-3 text-slate-800">
+                  <span className="text-slate-500">📦 عدد المنتجات:</span>
+                  <span className="font-bold text-emerald-700">{totalItems}</span>
                 </div>
-                <div className="flex justify-between text-white text-lg">
-                  <span className="text-gray-300">💰 المجموع:</span>
-                  <span className="font-bold text-green-400">{(total + deliveryPrice).toFixed(3)} د.ك</span>
+                <div className="flex justify-between text-lg text-slate-800">
+                  <span className="text-slate-500">💰 المجموع:</span>
+                  <span className="font-bold text-emerald-700">{(total + deliveryPrice).toFixed(3)} د.ك</span>
                 </div>
               </div>
               
-              <div className="text-center text-green-300 text-sm">
+              <div className="text-center text-sm text-emerald-700">
                 ✓ تأكد من صحة البيانات قبل إتمام الطلب
               </div>
             </div>
@@ -692,7 +692,7 @@ export default function CartPage() {
             {currentStep > 1 && (
               <button 
                 onClick={() => setCurrentStep(currentStep - 1)}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 text-white font-bold py-3 rounded-full shadow transition"
+                className="flex-1 rounded-full bg-slate-500 py-3 font-bold text-white shadow transition hover:bg-slate-600"
               >
                 ← رجوع
               </button>
@@ -708,7 +708,7 @@ export default function CartPage() {
                   // الانتقال للخطوة التالية
                   setCurrentStep(currentStep + 1);
                 }}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-3 rounded-full shadow text-lg transition"
+                className="flex-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 py-3 text-lg font-extrabold text-white shadow transition hover:from-emerald-700 hover:to-teal-600"
               >
                 {currentStep === 3 ? '← متابعة للتأكيد' : 'التالي →'}
               </button>
@@ -723,7 +723,7 @@ export default function CartPage() {
                   }
                   handleCheckout();
                 }}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white font-extrabold py-4 rounded-full shadow text-xl transition"
+                className="flex-1 rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 py-4 text-xl font-extrabold text-white shadow transition hover:from-emerald-700 hover:to-teal-600"
                 style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}
               >
                 ✓ تأكيد وإتمام الطلب
@@ -733,7 +733,7 @@ export default function CartPage() {
         </>
       )}
       <div className="mt-10 text-center w-full max-w-md">
-        <Link href="/" className="inline-block bg-gray-700 hover:bg-green-600 text-white font-extrabold py-3 px-8 rounded-full shadow-lg text-lg transition-all">← متابعة التسوق</Link>
+        <Link href="/" className="inline-block rounded-full bg-gradient-to-r from-slate-600 to-slate-500 px-8 py-3 text-lg font-extrabold text-white shadow-lg transition-all hover:from-emerald-600 hover:to-teal-500">← متابعة التسوق</Link>
       </div>
     </div>
   );

@@ -22,11 +22,3 @@ export const createAdminAccount = async () => {
     throw error;
   }
 };
-
-// تشغيل الدالة تلقائياً عند تحميل الصفحة
-if (typeof window !== 'undefined') {
-  // تأخير لضمان تهيئة Firebase
-  setTimeout(() => {
-    createAdminAccount().catch(console.error);
-  }, 2000);
-}
