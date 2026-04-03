@@ -31,6 +31,40 @@ async function resolveBadgeCount(badgeSource?: string) {
   return null;
 }
 
+async function getAdminDeviceTokens() {
+  if (!admin.apps.length) {
+    return [] as string[];
+  }
+
+  const usersCollection = admin.firestore().collection('users');
+  const [adminFlagSnapshot, adminRoleSnapshot] = await Promise.all([
+    usersCollection.where('isAdmin', '==', true).get(),
+    usersCollection.where('role', '==', 'admin').get(),
+  ]);
+
+  const tokens = new Set<string>();
+
+  for (const snapshot of [adminFlagSnapshot, adminRoleSnapshot]) {
+    for (const document of snapshot.docs) {
+      const data = document.data() || {};
+
+      if (typeof data.fcmToken === 'string' && data.fcmToken.trim()) {
+        tokens.add(data.fcmToken.trim());
+      }
+
+      if (Array.isArray(data.fcmTokens)) {
+        for (const token of data.fcmTokens) {
+          if (typeof token === 'string' && token.trim()) {
+            tokens.add(token.trim());
+          }
+        }
+      }
+    }
+  }
+
+  return Array.from(tokens);
+}
+
 // Initialize Firebase Admin (do this once in your app)
 if (!admin.apps.length) {
   try {
@@ -81,6 +115,7 @@ export async function POST(request: NextRequest) {
     notificationData.badgeCount = String(resolvedBadgeCount);
 
     let message: admin.messaging.Message;
+    const shouldFanOutToAdminDevices = topic === 'admin-orders';
 
     if (topic) {
       // Send to topic
@@ -155,8 +190,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send notification
-    const response = await admin.messaging().send(message);
+    let response: string;
+
+    if (shouldFanOutToAdminDevices) {
+      const adminTokens = await getAdminDeviceTokens();
+
+      if (adminTokens.length > 0) {
+        const multicastMessage: admin.messaging.MulticastMessage = {
+          notification: message.notification,
+          data: message.data,
+          android: message.android,
+          apns: message.apns,
+          tokens: adminTokens,
+        };
+
+        const multicastResponse = await admin.messaging().sendEachForMulticast(multicastMessage);
+        console.log('✅ Admin multicast notification result:', {
+          successCount: multicastResponse.successCount,
+          failureCount: multicastResponse.failureCount,
+        });
+
+        response = `admin-multicast:${multicastResponse.successCount}/${adminTokens.length}`;
+      } else {
+        response = await admin.messaging().send(message);
+      }
+    } else {
+      response = await admin.messaging().send(message);
+    }
     
     console.log('✅ Notification sent successfully:', response);
     
