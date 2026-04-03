@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useDeferredValue, useEffect, useMemo, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -27,15 +27,14 @@ export const HomeScreen: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const deferredSearchQuery = useDeferredValue(searchQuery.trim().toLowerCase());
 
   const isArabic = i18n.language === 'ar';
   const availableCategories = ['فواكه', 'خضار', 'ورقيات', 'سلات الفواكه'];
 
   const loadProducts = useCallback(async () => {
     try {
-      console.log('🔄 Fetching products from Firebase...');
       const rawProducts = await fetchProductsFromFirebase();
-      console.log('✅ Raw products:', rawProducts.length, rawProducts);
       const mappedProducts: Product[] = rawProducts
         .filter((item: any) => item && item.name && !item.isHidden)
         .map((item: any) => {
@@ -44,9 +43,7 @@ export const HomeScreen: React.FC = () => {
           const image = Array.isArray(item.images) && item.images.length > 0
             ? item.images[0]
             : item.image || '';
-          
-          console.log('📦 Product:', item.name, '| Images:', item.images, '| Image:', item.image, '| Final:', image);
-          
+
           return {
             id: String(item.id ?? item.docId ?? item.name),
             name: item.name || '',
@@ -71,7 +68,6 @@ export const HomeScreen: React.FC = () => {
         });
 
       setProducts(mappedProducts);
-      console.log('✅ Mapped products:', mappedProducts.length);
     } catch (error) {
       console.error('❌ Firebase error:', error);
       setProducts([]);
@@ -99,16 +95,19 @@ export const HomeScreen: React.FC = () => {
     }));
   }, []);
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = isArabic
-      ? product.nameAr.toLowerCase().includes(searchQuery.toLowerCase())
-      : product.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory =
-      selectedCategory === 'all' || product.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const searchableName = isArabic
+        ? (product.nameAr || product.name || '').toLowerCase()
+        : (product.name || product.nameAr || '').toLowerCase();
+      const matchesSearch = !deferredSearchQuery || searchableName.includes(deferredSearchQuery);
+      const matchesCategory =
+        selectedCategory === 'all' || product.category === selectedCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, isArabic, deferredSearchQuery, selectedCategory]);
 
-  const featuredProducts = products.filter((p) => p.discount);
+  const featuredProducts = useMemo(() => products.filter((p) => p.discount), [products]);
 
   const renderProductItem = useCallback(({ item }: { item: Product }) => (
     <ProductCard
@@ -120,17 +119,6 @@ export const HomeScreen: React.FC = () => {
 
   const ListHeaderComponent = useCallback(() => (
     <>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder={t('search')}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholderTextColor={COLORS.textSecondary}
-        />
-        <Text style={styles.searchIcon}>🔍</Text>
-      </View>
-
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('categories')}</Text>
         <ScrollView
@@ -198,7 +186,7 @@ export const HomeScreen: React.FC = () => {
         ) : null}
       </View>
     </>
-  ), [searchQuery, t, setSearchQuery, selectedCategory, categories, isArabic, featuredProducts, addToCart, loading, products.length]);
+  ), [t, selectedCategory, categories, isArabic, featuredProducts, addToCart, loading, products.length]);
 
   return (
     <View style={styles.container}>
@@ -215,6 +203,21 @@ export const HomeScreen: React.FC = () => {
         }
       />
 
+      <View style={styles.searchContainer}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder={t('search')}
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholderTextColor={COLORS.textSecondary}
+          autoCorrect={false}
+          autoCapitalize="none"
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+        />
+        <Text style={styles.searchIcon}>🔍</Text>
+      </View>
+
       <FlatList
         data={filteredProducts}
         renderItem={renderProductItem}
@@ -224,6 +227,7 @@ export const HomeScreen: React.FC = () => {
         contentContainerStyle={styles.flatListContent}
         showsVerticalScrollIndicator={false}
         ListHeaderComponent={ListHeaderComponent}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl 
             refreshing={refreshing} 
