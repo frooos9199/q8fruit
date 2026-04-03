@@ -194,6 +194,23 @@ export const fetchAdminStats = async () => {
     
     const ordersSnapshot = await getDocs(collection(db, 'orders'));
     const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    const getNormalizedOrderTotal = (order: any) => {
+      const pricingTotal = Number(order?.pricing?.total);
+      if (Number.isFinite(pricingTotal)) return pricingTotal;
+
+      const directTotal = Number(order?.total);
+      if (Number.isFinite(directTotal)) return directTotal;
+
+      const items = Array.isArray(order?.items) ? order.items : Array.isArray(order?.products) ? order.products : [];
+      const subtotal = items.reduce((sum: number, item: any) => {
+        const price = Number(item?.total ?? ((Number(item?.price ?? item?.unitPrice) || 0) * (Number(item?.quantity) || 1)));
+        return sum + (Number.isFinite(price) ? price : 0);
+      }, 0);
+
+      const deliveryFee = Number(order?.pricing?.deliveryPrice ?? order?.deliveryFee ?? order?.deliveryPrice) || 0;
+      return subtotal + deliveryFee;
+    };
     
     const todayOrders = orders.filter((order: any) => {
       const orderDate = getOrderDate(order);
@@ -207,10 +224,13 @@ export const fetchAdminStats = async () => {
     const pendingOrders = orders.filter((order: any) => order.status === 'pending');
     const completedOrders = orders.filter((order: any) => order.status === 'completed' || order.status === 'delivered');
     
-    const totalRevenue = completedOrders.reduce((sum: number, order: any) => sum + (order.total || 0), 0);
+    const totalRevenue = completedOrders.reduce((sum: number, order: any) => sum + getNormalizedOrderTotal(order), 0);
     
     const productsSnapshot = await getDocs(collection(db, 'products'));
-    const totalProducts = productsSnapshot.size;
+    const totalProducts = productsSnapshot.docs.filter((productDoc) => {
+      const data = productDoc.data() as Record<string, any>;
+      return data.active !== false && data.isHidden !== true;
+    }).length;
     
     const usersSnapshot = await getDocs(collection(db, 'users'));
     const totalCustomers = usersSnapshot.size;

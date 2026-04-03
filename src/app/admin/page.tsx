@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { db } from "../../lib/firebase";
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
+import { getOrderPricing } from "../../lib/orderUtils";
 interface Category {
   name: string;
   products?: string[];
@@ -9,11 +10,35 @@ interface Category {
 }
 
 interface Product {
-  id: number;
+  id: number | string;
   name: string;
   category: string;
   active: boolean;
+  categories?: string[];
+  isHidden?: boolean;
 }
+
+const getOrderDate = (order: Record<string, any>) => {
+  if (order.createdAt?.toDate) {
+    return order.createdAt.toDate();
+  }
+
+  if (order.date) {
+    const parsedDate = new Date(order.date);
+    if (!Number.isNaN(parsedDate.getTime())) return parsedDate;
+  }
+
+  if (order.timestamp) {
+    const parsedDate = new Date(order.timestamp);
+    if (!Number.isNaN(parsedDate.getTime())) return parsedDate;
+  }
+
+  return null;
+};
+
+const isCompletedOrder = (status: unknown) => {
+  return status === "completed" || status === "delivered";
+};
 
 export default function AdminDashboard() {
   const [userCount, setUserCount] = useState(0);
@@ -35,155 +60,86 @@ export default function AdminDashboard() {
 
 
   useEffect(() => {
-    // تحديث عدد المستخدمين
-    const syncCount = async () => {
-      if (db) {
-        try {
-          const usersSnapshot = await getDocs(collection(db, 'users'));
-          setUserCount(usersSnapshot.size);
-          return;
-        } catch {
-          // fallback below
-        }
+    const syncDashboardStats = async () => {
+      if (!db) {
+        setUserCount(0);
+        setOrdersStats({ total: 0, today: 0, sales: 0 });
+        setCateringStats({ categories: 0, totalProducts: 0, details: [] });
+        return;
       }
 
-      if (typeof window !== "undefined") {
-        const stored = window.localStorage.getItem("users");
-        if (stored) {
-          try {
-            setUserCount(JSON.parse(stored).length);
-            return;
-          } catch {
-            // ignore fallback parsing issues
-          }
-        }
-      }
+      try {
+        const [usersSnapshot, ordersSnapshot, productsSnapshot, categoriesSnapshot] = await Promise.all([
+          getDocs(collection(db, 'users')),
+          getDocs(collection(db, 'orders')),
+          getDocs(collection(db, 'products')),
+          getDocs(collection(db, 'cateringCategories')),
+        ]);
 
-      setUserCount(0);
-    };
-    
-    window.addEventListener("usersUpdated", syncCount);
-    syncCount();
+        setUserCount(usersSnapshot.size);
 
-    // تحديث إحصائيات الطلبات من Firebase + localStorage
-    const syncOrders = async () => {
-      let allOrders: any[] = [];
-      
-      // 1. Get orders from Firebase
-      if (db) {
-        try {
-          const ordersRef = collection(db, 'orders');
-          const snapshot = await getDocs(ordersRef);
-          const firebaseOrders = snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-              id: doc.id,
-              total: data.pricing?.total || data.total || 0,
-              date: data.createdAt ? data.createdAt.toDate().toISOString() : (data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString()),
-              status: data.status
-            };
-          });
-          allOrders = [...firebaseOrders];
-          console.log('📦 Firebase orders:', firebaseOrders.length);
-        } catch (error) {
-          console.error('Error fetching Firebase orders:', error);
-        }
-      }
-      
-      // 2. Get orders from localStorage (legacy)
-      if (typeof window !== "undefined") {
-        const stored = window.localStorage.getItem("orders");
-        if (stored) {
-          try {
-            const localOrders = JSON.parse(stored);
-            if (Array.isArray(localOrders)) {
-              allOrders = [...allOrders, ...localOrders];
-            }
-          } catch (error) {
-            console.error('Error parsing localStorage orders:', error);
-          }
-        }
-      }
-      
-      // Calculate statistics
-      const total = allOrders.length;
-      
-      // طلبات اليوم
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const today = allOrders.filter((o) => {
-        if (!o.date) return false;
-        try {
-          const orderDate = new Date(o.date);
-          return orderDate >= todayStart;
-        } catch {
-          return false;
-        }
-      }).length;
-      
-      // إجمالي المبيعات
-      const sales = allOrders.reduce((sum, o) => {
-        const orderTotal = typeof o.total === "number" ? o.total : 0;
-        return sum + orderTotal;
-      }, 0);
-      
-      setOrdersStats({ total, today, sales });
-      console.log('📊 Orders stats updated:', { total, today, sales });
-    };
+        const orders = ordersSnapshot.docs.map((orderDoc) => ({ id: orderDoc.id, ...orderDoc.data() }));
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
 
-    // تحديث إحصائيات الكاترينج
-    const syncCatering = () => {
-      if (typeof window !== "undefined") {
-        const storedCategories = window.localStorage.getItem("cateringCategories");
-        const storedProducts = window.localStorage.getItem("products");
-        
-        if (storedCategories && storedProducts) {
-          try {
-            const categories = JSON.parse(storedCategories);
-            const products = JSON.parse(storedProducts);
-            
-            // حساب المنتجات الفعلية لكل تصنيف
-            const details = categories.map((cat: Category) => {
-              const actualProducts = products.filter((product: Product) => 
-                product.category === cat.name && product.active === true
-              );
-              return {
-                name: cat.name,
-                productCount: actualProducts.length
-              };
-            });
-            
-            const totalProducts = details.reduce((sum: number, cat: { name: string; productCount: number }) => sum + cat.productCount, 0);
-            setCateringStats({
-              categories: categories.length,
-              totalProducts,
-              details
-            });
-          } catch {
-            setCateringStats({ categories: 0, totalProducts: 0, details: [] });
-          }
-        } else {
-          setCateringStats({ categories: 0, totalProducts: 0, details: [] });
-        }
+        const todayOrders = orders.filter((order) => {
+          const orderDate = getOrderDate(order as Record<string, any>);
+          return orderDate ? orderDate >= todayStart : false;
+        });
+
+        const sales = orders
+          .filter((order) => isCompletedOrder((order as Record<string, any>).status))
+          .reduce((sum, order) => sum + getOrderPricing(order).total, 0);
+
+        setOrdersStats({
+          total: orders.length,
+          today: todayOrders.length,
+          sales,
+        });
+
+        const products = productsSnapshot.docs.map((productDoc) => ({
+          id: productDoc.id,
+          ...productDoc.data(),
+        })) as Product[];
+        const categories = categoriesSnapshot.docs.map((categoryDoc) => ({
+          id: categoryDoc.id,
+          ...categoryDoc.data(),
+        })) as Array<Category & { id: string }>;
+
+        const activeProducts = products.filter((product) => product.active !== false && product.isHidden !== true);
+        const details = categories.map((category) => ({
+          name: category.name,
+          productCount: activeProducts.filter((product) => {
+            const productCategories = Array.isArray(product.categories) && product.categories.length > 0
+              ? product.categories
+              : [product.category].filter(Boolean);
+
+            return productCategories.includes(category.name);
+          }).length,
+        }));
+
+        setCateringStats({
+          categories: categories.length,
+          totalProducts: activeProducts.length,
+          details,
+        });
+      } catch (error) {
+        console.error('Error syncing admin dashboard stats:', error);
+        setUserCount(0);
+        setOrdersStats({ total: 0, today: 0, sales: 0 });
+        setCateringStats({ categories: 0, totalProducts: 0, details: [] });
       }
     };
 
-    window.addEventListener("storage", syncCatering);
-    
-    // Initial sync and periodic updates
-    syncOrders(); // Initial call
-    syncCatering();
-    
-    // مراقبة دورية لضمان تحديث الإحصائيات
+    window.addEventListener("usersUpdated", syncDashboardStats);
+    syncDashboardStats();
+
     const statsInterval = setInterval(() => {
-      syncOrders(); // Will be async
-      syncCatering();
-      void syncCount();
-    }, 10000); // كل 10 ثواني
+      void syncDashboardStats();
+    }, 10000);
     
     return () => {
-      window.removeEventListener("usersUpdated", syncCount);
-      window.removeEventListener("storage", syncCatering);
+      window.removeEventListener("usersUpdated", syncDashboardStats);
       clearInterval(statsInterval);
     };
   }, []);
