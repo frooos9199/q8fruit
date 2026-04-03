@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../lib/firebase";
-import { getUserProfile, updateUserProfile, logoutUser } from "../../lib/auth";
+import { getUserProfile, normalizeUserProfile, updateUserProfile, logoutUser } from "../../lib/auth";
 import { useRouter } from "next/navigation";
 import BackToHome from "../../components/BackToHome";
 
@@ -47,19 +47,21 @@ export default function AccountPage() {
             const currentUser = window.localStorage.getItem("currentUser");
             if (currentUser) {
               const parsed = JSON.parse(currentUser);
-              setUser({
-                uid: parsed.uid,
+              const normalizedProfile = normalizeUserProfile({
+                ...parsed,
+                uid: parsed.uid || firebaseUser.uid,
                 name: parsed.name || firebaseUser.displayName || "",
                 email: parsed.email || firebaseUser.email || "",
                 phone: parsed.phone || "",
                 address: parsed.address || "",
-                role: parsed.role === "مدير" ? "admin" : "user",
+                role: parsed.role,
                 active: true,
-              });
+              }, firebaseUser.uid);
+              setUser(normalizedProfile);
               setForm({
-                name: parsed.name || firebaseUser.displayName || "",
-                phone: parsed.phone || "",
-                address: parsed.address || "",
+                name: normalizedProfile.name,
+                phone: normalizedProfile.phone,
+                address: normalizedProfile.address || "",
               });
             }
           }

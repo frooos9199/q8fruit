@@ -22,6 +22,41 @@ export interface UserProfile {
   updatedAt: Date;
 }
 
+const normalizeString = (value: unknown, fallback = ''): string => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return fallback;
+};
+
+const normalizeAddress = (value: unknown): string => {
+  if (typeof value === 'string') return value;
+  if (value && typeof value === 'object') {
+    const candidate = value as Record<string, unknown>;
+    return normalizeString(
+      candidate.fullAddress ?? candidate.address ?? candidate.name ?? candidate.label,
+      ''
+    );
+  }
+  return '';
+};
+
+export const normalizeUserProfile = (raw: Partial<UserProfile> | Record<string, unknown>, uidFallback = ''): UserProfile => {
+  const roleValue = raw.role;
+  const normalizedRole = roleValue === 'admin' || roleValue === 'مدير' ? 'admin' : 'user';
+
+  return {
+    uid: normalizeString(raw.uid, uidFallback),
+    name: normalizeString(raw.name),
+    email: normalizeString(raw.email),
+    phone: normalizeString(raw.phone),
+    address: normalizeAddress(raw.address),
+    role: normalizedRole,
+    active: raw.active !== false,
+    createdAt: raw.createdAt instanceof Date ? raw.createdAt : new Date(),
+    updatedAt: raw.updatedAt instanceof Date ? raw.updatedAt : new Date(),
+  };
+};
+
 // تسجيل مستخدم جديد
 export const registerUser = async (userData: {
   name: string;
@@ -68,7 +103,7 @@ export const registerUser = async (userData: {
 
     await setDoc(doc(db, 'users', userCredential.user.uid), userProfile);
 
-    return { user: userCredential.user, profile: userProfile };
+    return { user: userCredential.user, profile: normalizeUserProfile(userProfile, userCredential.user.uid) };
   } catch (error: unknown) {
     // ترجمة رسائل الخطأ
     const err = error as { code?: string };
@@ -97,7 +132,7 @@ export const loginUser = async (email: string, password: string) => {
       throw new Error('بيانات المستخدم غير موجودة');
     }
 
-    const profile = userDoc.data() as UserProfile;
+    const profile = normalizeUserProfile(userDoc.data() as UserProfile, userCredential.user.uid);
     
     // التحقق من أن الحساب مفعل
     if (!profile.active) {
@@ -163,5 +198,5 @@ export const getUserProfile = async (uid: string): Promise<UserProfile | null> =
   if (!db) throw new Error('Firebase غير مهيأ');
   
   const userDoc = await getDoc(doc(db, 'users', uid));
-  return userDoc.exists() ? userDoc.data() as UserProfile : null;
+  return userDoc.exists() ? normalizeUserProfile(userDoc.data() as UserProfile, uid) : null;
 };
