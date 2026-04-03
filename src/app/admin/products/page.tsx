@@ -229,8 +229,10 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">إدارة المنتجات</h1>
-      <p>هنا يمكنك إضافة وتعديل وحذف المنتجات والوحدات.</p>
+      <div className="mb-6 text-center lg:text-right">
+        <h1 className="mb-4 bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-2xl font-bold text-transparent">إدارة المنتجات</h1>
+        <p className="text-slate-600">إدارة المنتجات والاستيراد والتصدير وترتيب العرض داخل الموقع.</p>
+      </div>
 
       <div className="flex gap-4 my-6">
         <button onClick={handleExportExcel} className="px-4 py-2 rounded bg-emerald-700 text-white font-bold hover:bg-emerald-900">📈 تحميل باكاب Excel</button>

@@ -65,21 +65,21 @@ export default function WhatsAppSettings() {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700">
+    <div className="rounded-2xl border border-emerald-100 bg-white/92 p-6 shadow-[0_20px_60px_rgba(15,118,110,0.10)] backdrop-blur-sm">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-xl flex items-center justify-center">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-100">
           <span className="text-2xl">📱</span>
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white">أرقام الواتساب</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">إدارة أرقام استقبال الفواتير</p>
+          <h2 className="text-xl font-bold text-slate-800">أرقام الواتساب</h2>
+          <p className="text-sm text-slate-600">إدارة أرقام استقبال الفواتير</p>
         </div>
       </div>
 
       {/* قائمة الأرقام الحالية */}
       <div className="space-y-3 mb-6">
         {whatsappNumbers.map((number, index) => (
-          <div key={index} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 rounded-xl p-4">
+          <div key={index} className="flex items-center justify-between rounded-xl bg-slate-50 p-4 border border-slate-200">
             <div className="flex items-center gap-3">
               <span className="text-green-600 text-xl">📞</span>
               <span className="font-mono text-lg">+{number}</span>
@@ -100,8 +100,8 @@ export default function WhatsAppSettings() {
       </div>
 
       {/* إضافة رقم جديد */}
-      <div className="border-t border-gray-200 dark:border-gray-600 pt-6">
-        <h3 className="font-semibold text-gray-800 dark:text-white mb-3">إضافة رقم جديد</h3>
+      <div className="border-t border-slate-200 pt-6">
+        <h3 className="mb-3 font-semibold text-slate-800">إضافة رقم جديد</h3>
         <div className="flex gap-3">
           <div className="flex-1">
             <input
@@ -109,7 +109,7 @@ export default function WhatsAppSettings() {
               value={newNumber}
               onChange={(e) => setNewNumber(e.target.value)}
               placeholder="مثال: 50540999 أو 96550540999"
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-emerald-500"
             />
           </div>
           <button
@@ -121,16 +121,16 @@ export default function WhatsAppSettings() {
             إضافة
           </button>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+        <p className="mt-2 text-xs text-slate-500">
           * سيتم إضافة كود الكويت (965) تلقائياً إذا لم يكن موجود
         </p>
       </div>
 
       {/* معلومات إضافية */}
-      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800">
+      <div className="mt-6 rounded-xl border border-cyan-200 bg-cyan-50 p-4">
         <div className="flex items-start gap-3">
           <span className="text-blue-600 text-xl">ℹ️</span>
-          <div className="text-sm text-blue-800 dark:text-blue-200">
+          <div className="text-sm text-cyan-900">
             <p className="font-semibold mb-1">كيف يعمل النظام:</p>
             <ul className="space-y-1 text-xs">
               <li>• عند تأكيد أي طلب، ستصل الفاتورة للرقم الرئيسي</li>

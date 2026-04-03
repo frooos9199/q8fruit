@@ -10,25 +10,25 @@ export default function OrdersPage() {
           <span className="text-3xl">📋</span>
           إدارة الطلبات والفواتير
         </h1>
-        <p className="text-gray-600 dark:text-gray-400 text-sm lg:text-base">
+        <p className="text-sm text-slate-600 lg:text-base">
           عرض وإدارة جميع الطلبات مع إمكانية إرسال الفواتير عبر الواتساب
         </p>
       </div>
 
       {/* معلومات مهمة */}
-      <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-blue-900 dark:to-green-900 rounded-xl p-4 border border-blue-200 dark:border-blue-700">
+      <div className="rounded-xl border border-emerald-100 bg-gradient-to-r from-cyan-50 via-white to-emerald-50 p-4 shadow-sm">
         <div className="flex items-center gap-3 mb-2">
           <span className="text-2xl">📱</span>
-          <h3 className="font-bold text-blue-800 dark:text-blue-200">ميزة إرسال الفواتير عبر الواتساب</h3>
+          <h3 className="font-bold text-cyan-800">ميزة إرسال الفواتير عبر الواتساب</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div className="flex items-center gap-2">
             <span>👨💼</span>
-            <span className="text-gray-700 dark:text-gray-300">إرسال للإدارة: لمتابعة الطلبات</span>
+            <span className="text-slate-700">إرسال للإدارة: لمتابعة الطلبات</span>
           </div>
           <div className="flex items-center gap-2">
             <span>👤</span>
-            <span className="text-gray-700 dark:text-gray-300">إرسال للعميل: فاتورة مفصلة</span>
+            <span className="text-slate-700">إرسال للعميل: فاتورة مفصلة</span>
           </div>
         </div>
       </div>

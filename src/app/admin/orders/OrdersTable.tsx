@@ -370,30 +370,30 @@ function OrdersTable() {
     <div className="space-y-6">
       {/* إحصائيات سريعة */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-xl p-4 text-center border border-blue-200 dark:border-blue-700">
+        <div className="rounded-xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-sky-100 p-4 text-center">
           <div className="text-2xl mb-2">📦</div>
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">إجمالي الطلبات</div>
-          <div className="text-xl font-bold text-blue-600 dark:text-blue-400">{orders.length}</div>
+          <div className="text-sm font-medium text-slate-600">إجمالي الطلبات</div>
+          <div className="text-xl font-bold text-cyan-700">{orders.length}</div>
         </div>
-        <div className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-xl p-4 text-center border border-green-200 dark:border-green-700">
+        <div className="rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-teal-100 p-4 text-center">
           <div className="text-2xl mb-2">✅</div>
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">مكتملة</div>
-          <div className="text-xl font-bold text-green-600 dark:text-green-400">{orders.filter(o => o.status === 'مكتمل').length}</div>
+          <div className="text-sm font-medium text-slate-600">مكتملة</div>
+          <div className="text-xl font-bold text-emerald-700">{orders.filter(o => o.status === 'مكتمل').length}</div>
         </div>
-        <div className="bg-gradient-to-r from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 rounded-xl p-4 text-center border border-orange-200 dark:border-orange-700">
+        <div className="rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-orange-100 p-4 text-center">
           <div className="text-2xl mb-2">⏳</div>
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">قيد التنفيذ</div>
-          <div className="text-xl font-bold text-orange-600 dark:text-orange-400">{orders.filter(o => o.status === 'قيد التنفيذ').length}</div>
+          <div className="text-sm font-medium text-slate-600">قيد التنفيذ</div>
+          <div className="text-xl font-bold text-amber-700">{orders.filter(o => o.status === 'قيد التنفيذ').length}</div>
         </div>
-        <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-xl p-4 text-center border border-purple-200 dark:border-purple-700">
+        <div className="rounded-xl border border-teal-200 bg-gradient-to-r from-teal-50 via-white to-cyan-100 p-4 text-center">
           <div className="text-2xl mb-2">💰</div>
-          <div className="text-sm font-medium text-gray-600 dark:text-gray-300">إجمالي المبيعات</div>
-          <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{orders.reduce((sum, o) => sum + getOrderPricing(o).total, 0).toFixed(3)} د.ك</div>
+          <div className="text-sm font-medium text-slate-600">إجمالي المبيعات</div>
+          <div className="text-lg font-bold text-teal-700">{orders.reduce((sum, o) => sum + getOrderPricing(o).total, 0).toFixed(3)} د.ك</div>
         </div>
       </div>
 
       {/* جدول الطلبات */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden border border-gray-200 dark:border-gray-700">
+      <div className="overflow-hidden rounded-2xl border border-emerald-100 bg-white/92 shadow-[0_20px_60px_rgba(15,118,110,0.10)] backdrop-blur-sm">
         <div className="p-6 bg-gradient-to-r from-green-500 to-blue-500">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <span>📋</span>
@@ -403,35 +403,35 @@ function OrdersTable() {
         
         <div className="overflow-x-auto">
           <table className="min-w-full">
-            <thead className="bg-gray-50 dark:bg-gray-700">
+            <thead className="bg-slate-50">
               <tr>
-                <th className="p-4 text-right font-semibold text-gray-700 dark:text-gray-300">رقم الطلب</th>
-                <th className="p-4 text-right font-semibold text-gray-700 dark:text-gray-300">العميل</th>
-                <th className="p-4 text-right font-semibold text-gray-700 dark:text-gray-300">الهاتف</th>
-                <th className="p-4 text-right font-semibold text-gray-700 dark:text-gray-300">الإجمالي</th>
-                <th className="p-4 text-right font-semibold text-gray-700 dark:text-gray-300">الحالة</th>
-                <th className="p-4 text-right font-semibold text-gray-700 dark:text-gray-300">التاريخ</th>
-                <th className="p-4 text-center font-semibold text-gray-700 dark:text-gray-300">الإجراءات</th>
+                <th className="p-4 text-right font-semibold text-slate-700">رقم الطلب</th>
+                <th className="p-4 text-right font-semibold text-slate-700">العميل</th>
+                <th className="p-4 text-right font-semibold text-slate-700">الهاتف</th>
+                <th className="p-4 text-right font-semibold text-slate-700">الإجمالي</th>
+                <th className="p-4 text-right font-semibold text-slate-700">الحالة</th>
+                <th className="p-4 text-right font-semibold text-slate-700">التاريخ</th>
+                <th className="p-4 text-center font-semibold text-slate-700">الإجراءات</th>
               </tr>
             </thead>
             <tbody>
               {sortedOrders.map((order, index) => (
-                <tr key={order.id} className={`border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'}`}>
-                  <td className="p-4 font-bold text-blue-600 dark:text-blue-400">{getOrderDisplayNumber(order)}</td>
+                <tr key={order.id} className={`border-b border-slate-200 transition-colors hover:bg-emerald-50/60 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
+                  <td className="p-4 font-bold text-cyan-700">{getOrderDisplayNumber(order)}</td>
                   <td className="p-4 font-medium">{order.customer}</td>
-                  <td className="p-4 text-gray-600 dark:text-gray-400">{order.phone || 'غير محدد'}</td>
-                  <td className="p-4 font-bold text-green-600 dark:text-green-400">{getOrderPricing(order).total.toFixed(3)} د.ك</td>
+                  <td className="p-4 text-slate-600">{order.phone || 'غير محدد'}</td>
+                  <td className="p-4 font-bold text-emerald-700">{getOrderPricing(order).total.toFixed(3)} د.ك</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                      order.status === 'مكتمل' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
-                      order.status === 'قيد التنفيذ' ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200' :
-                      order.status === 'جديد' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
-                      'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                      order.status === 'مكتمل' ? 'bg-emerald-100 text-emerald-800' :
+                      order.status === 'قيد التنفيذ' ? 'bg-amber-100 text-amber-800' :
+                      order.status === 'جديد' ? 'bg-cyan-100 text-cyan-800' :
+                      'bg-red-100 text-red-800'
                     }`}>
                       {order.status}
                     </span>
                   </td>
-                  <td className="p-4 text-gray-600 dark:text-gray-400">{formatDateTime(order.date)}</td>
+                  <td className="p-4 text-slate-600">{formatDateTime(order.date)}</td>
                   <td className="p-4">
                     <div className="flex flex-wrap gap-2 justify-center">
                       {/* تعديل */}
@@ -509,8 +509,8 @@ function OrdersTable() {
           {orders.length === 0 && (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📦</div>
-              <h3 className="text-xl font-semibold text-gray-600 dark:text-gray-400 mb-2">لا توجد طلبات</h3>
-              <p className="text-gray-500 dark:text-gray-500">لم يتم إنشاء أي طلبات بعد</p>
+              <h3 className="text-xl font-semibold text-slate-600 mb-2">لا توجد طلبات</h3>
+              <p className="text-slate-500">لم يتم إنشاء أي طلبات بعد</p>
             </div>
           )}
         </div>

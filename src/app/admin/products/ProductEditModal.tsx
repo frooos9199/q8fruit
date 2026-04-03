@@ -169,9 +169,9 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg min-w-[320px] max-w-[600px] max-h-[90vh] overflow-y-auto rtl">
-        <h2 className="text-xl font-bold mb-4 text-center">تعديل المنتج</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="rtl max-h-[90vh] min-w-[320px] max-w-[600px] overflow-y-auto rounded-2xl border border-white/80 bg-white/95 p-6 shadow-2xl">
+        <h2 className="mb-4 text-center text-xl font-bold text-slate-800">تعديل المنتج</h2>
 
         <div className="flex flex-col gap-3">
           <label className="mb-2">
@@ -200,7 +200,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               ))}
               <button
                 type="button"
-                className="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded font-bold flex items-center gap-2 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-2 rounded-xl bg-cyan-600 px-3 py-2 font-bold text-white transition-colors hover:bg-cyan-700 disabled:opacity-50"
                 onClick={() => fileInput.current?.click()}
                 disabled={uploading}
               >
@@ -238,7 +238,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
               required
             />
           </label>
@@ -249,7 +249,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               name="category"
               value={form.category}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
               required
             >
               <option value="">اختر الفئة</option>

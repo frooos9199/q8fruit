@@ -67,12 +67,12 @@ export default function DeliverySettings() {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-white dark:bg-gray-900 p-6 rounded shadow">
-      <h2 className="text-xl font-bold mb-4">إعدادات التوصيل</h2>
+    <div className="mx-auto max-w-md rounded-2xl border border-emerald-100 bg-white/92 p-6 shadow-[0_20px_60px_rgba(15,118,110,0.10)] backdrop-blur-sm">
+      <h2 className="mb-4 text-xl font-bold text-slate-800">إعدادات التوصيل</h2>
       <label className="block mb-3">
         <span className="font-semibold">ملاحظة التوصيل (تظهر في السلة والفاتورة):</span>
         <textarea
-          className="w-full border rounded p-2 mt-1 min-h-[60px]"
+          className="mt-1 min-h-[60px] w-full rounded-xl border border-slate-300 p-3"
           value={deliveryNote}
           onChange={e => setDeliveryNote(e.target.value)}
           placeholder="مثال: التوصيل خلال ساعتين أو حسب الاتفاق..."
@@ -82,7 +82,7 @@ export default function DeliverySettings() {
         <span className="font-semibold">وقت التوصيل (يظهر بجانب التوصيل):</span>
         <input
           type="text"
-          className="w-full border rounded p-2 mt-1"
+          className="mt-1 w-full rounded-xl border border-slate-300 p-3"
           value={deliveryTime}
           onChange={e => {
             setDeliveryTime(e.target.value);
@@ -95,7 +95,7 @@ export default function DeliverySettings() {
         <span className="font-semibold">قيمة التوصيل (د.ك):</span>
         <input
           type="number"
-          className="w-full border rounded p-2 mt-1"
+          className="mt-1 w-full rounded-xl border border-slate-300 p-3"
           value={deliveryPrice}
           onChange={e => {
             const val = Number(e.target.value);
@@ -105,13 +105,13 @@ export default function DeliverySettings() {
           min={0}
           step={0.1}
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="mt-1 text-xs text-slate-500">
           💡 يتم الحفظ تلقائياً في Firebase للتطبيق
         </p>
       </label>
       <button
         onClick={handleSave}
-        className="px-4 py-2 bg-green-600 text-white rounded font-bold mt-2"
+        className="mt-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-2 font-bold text-white"
       >
         حفظ
       </button>

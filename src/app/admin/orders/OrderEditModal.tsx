@@ -35,9 +35,9 @@ export default function OrderEditModal({ order, onSave, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg min-w-[320px]">
-        <h2 className="text-xl font-bold mb-4">تعديل الطلب</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="min-w-[320px] rounded-2xl border border-white/80 bg-white/95 p-6 shadow-2xl">
+        <h2 className="mb-4 text-xl font-bold text-slate-800">تعديل الطلب</h2>
         <div className="flex flex-col gap-3">
           <label>
             اسم العميل
@@ -45,7 +45,7 @@ export default function OrderEditModal({ order, onSave, onClose }: Props) {
               name="customer"
               value={form.customer}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
             />
           </label>
           <label>
@@ -55,7 +55,7 @@ export default function OrderEditModal({ order, onSave, onClose }: Props) {
               type="number"
               value={form.total}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
             />
           </label>
           <label>
@@ -64,7 +64,7 @@ export default function OrderEditModal({ order, onSave, onClose }: Props) {
               name="status"
               value={form.status}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
             >
               <option value="جديد">جديد</option>
               <option value="قيد التنفيذ">قيد التنفيذ</option>
@@ -79,20 +79,20 @@ export default function OrderEditModal({ order, onSave, onClose }: Props) {
               type="date"
               value={form.date}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
             />
           </label>
         </div>
         <div className="flex gap-2 justify-end mt-6">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-400 text-white"
+            className="rounded-xl bg-slate-400 px-4 py-2 text-white"
           >
             إلغاء
           </button>
           <button
             onClick={() => onSave(form)}
-            className="px-4 py-2 rounded bg-green-600 text-white"
+            className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-2 text-white"
           >
             حفظ
           </button>

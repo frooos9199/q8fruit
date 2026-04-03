@@ -99,7 +99,7 @@ export default function CateringTable() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-6">
+    <div className="rounded-2xl border border-emerald-100 bg-white/92 p-6 shadow-[0_20px_60px_rgba(15,118,110,0.10)] backdrop-blur-sm">
       <div className="mb-6">
         <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">إضافة تصنيف جديد</h3>
         <div className="flex gap-3">
@@ -109,7 +109,7 @@ export default function CateringTable() {
             onChange={e => setNewCategory(e.target.value)}
             onKeyPress={e => e.key === 'Enter' && addCategory()}
             placeholder="اسم التصنيف الجديد"
-            className="flex-1 rounded-xl p-3 border-2 border-gray-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:border-green-500 focus:outline-none transition-colors"
+            className="flex-1 rounded-xl border-2 border-slate-200 bg-white p-3 text-slate-900 placeholder-slate-400 transition-colors focus:border-emerald-500 focus:outline-none"
           />
           <button
             onClick={addCategory}
@@ -123,21 +123,21 @@ export default function CateringTable() {
         </div>
       </div>
       
-      <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-slate-600">
+      <div className="overflow-x-auto rounded-xl border border-slate-200">
         <table className="min-w-full">
           <thead>
-            <tr className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900">
-              <th className="p-4 text-right font-bold text-gray-800 dark:text-gray-200">الصورة</th>
-              <th className="p-4 text-right font-bold text-gray-800 dark:text-gray-200">اسم التصنيف</th>
-              <th className="p-4 text-center font-bold text-gray-800 dark:text-gray-200">عدد المنتجات</th>
-              <th className="p-4 text-center font-bold text-gray-800 dark:text-gray-200">الإجراءات</th>
+            <tr className="bg-gradient-to-r from-emerald-50 via-white to-cyan-50">
+              <th className="p-4 text-right font-bold text-slate-800">الصورة</th>
+              <th className="p-4 text-right font-bold text-slate-800">اسم التصنيف</th>
+              <th className="p-4 text-center font-bold text-slate-800">عدد المنتجات</th>
+              <th className="p-4 text-center font-bold text-slate-800">الإجراءات</th>
             </tr>
           </thead>
           <tbody>
             {categories.map((cat, index) => (
-              <tr key={cat.id} className={`border-b border-gray-200 dark:border-slate-600 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors ${index % 2 === 0 ? 'bg-white dark:bg-slate-800' : 'bg-gray-50 dark:bg-slate-750'}`}>
+              <tr key={cat.id} className={`border-b border-slate-200 transition-colors hover:bg-emerald-50/60 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/60'}`}>
                 <td className="p-4">
-                  <div className="w-16 h-12 rounded-lg overflow-hidden bg-gray-100 dark:bg-slate-600 flex items-center justify-center">
+                  <div className="flex h-12 w-16 items-center justify-center overflow-hidden rounded-lg bg-slate-100">
                     {cat.image ? (
                       <img src={cat.image} alt={cat.name} className="w-full h-full object-cover" />
                     ) : (
@@ -148,10 +148,10 @@ export default function CateringTable() {
                   </div>
                 </td>
                 <td className="p-4">
-                  <span className="font-bold text-lg text-gray-800 dark:text-gray-200">{cat.name}</span>
+                  <span className="font-bold text-lg text-slate-800">{cat.name}</span>
                 </td>
                 <td className="p-4 text-center">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                  <span className="inline-flex items-center rounded-full bg-cyan-100 px-3 py-1 text-sm font-medium text-cyan-800">
                     {cat.products?.length || 0} منتج
                   </span>
                 </td>
@@ -181,9 +181,9 @@ export default function CateringTable() {
             ))}
             {categories.length === 0 && (
               <tr>
-                <td colSpan={4} className="p-8 text-center text-gray-500 dark:text-gray-400">
+                <td colSpan={4} className="p-8 text-center text-slate-500">
                   <div className="flex flex-col items-center gap-3">
-                    <svg className="w-12 h-12 text-gray-300 dark:text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                     <p className="text-lg font-medium">لا توجد تصنيفات حالياً</p>

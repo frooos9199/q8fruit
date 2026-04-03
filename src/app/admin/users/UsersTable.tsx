@@ -196,9 +196,9 @@ export default function UsersTable() {
         </div>
       </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full border text-center">
+        <table className="min-w-full overflow-hidden rounded-xl border border-slate-200 text-center">
           <thead>
-            <tr className="bg-gray-100 dark:bg-gray-800">
+            <tr className="bg-slate-100 text-slate-700">
               <th className="p-2">الاسم</th>
               <th className="p-2">الإيميل</th>
               <th className="p-2">رقم الهاتف</th>
@@ -211,7 +211,7 @@ export default function UsersTable() {
           </thead>
           <tbody>
             {filteredUsers.map(user => (
-              <tr key={`user-${user.id}-${user.email}`} className="border-b">
+              <tr key={`user-${user.id}-${user.email}`} className="border-b border-slate-200 hover:bg-emerald-50/50 transition-colors">
                 <td className="p-2">{user.name}</td>
                 <td className="p-2">{user.email}</td>
                 <td className="p-2">{user.phone}</td>
@@ -232,16 +232,16 @@ export default function UsersTable() {
                   </button>
                 </td>
                 <td className="p-2">
-                  <button
-                    onClick={() => setEditUser(user)}
-                    className="px-3 py-1 rounded bg-blue-600 text-white"
+                    <button
+                      onClick={() => setEditUser(user)}
+                      className="rounded-lg bg-cyan-600 px-3 py-1 text-white"
                   >
                     تعديل
                   </button>
                 </td>
                 <td className="p-2">
                   {user.isAdmin ? (
-                    <span className="text-gray-400 text-xs">لا يمكن حذف المدير</span>
+                    <span className="text-slate-400 text-xs">لا يمكن حذف المدير</span>
                   ) : (
                     <button
                       onClick={() => handleDeleteUser(user.id)}

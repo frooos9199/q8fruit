@@ -58,9 +58,9 @@ export default function UserEditModal({ user, onSave, onClose }: Props) {
   }, [form, onSave]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-900 p-6 rounded shadow-lg min-w-[320px]">
-        <h2 className="text-xl font-bold mb-4">تعديل المستخدم</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="min-w-[320px] rounded-2xl border border-white/80 bg-white/95 p-6 shadow-2xl">
+        <h2 className="mb-4 text-xl font-bold text-slate-800">تعديل المستخدم</h2>
         <div className="flex flex-col gap-3">
           <label>
             الاسم
@@ -68,7 +68,7 @@ export default function UserEditModal({ user, onSave, onClose }: Props) {
               name="name"
               value={form.name}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
               required
             />
           </label>
@@ -79,7 +79,7 @@ export default function UserEditModal({ user, onSave, onClose }: Props) {
               type="email"
               value={form.email}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
               required
             />
           </label>
@@ -90,7 +90,7 @@ export default function UserEditModal({ user, onSave, onClose }: Props) {
               type="tel"
               value={form.phone}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
               required
             />
           </label>
@@ -100,7 +100,7 @@ export default function UserEditModal({ user, onSave, onClose }: Props) {
               name="role"
               value={form.role}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
             >
               <option value="عميل">عميل</option>
               <option value="مدير">مدير</option>
@@ -114,7 +114,7 @@ export default function UserEditModal({ user, onSave, onClose }: Props) {
               type="password"
               value={form.password}
               onChange={handleChange}
-              className="w-full border rounded p-2 mt-1"
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
               minLength={6}
             />
           </label>
@@ -123,14 +123,14 @@ export default function UserEditModal({ user, onSave, onClose }: Props) {
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded bg-gray-400 text-white hover:bg-gray-500 transition-colors"
+            className="rounded-xl bg-slate-400 px-4 py-2 text-white transition-colors hover:bg-slate-500"
           >
             إلغاء
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 transition-colors"
+            className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-2 text-white transition-colors hover:from-emerald-700 hover:to-teal-600"
           >
             حفظ
           </button>

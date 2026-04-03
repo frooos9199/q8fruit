@@ -416,7 +416,7 @@ export default function ProductTable() {
   return (
     <div>
       {loading && (
-        <div className="bg-blue-100 dark:bg-blue-800 border border-blue-400 text-blue-700 dark:text-blue-200 px-4 py-3 rounded mb-4 text-center">
+        <div className="mb-4 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-center text-cyan-800">
           <p className="font-bold">🔄 جاري التحميل من Firebase...</p>
         </div>
       )}
@@ -428,16 +428,16 @@ export default function ProductTable() {
         >
           + إضافة منتج
         </button>
-        <div className="bg-green-50 dark:bg-green-900 p-3 rounded-lg border border-green-200 dark:border-green-700">
-          <p className="text-sm text-green-700 dark:text-green-200 flex items-center gap-2">
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
+          <p className="flex items-center gap-2 text-sm text-emerald-700">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             إجمالي المنتجات: {products.length} | المعروضة: {filteredProducts.length}
           </p>
         </div>
-        <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
-          <p className="text-sm text-blue-700 dark:text-blue-200 flex items-center gap-2">
+        <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3">
+          <p className="flex items-center gap-2 text-sm text-cyan-700">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
@@ -483,7 +483,7 @@ export default function ProductTable() {
         ) : (
           <table className="min-w-full border text-center rtl">
             <thead>
-              <tr className="bg-gray-100 dark:bg-gray-800">
+              <tr className="bg-slate-100 text-slate-700">
                 <th className="p-2">↕️</th>
                 <th className="p-2">#</th>
                 <th className="p-2">الصورة</th>
@@ -502,7 +502,7 @@ export default function ProductTable() {
               {filteredProducts.map((product, index) => (
                 <tr
                   key={`product-${product.id}-${index}`}
-                  className={`border-b cursor-move hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${
+                  className={`border-b border-slate-200 cursor-move transition-colors hover:bg-emerald-50/60 ${
                     draggedItem === product.id ? 'opacity-50' : ''
                   }`}
                   draggable
