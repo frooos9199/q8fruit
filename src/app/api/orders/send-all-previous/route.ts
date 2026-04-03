@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getOrderDisplayNumber } from '../../../../lib/orderUtils';
 
 function getBrevoSender() {
   return {
@@ -39,6 +40,7 @@ export async function POST(request: Request) {
     // إرسال كل طلب على حدة مع تأخير بسيط لتجنب rate limit
     for (let i = 0; i < orders.length; i++) {
       const order = orders[i];
+      const displayNumber = getOrderDisplayNumber(order);
       
       try {
         // تنسيق بيانات المنتجات
@@ -86,7 +88,7 @@ export async function POST(request: Request) {
                 <!-- Order Info -->
                 <div style="background-color: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-right: 4px solid #3b82f6;">
                   <h2 style="color: #1e40af; margin-top: 0;">📋 معلومات الطلب</h2>
-                  <p style="margin: 5px 0;"><strong>رقم الطلب:</strong> ${order.orderNumber || order.id || 'غير محدد'}</p>
+                  <p style="margin: 5px 0;"><strong>رقم الطلب:</strong> ${displayNumber}</p>
                   <p style="margin: 5px 0;"><strong>التاريخ:</strong> ${order.date || 'غير محدد'}</p>
                   <p style="margin: 5px 0;"><strong>الحالة:</strong> <span style="background-color: #dbeafe; padding: 4px 8px; border-radius: 4px; color: #1e40af;">${order.status || 'مكتمل'}</span></p>
                 </div>
@@ -170,7 +172,7 @@ export async function POST(request: Request) {
               email: 'summit_kw@hotmail.com',
               name: 'Q8 Fruit Admin'
             }],
-            subject: `📦 طلب سابق #${order.orderNumber || order.id} من ${order.customer || order.customerName || 'عميل'}`,
+            subject: `📦 طلب سابق #${displayNumber} من ${order.customer || order.customerName || 'عميل'}`,
             htmlContent: htmlContent,
           }),
         });
@@ -181,7 +183,7 @@ export async function POST(request: Request) {
         } else {
           const errorData = await readBrevoError(res);
           results.failed++;
-          results.errors.push({ order: order.id || order.orderNumber, sender, error: errorData });
+          results.errors.push({ order: displayNumber, sender, error: errorData });
           console.error(`❌ فشل إرسال الطلب ${order.id}:`, errorData);
         }
 
@@ -192,7 +194,7 @@ export async function POST(request: Request) {
 
       } catch (error) {
         results.failed++;
-        results.errors.push({ order: order.id || order.orderNumber, error: String(error) });
+        results.errors.push({ order: displayNumber, error: String(error) });
         console.error(`❌ خطأ في إرسال الطلب ${order.id}:`, error);
       }
     }

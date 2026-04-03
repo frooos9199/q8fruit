@@ -100,20 +100,29 @@ export const getOrderPaymentMethod = (order: any) =>
   order.paymentMethod || order.paymentType || 'cash';
 
 export const getOrderDisplayNumber = (order: any) => {
-  if (order.orderNumber) {
-    return String(order.orderNumber);
+  if (order.orderNumber !== undefined && order.orderNumber !== null && String(order.orderNumber).trim()) {
+    return String(order.orderNumber).trim();
   }
 
-  if (typeof order.id === 'string' && order.id.startsWith('local_')) {
-    const normalizedLocalId = order.id.replace('local_', '');
-    return String(toNumber(normalizedLocalId, Number(normalizedLocalId) || 100));
+  if (typeof order.id === 'number' && Number.isFinite(order.id)) {
+    return String(order.id);
   }
 
-  if (order.id) {
-    return `#${String(order.id).slice(-8)}`;
+  if (typeof order.id === 'string') {
+    const trimmedId = order.id.trim();
+
+    if (trimmedId.startsWith('local_')) {
+      const normalizedLocalId = trimmedId.replace('local_', '');
+      const localNumber = Number(normalizedLocalId);
+      return Number.isFinite(localNumber) ? String(localNumber) : 'جديد';
+    }
+
+    if (/^\d+$/.test(trimmedId)) {
+      return trimmedId;
+    }
   }
 
-  return '#جديد';
+  return 'جديد';
 };
 
 export const getOrderDateLabel = (order: any) => {

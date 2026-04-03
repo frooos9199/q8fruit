@@ -27,12 +27,11 @@ export default function OffersPage() {
       if (typeof window === "undefined") return;
       try {
         const firebaseProducts = await getProductsFromFirebase();
-        if (Array.isArray(firebaseProducts) && firebaseProducts.length > 0) {
-          setProducts(firebaseProducts);
-          window.localStorage.setItem("products", JSON.stringify(firebaseProducts));
-          setLoading(false);
-          return;
-        }
+        const normalizedProducts = Array.isArray(firebaseProducts) ? firebaseProducts : [];
+        setProducts(normalizedProducts);
+        window.localStorage.setItem("products", JSON.stringify(normalizedProducts));
+        setLoading(false);
+        return;
       } catch {
         // ignore
       }

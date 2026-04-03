@@ -39,7 +39,6 @@ export default function ProductTable() {
 
     const loadProducts = async () => {
       try {
-        // 1️⃣ جرب تحميل من localStorage أولاً (عرض سريع)
         const stored = window.localStorage.getItem('products');
         if (stored) {
           const parsed = JSON.parse(stored);
@@ -52,7 +51,6 @@ export default function ProductTable() {
           setProducts(withOrder);
         }
 
-        // 2️⃣ تحميل من Firebase (المصدر الرئيسي) بدون Real-time listener
         if (db) {
           try {
             const snapshot = await getDocs(collection(db, 'products'));
@@ -65,13 +63,10 @@ export default function ProductTable() {
             firebaseProducts.sort((a, b) => (a.order || 0) - (b.order || 0));
             
             console.log('🔥 تحميل من Firebase:', firebaseProducts.length);
-            
-            // فقط تحديث إذا لم يكن هناك بيانات محلية
-            if (!stored) {
-              setProducts(firebaseProducts);
-              window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
-              window.localStorage.setItem('productsLastUpdate', new Date().toISOString());
-            }
+
+            setProducts(firebaseProducts);
+            window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
+            window.localStorage.setItem('productsLastUpdate', new Date().toISOString());
             setLoading(false);
           } catch (error) {
             console.error('❌ خطأ في تحميل Firebase:', error);

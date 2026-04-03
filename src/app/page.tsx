@@ -238,65 +238,13 @@ export default function Home() {
             )
           : [];
 
-        if (validFirebaseProducts.length > 0) {
-          console.log(`✅ عدد المنتجات من Firebase: ${validFirebaseProducts.length}`);
-          setProducts(validFirebaseProducts);
-          window.localStorage.setItem("products", JSON.stringify(validFirebaseProducts));
-          return;
-        }
-
-        console.warn('⚠️ لم يتم العثور على منتجات صالحة في Firebase، محاولة استخدام البيانات المحلية');
-
-        // جلب المنتجات من localStorage كخيار احتياطي
-        const storedProducts = window.localStorage.getItem("products");
-        
-        if (storedProducts) {
-          try {
-            const parsed = JSON.parse(storedProducts);
-            console.log(`📦 عدد المنتجات في localStorage: ${Array.isArray(parsed) ? parsed.length : 0}`);
-            
-            const validProducts = Array.isArray(parsed)
-              ? parsed.filter(
-                  (p) =>
-                    typeof p === "object" &&
-                    p !== null &&
-                    (typeof p.id === "number" || typeof p.id === "string") &&
-                    typeof p.name === "string" &&
-                    Array.isArray(p.units) &&
-                    p.units.length > 0 &&
-                    p.units.every(
-                      (u: Unit) =>
-                        typeof u === "object" &&
-                        u !== null &&
-                        typeof u.name === "string" &&
-                        typeof u.price === "number"
-                    ) &&
-                    typeof p.active === "boolean" &&
-                    typeof p.category === "string"
-                )
-              : [];
-            
-            console.log(`✅ عدد المنتجات الصالحة محلياً: ${validProducts.length}`);
-            setProducts(validProducts);
-            
-            if (validProducts.length === 0) {
-              console.warn('⚠️ لا توجد منتجات صالحة للعرض');
-            }
-            
-            return;
-          } catch (parseError) {
-            console.error('❌ خطأ في قراءة المنتجات من localStorage:', parseError);
-          }
-        } else {
-          console.warn('⚠️ لا توجد منتجات في localStorage');
-        }
-        
-        // في حالة عدم وجود منتجات، اعرض مصفوفة فارغة
-        setProducts([]);
+        console.log(`✅ عدد المنتجات المعتمدة من Firebase: ${validFirebaseProducts.length}`);
+        setProducts(validFirebaseProducts);
+        window.localStorage.setItem("products", JSON.stringify(validFirebaseProducts));
+        return;
       } catch (error) {
         console.error('❌ خطأ في جلب المنتجات:', error);
         
-        // محاولة أخيرة: جلب من localStorage مباشرة
         try {
           const fallbackProducts = window.localStorage.getItem("products");
           if (fallbackProducts) {

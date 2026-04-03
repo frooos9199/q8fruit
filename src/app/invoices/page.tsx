@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import InvoicePrint from "../admin/orders/InvoicePrint";
+import { getOrderDisplayNumber } from "../../lib/orderUtils";
 
 // دالة تنسيق التاريخ والوقت بشكل احترافي (مطابقة للأدمن)
 function formatDateTime(dateStr: string) {
@@ -89,7 +90,7 @@ export default function InvoicesPage() {
           {invoices.map((inv, i) => (
             <li key={i} className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 md:flex-row md:items-center md:justify-between">
               <div>
-                <span className="font-bold">رقم الفاتورة:</span> {inv.orderNumber || inv.id}
+                <span className="font-bold">رقم الفاتورة:</span> {getOrderDisplayNumber(inv)}
                 <span className="font-bold ml-4">المجموع:</span> {inv.total} د.ك
                 <span className="font-bold ml-4">تاريخ:</span> {formatDateTime(inv.date)}
               </div>
@@ -114,7 +115,7 @@ export default function InvoicesPage() {
               ×
             </button>
             <InvoicePrint
-              invoiceNumber={selectedInvoice.orderNumber || selectedInvoice.id}
+              invoiceNumber={getOrderDisplayNumber(selectedInvoice)}
               customer={selectedInvoice.userInfo?.name || selectedInvoice.customer || "عميل"}
               phone={selectedInvoice.userInfo?.phone || selectedInvoice.phone || ""}
               address={selectedInvoice.userInfo?.address || selectedInvoice.address || ""}

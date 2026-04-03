@@ -66,7 +66,28 @@ export const saveUserFcmToken = async (userId: string, token: string) => {
 
 export const fetchProductsFromFirebase = async () => {
   const snapshot = await getDocs(collection(db, 'products'));
-  const products = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  const products = snapshot.docs.map((doc) => {
+    const data = doc.data() as Record<string, any>;
+    const normalizedUnits = Array.isArray(data.units)
+      ? data.units
+          .map((unit: any) => ({
+            ...unit,
+            price: Number(unit?.price) || 0,
+          }))
+          .filter((unit: any) => unit.name)
+      : [];
+
+    return {
+      id: data.id ?? doc.id,
+      ...data,
+      units: normalizedUnits,
+      quantity: Number(data.quantity ?? 0) || 0,
+      order: Number(data.order ?? 0) || 0,
+      discount: Number(data.discount ?? 0) || 0,
+      image: data.image || (Array.isArray(data.images) ? data.images[0] : '') || '',
+      images: Array.isArray(data.images) ? data.images : (data.image ? [data.image] : []),
+    };
+  });
   return products.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 };
 
