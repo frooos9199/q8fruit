@@ -44,10 +44,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Show loading while checking admin status
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fffdf6] via-[#f7fbf7] to-[#eef7f2]">
         <div className="text-center">
-          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">جاري التحقق من الصلاحيات...</p>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
+          <p className="text-slate-600">جاري التحقق من الصلاحيات...</p>
         </div>
       </div>
     );
@@ -58,7 +58,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900" suppressHydrationWarning>
+    <div className="min-h-screen flex bg-gradient-to-br from-[#fffdf6] via-[#f7fbf7] to-[#eef7f2]" suppressHydrationWarning>
       {/* Mobile Sidebar Overlay */}
       {sidebarOpen && (
         <div 
@@ -69,13 +69,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       
       {/* Sidebar */}
       <aside className={`
-        fixed lg:static inset-y-0 left-0 z-50 w-72 sm:w-80 lg:w-64 bg-white dark:bg-gray-800 shadow-lg p-4 flex flex-col gap-4 transform transition-transform duration-300 ease-in-out
+        fixed lg:static inset-y-0 left-0 z-50 w-72 sm:w-80 lg:w-64 border-r border-emerald-100 bg-white/92 p-4 shadow-[0_20px_60px_rgba(15,118,110,0.12)] backdrop-blur-xl flex flex-col gap-4 transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* زر إغلاق القائمة على الموبايل */}
         <button
           onClick={() => setSidebarOpen(false)}
-          className="lg:hidden absolute top-4 right-4 p-2 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+          className="lg:hidden absolute top-4 right-4 rounded-full bg-emerald-50 p-2 text-slate-500 transition-all hover:bg-emerald-100 hover:text-emerald-700"
         >
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -84,7 +84,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         
         {/* شعار الموقع */}
         <div className="flex items-center justify-center mb-6 mt-12 lg:mt-0">
-          <div className="w-20 h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-green-100 to-blue-100 dark:from-green-800 dark:to-blue-800 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg">
+          <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-white to-cyan-50 shadow-[0_18px_40px_rgba(15,118,110,0.14)] lg:h-24 lg:w-24">
             {logo ? (
               <Image src={logo} alt="شعار الموقع" width={96} height={96} className="object-contain w-full h-full" />
             ) : (
@@ -109,12 +109,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
         
         {/* زر العودة للموقع */}
-        <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
+        <div className="mt-auto border-t border-emerald-100 pt-4">
           <a
             href="https://www.q8fruit.com" 
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-xl font-bold text-center transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="flex w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-3 text-center font-bold text-white shadow-lg shadow-emerald-200 transition-all duration-200 hover:scale-105 hover:from-emerald-700 hover:to-teal-600 hover:shadow-xl"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -127,21 +127,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-h-screen">
         {/* Mobile Header */}
-        <header className="lg:hidden bg-white dark:bg-gray-800 shadow-sm p-4 flex items-center justify-between sticky top-0 z-30">
+        <header className="sticky top-0 z-30 flex items-center justify-between border-b border-emerald-100 bg-white/90 p-4 shadow-sm backdrop-blur-xl lg:hidden">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-3 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 p-3 text-white shadow-lg shadow-emerald-200 transition-all duration-200 hover:scale-105 hover:from-emerald-700 hover:to-teal-600 hover:shadow-xl"
           >
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">لوحة الإدارة</h1>
+          <h1 className="bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-xl font-bold text-transparent">لوحة الإدارة</h1>
           <div className="w-12"></div> {/* Spacer */}
         </header>
         
         {/* Page Content */}
-        <div className="flex-1 p-4 lg:p-6 overflow-auto">
+        <div className="flex-1 overflow-auto p-4 lg:p-6">
           {children}
         </div>
       </main>
@@ -155,12 +155,12 @@ function NavLink({ href, icon, text, special = false, highlight = false }: { hre
     <Link 
       href={href} 
       className={`
-        py-3 px-4 rounded-xl font-medium transition-all duration-200 flex items-center gap-3 group
+        group flex items-center gap-3 rounded-xl px-4 py-3 font-medium transition-all duration-200
         ${special 
-          ? 'bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900 dark:to-purple-900 text-blue-600 dark:text-blue-400 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-800 dark:hover:to-purple-800 border border-blue-200 dark:border-blue-700' 
+          ? 'border border-cyan-200 bg-gradient-to-r from-cyan-50 to-sky-50 text-cyan-700 hover:from-cyan-100 hover:to-sky-100' 
           : highlight
-          ? 'bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-800 dark:to-cyan-800 text-blue-700 dark:text-blue-300 hover:from-blue-200 hover:to-cyan-200 dark:hover:from-blue-700 dark:hover:to-cyan-700 border-2 border-blue-400 dark:border-blue-500 shadow-md'
-          : 'hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900 text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400'
+          ? 'border-2 border-emerald-300 bg-gradient-to-r from-emerald-100 to-cyan-100 text-emerald-800 shadow-md shadow-emerald-100 hover:from-emerald-200 hover:to-cyan-200'
+          : 'text-slate-700 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-cyan-50 hover:text-emerald-700'
         }
         transform hover:scale-105 hover:shadow-md
       `}

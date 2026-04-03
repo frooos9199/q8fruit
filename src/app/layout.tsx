@@ -128,7 +128,7 @@ export default function RootLayout({
     <html lang="ar" dir="rtl">
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-        <meta name="theme-color" content="#10b981" />
+        <meta name="theme-color" content="#1f8a70" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -173,7 +173,7 @@ export default function RootLayout({
         )}
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-blue-50 to-green-50 dark:from-slate-900 dark:to-blue-900 overflow-x-hidden min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-[#fffdf6] via-[#f7fbf7] to-[#eef7f2] overflow-x-hidden min-h-screen text-slate-800`}
         style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
       >
         <AppDownloadBanner />

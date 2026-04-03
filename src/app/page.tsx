@@ -101,9 +101,9 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
 
   return (
     <div
-      className={`bg-white dark:bg-slate-800 rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 flex flex-col items-stretch border border-gray-100 dark:border-slate-700 transition-all duration-300 hover:scale-105 hover:shadow-2xl group backdrop-blur-sm`}
+      className={`group flex flex-col items-stretch rounded-xl border border-white/80 bg-white/92 p-3 shadow-[0_18px_40px_rgba(15,118,110,0.10)] backdrop-blur-sm transition-all duration-300 hover:scale-105 hover:shadow-2xl sm:rounded-2xl sm:p-4`}
     >
-      <div className={`${small ? 'w-full h-32 xs:h-36 sm:h-40 mb-2 sm:mb-3' : 'w-40 h-40 mb-4'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 flex items-center justify-center relative`}>
+      <div className={`${small ? 'w-full h-32 xs:h-36 sm:h-40 mb-2 sm:mb-3' : 'w-40 h-40 mb-4'} mx-auto rounded-xl sm:rounded-2xl overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-cyan-50 flex items-center justify-center relative`}>
         {product.images && product.images.length > 0 ? (
           <img
             src={product.images[imgIdx]}
@@ -133,7 +133,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
       </div>
-      <div className={`font-bold ${small ? 'text-sm sm:text-base mb-2' : 'text-lg mb-3'} text-gray-800 dark:text-gray-100 text-center line-clamp-2`}>{product.name}</div>
+      <div className={`font-bold ${small ? 'text-sm sm:text-base mb-2' : 'text-lg mb-3'} text-center text-slate-800 line-clamp-2`}>{product.name}</div>
       {/* اختيار الوحدة */}
       <div className="flex items-center justify-center gap-1 sm:gap-2 mb-2 sm:mb-3 flex-wrap">
         {product.units.map((unit, idx) => (
@@ -142,8 +142,8 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
             type="button"
             className={`flex items-center gap-1 text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 rounded-full border-2 transition-all duration-200 focus:outline-none shadow-sm min-w-[44px] sm:min-w-[52px] justify-center
               ${idx === selectedUnitIdx
-                ? 'border-green-500 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 text-green-700 dark:text-green-200 shadow-md'
-                : 'border-gray-300 dark:border-slate-600 bg-gray-50 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:border-green-300 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900'}
+                ? 'border-emerald-500 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 text-emerald-700 shadow-md'
+                : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-emerald-300 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-cyan-50'}
             `}
             onClick={() => setSelectedUnitIdx(idx)}
           >
@@ -164,7 +164,7 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
         >
           -
         </button>
-        <span className="w-8 sm:w-10 text-center font-bold text-lg sm:text-xl text-gray-800 dark:text-gray-100">{quantity}</span>
+        <span className="w-8 sm:w-10 text-center text-lg font-bold text-slate-800 sm:text-xl">{quantity}</span>
         <button
           type="button"
           className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white text-base sm:text-lg font-bold hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl"
@@ -181,11 +181,11 @@ function ProductCard({ product, quantities, handleQuantityChange, small = false 
           <span className="mx-1" />
           <span>{(selectedUnit?.price * quantity).toFixed(3)}</span>
           {quantity > 1 && (
-            <span className="text-xs text-gray-500 dark:text-gray-400 ml-1 sm:ml-2 bg-gray-100 dark:bg-slate-700 px-1 sm:px-2 py-0.5 rounded-full whitespace-nowrap">({selectedUnit?.price} × {quantity})</span>
+            <span className="ml-1 whitespace-nowrap rounded-full bg-slate-100 px-1 py-0.5 text-xs text-slate-500 sm:ml-2 sm:px-2">({selectedUnit?.price} × {quantity})</span>
           )}
         </span>
         {selectedUnit?.name && (
-          <span className="flex items-center gap-1 text-xs font-bold px-2 sm:px-3 py-1 rounded-full border-2 border-green-400 bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900 dark:to-blue-900 text-green-700 dark:text-green-200 shadow-sm transition-all">
+          <span className="flex items-center gap-1 rounded-full border-2 border-emerald-300 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 px-2 py-1 text-xs font-bold text-emerald-700 shadow-sm transition-all sm:px-3">
             <svg width="10" height="10" className="sm:w-3 sm:h-3" viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.2"/><circle cx="10" cy="10" r="4" fill="currentColor" /></svg>
             <span className="text-xs">{selectedUnit.name}</span>
           </span>
@@ -630,7 +630,7 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 dark:from-slate-900 dark:via-blue-900 dark:to-green-900 font-sans">
+    <div className="min-h-screen bg-gradient-to-br from-[#fffdf6] via-[#f7fbf7] to-[#eef7f2] font-sans">
       {/* رسالة ترحيبية */}
       {currentUser?.name && (
         <div className="w-full text-center py-3 sm:py-4 bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold text-sm sm:text-lg shadow-lg">
@@ -645,9 +645,9 @@ export default function Home() {
       {/* منيو جانبي والهيدر كما هو ... */}
       {menuOpen && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex">
-          <div className="w-72 bg-white dark:bg-slate-800 h-full shadow-2xl p-6 flex flex-col gap-4 animate-slideInRight border-r-4 border-green-500">
+          <div className="flex h-full w-72 flex-col gap-4 border-r-4 border-emerald-500 bg-white/95 p-6 shadow-2xl animate-slideInRight backdrop-blur-xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">القائمة</h3>
+              <h3 className="text-xl font-bold text-slate-800">القائمة</h3>
               <button onClick={() => setMenuOpen(false)} className="text-gray-500 hover:text-blue-500 text-3xl transition-colors">&times;</button>
             </div>
             {menuLinks.map((link) => (
@@ -655,7 +655,7 @@ export default function Home() {
                 <button
                   key={link.label}
                   onClick={link.onClick}
-                  className="flex items-center gap-3 w-full text-right px-4 py-3 rounded-xl text-lg font-semibold text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900 hover:text-green-600 transition-all duration-200 border border-transparent hover:border-green-200"
+                  className="flex w-full items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-right text-lg font-semibold text-slate-700 transition-all duration-200 hover:border-emerald-200 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-cyan-50 hover:text-emerald-700"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
@@ -663,7 +663,7 @@ export default function Home() {
                   {link.label}
                 </button>
               ) : (
-                <Link key={link.href} href={link.href} className="flex items-center gap-3 px-4 py-3 rounded-xl text-lg font-semibold text-gray-700 dark:text-gray-200 hover:bg-gradient-to-r hover:from-green-50 hover:to-blue-50 dark:hover:from-green-900 dark:hover:to-blue-900 hover:text-green-600 transition-all duration-200 border border-transparent hover:border-green-200">
+                <Link key={link.href} href={link.href} className="flex items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-lg font-semibold text-slate-700 transition-all duration-200 hover:border-emerald-200 hover:bg-gradient-to-r hover:from-emerald-50 hover:to-cyan-50 hover:text-emerald-700">
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
@@ -675,7 +675,7 @@ export default function Home() {
           <div className="flex-1" onClick={() => setMenuOpen(false)} />
         </div>
       )}
-      <header className="w-full flex items-center justify-between px-3 sm:px-6 py-3 sm:py-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg sticky top-0 z-30 border-b border-green-100 dark:border-green-900">
+      <header className="sticky top-0 z-30 flex w-full items-center justify-between border-b border-emerald-100 bg-white/92 px-3 py-3 shadow-lg backdrop-blur-xl sm:px-6 sm:py-4">
         <div className="flex items-center gap-2 sm:gap-4">
           <button onClick={() => setMenuOpen(true)} className="p-2 sm:p-2 rounded-xl bg-gradient-to-r from-green-500 to-blue-500 text-white hover:from-green-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl touch-manipulation">
             <svg width="18" height="18" className="sm:w-5 sm:h-5" fill="none" viewBox="0 0 24 24"><path stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
@@ -695,7 +695,7 @@ export default function Home() {
           ) : (
             <div className="text-center">
               <h1 className="text-base sm:text-2xl font-extrabold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">فكهاني الكويت</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium hidden sm:block">طازج • طبيعي • صحي</p>
+              <p className="hidden text-xs font-medium text-slate-500 sm:block">طازج • طبيعي • صحي</p>
             </div>
           )}
         </div>

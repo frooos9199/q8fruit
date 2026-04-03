@@ -38,7 +38,7 @@ export default function BottomNav() {
   return (
     <>
       <div className="h-20 sm:h-24" aria-hidden="true" />
-      <nav className="fixed bottom-0 inset-x-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-t border-gray-200/70 dark:border-slate-700">
+      <nav className="fixed bottom-0 inset-x-0 z-50 border-t border-emerald-100/80 bg-white/88 shadow-[0_-12px_30px_rgba(15,118,110,0.08)] backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-4">
           <div className="grid grid-cols-4 gap-2 py-3">
             {navItems.map((item) => {
@@ -49,8 +49,8 @@ export default function BottomNav() {
                   href={item.href}
                   className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-xs sm:text-sm font-semibold transition-all ${
                     isActive
-                      ? "text-white bg-gradient-to-r from-green-500 to-blue-500 shadow-lg"
-                      : "text-gray-600 dark:text-gray-200 hover:text-green-600"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-500 text-white shadow-lg shadow-emerald-200"
+                      : "text-slate-600 hover:bg-emerald-50/80 hover:text-emerald-700"
                   }`}
                 >
                   <span className={isActive ? "text-white" : "text-current"}>{item.icon}</span>
