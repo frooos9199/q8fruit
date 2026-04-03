@@ -10,6 +10,8 @@ import BackToHome from "../../components/BackToHome";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sendInvoiceToWhatsApp } from "../../lib/whatsappInvoice";
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { db } from '../../lib/firebase';
 
 interface CartItem {
   id: number;
@@ -223,23 +225,58 @@ export default function CartPage() {
 
       // إضافة الطلب إلى orders (للإدارة)
       const orders = JSON.parse(window.localStorage.getItem("orders") || "[]");
+      const normalizedProducts = cart.map(item => ({
+        productId: String(item.id),
+        name: item.name,
+        unit: item.unit,
+        price: item.price,
+        quantity: item.quantity,
+        total: item.price * item.quantity,
+        image: item.image || '',
+      }));
+
+      const addressText = userInfo.address.trim() || "سيتم التواصل لتحديد العنوان";
+
       const order = {
         id: orderNumber,
         orderNumber: orderNumber, // رقم موحد للفاتورة والطلبية
+        source: 'web',
         customer: userInfo.name,
+        customerName: userInfo.name,
+        customerEmail: userEmail || '',
         phone: userInfo.phone,
-        address: userInfo.address.trim() || "سيتم التواصل لتحديد العنوان",
+        phoneNumber: userInfo.phone,
+        address: addressText,
+        deliveryAddress: {
+          fullAddress: addressText,
+          notes: userNote.trim() || '',
+        },
+        delivery: {
+          address: addressText,
+          fullAddress: addressText,
+          notes: userNote.trim() || '',
+        },
+        userInfo: {
+          ...userInfo,
+          email: userEmail || '',
+        },
+        subtotal: total,
         total: invoice.total,
         deliveryFee: deliveryPrice,
         status: "جديد",
         date: invoice.date,
-        products: cart.map(item => ({
-          name: item.name,
-          unit: item.unit,
-          price: item.price,
-          quantity: item.quantity
-        })),
+        products: normalizedProducts,
+        items: normalizedProducts,
+        pricing: {
+          subtotal: total,
+          deliveryPrice,
+          total: invoice.total,
+        },
         paymentType: paymentType,
+        paymentMethod: paymentType,
+        deliveryNotes: userNote.trim() || undefined,
+        userNote: userNote.trim() || undefined,
+        timestamp: Date.now(),
         isGuest: !userEmail, // علامة للطلبات الضيوف
       };
       orders.push(order);
@@ -264,6 +301,23 @@ export default function CartPage() {
       import('../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
         syncAllDataToFirebase().catch(console.error);
       });
+
+      try {
+        if (db) {
+          await addDoc(collection(db, 'adminNotifications'), {
+            title: '📦 طلب جديد',
+            message: `طلب جديد من ${userInfo.name} - ${invoice.total.toFixed(3)} د.ك`,
+            type: 'new_order',
+            orderId: String(orderNumber),
+            customerName: userInfo.name,
+            phoneNumber: userInfo.phone,
+            read: false,
+            createdAt: serverTimestamp(),
+          });
+        }
+      } catch (notificationError) {
+        console.error('❌ خطأ في إنشاء إشعار الطلب:', notificationError);
+      }
 
       // إرسال الفاتورة عبر الواتساب تلقائياً
       const invoiceWithNote = {
@@ -317,7 +371,8 @@ export default function CartPage() {
             unit: item.unit,
             quantity: item.quantity,
             price: item.price,
-            total: item.price * item.quantity
+            total: item.price * item.quantity,
+            image: item.image || '',
           })),
           subtotal: total,
           deliveryPrice: deliveryPrice,

@@ -1,4 +1,5 @@
 import React from "react";
+import { getOrderAddress, getOrderPhone, getOrderPricing, getOrderProducts } from '../../../lib/orderUtils';
 
 interface InvoiceProduct {
   name: string;
@@ -31,6 +32,8 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
   paymentType,
 }) => {
   const paymentTypeLabel = paymentType === "knet" ? "دفع أونلاين" : "نقدي عند الاستلام";
+  const normalizedProducts = getOrderProducts({ products, deliveryFee, total });
+  const pricing = getOrderPricing({ products, deliveryFee, total });
   
   return (
     <div style={{
@@ -119,8 +122,8 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
         }}>
           <h3 style={{ margin: '0 0 15px 0', fontSize: 20, fontWeight: 'bold' }}>👤 معلومات العميل</h3>
           <div style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 8 }}>{customer}</div>
-          {phone && <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 5 }}>📱 {phone}</div>}
-          {address && <div style={{ fontSize: 16, opacity: 0.9 }}>📍 {address}</div>}
+          {phone && <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 5 }}>📱 {getOrderPhone({ phone })}</div>}
+          {address && <div style={{ fontSize: 16, opacity: 0.9 }}>📍 {getOrderAddress({ address })}</div>}
         </div>
         
         <div style={{
@@ -187,17 +190,22 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
               </tr>
             </thead>
             <tbody>
-              {products?.map((prod, idx) => (
+              {normalizedProducts.map((prod, idx) => (
                 <tr key={idx} style={{ 
                   background: idx % 2 === 0 ? '#f8fafc' : '#ffffff',
                   borderBottom: '1px solid #e2e8f0',
                   transition: 'all 0.3s ease'
                 }}>
-                  <td style={{ padding: 15, fontWeight: 'bold', color: '#2d3748' }}>{prod.name}</td>
+                  <td style={{ padding: 15, fontWeight: 'bold', color: '#2d3748' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {prod.image ? <img src={prod.image} alt={prod.name} style={{ width: 52, height: 52, objectFit: 'cover', borderRadius: 10, border: '1px solid #e2e8f0' }} /> : null}
+                      <span>{prod.name}</span>
+                    </div>
+                  </td>
                   <td style={{ padding: 15, textAlign: 'center', color: '#4a5568' }}>{prod.unit}</td>
                   <td style={{ padding: 15, textAlign: 'center', color: '#3182ce', fontWeight: 'bold' }}>{prod.price.toFixed(3)} د.ك</td>
                   <td style={{ padding: 15, textAlign: 'center', fontWeight: 'bold', color: '#2d3748' }}>{prod.quantity}</td>
-                  <td style={{ padding: 15, textAlign: 'center', fontWeight: 'bold', color: '#38a169', fontSize: 17 }}>{(prod.price * prod.quantity).toFixed(3)} د.ك</td>
+                  <td style={{ padding: 15, textAlign: 'center', fontWeight: 'bold', color: '#38a169', fontSize: 17 }}>{prod.total.toFixed(3)} د.ك</td>
                 </tr>
               ))}
               
@@ -214,7 +222,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
                 </td>
                 <td style={{ padding: 18, textAlign: 'center', fontWeight: 'bold', fontSize: 18 }}>-</td>
                 <td style={{ padding: 18, textAlign: 'center', fontWeight: 'bold', color: '#e17055', fontSize: 18 }}>
-                  {deliveryFee.toFixed(3)} د.ك
+                  {pricing.deliveryFee.toFixed(3)} د.ك
                 </td>
               </tr>
               
@@ -234,7 +242,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
                   fontWeight: 'bold',
                   fontSize: 20
                 }}>
-                  {products?.reduce((sum, p) => sum + (p.quantity || 0), 0)}
+                  {normalizedProducts.reduce((sum, p) => sum + (p.quantity || 0), 0)}
                 </td>
                 <td style={{ 
                   padding: 20, 
@@ -242,7 +250,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
                   fontWeight: 'bold',
                   fontSize: 24
                 }}>
-                  {(total + deliveryFee).toFixed(3)} د.ك
+                  {pricing.total.toFixed(3)} د.ك
                 </td>
               </tr>
             </tbody>

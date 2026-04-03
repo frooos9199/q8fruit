@@ -1,18 +1,30 @@
-import React from "react";
-
+import React, { useEffect, useRef } from "react";
+import {
+  getOrderAddress,
+  getOrderDisplayNumber,
+  getOrderEmail,
+  getOrderPaymentMethod,
+  getOrderPhone,
+  getOrderPricing,
+  getOrderProducts,
+} from '../../../lib/orderUtils';
 
 interface OrderProduct {
   name: string;
   unit: string;
   price: number;
   quantity: number;
+  total?: number;
+  image?: string;
 }
 
 interface InvoiceProps {
   order: {
     id: string;
+    orderNumber?: string;
     customer: string;
     phone?: string;
+    email?: string;
     address?: string;
     total: number;
     status: string;
@@ -24,9 +36,15 @@ interface InvoiceProps {
   onClose: () => void;
 }
 
-import { useEffect, useRef } from "react";
 const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order, onClose, autoPrint }) => {
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const pricing = getOrderPricing(order);
+  const products = getOrderProducts(order);
+  const orderPhone = getOrderPhone(order);
+  const orderEmail = getOrderEmail(order);
+  const orderAddress = getOrderAddress(order);
+  const paymentMethod = getOrderPaymentMethod(order);
+
   useEffect(() => {
     if (autoPrint && invoiceRef.current) {
       try {
@@ -97,11 +115,11 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
         <div className="header">
           <img src="/images/fruits.png" alt="شعار المتجر" className="logo" />
           <div className="invoice-title">🍎 متجر الفواكه والخضار</div>
-          <div className="invoice-number">فاتورة رقم #{1000 + (order.id ? Number(order.id) : 0)}</div>
+          <div className="invoice-number">فاتورة رقم {getOrderDisplayNumber(order)}</div>
           <div style={{marginTop: '15px', fontSize: '14px'}}>📅 {order.date}</div>
           {order.paymentType && (
             <div className="payment-badge" style={{marginTop: '10px'}}>
-              💳 {order.paymentType === "knet" ? "دفع أونلاين" : "نقدي عند الاستلام"}
+                💳 {paymentMethod === "knet" ? "دفع أونلاين" : "نقدي عند الاستلام"}
             </div>
           )}
         </div>
@@ -110,8 +128,9 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
         <div className="customer-info">
           <div className="customer-name">👤 {order.customer}</div>
           <div className="customer-details">
-            {order.phone && <div>📱 {order.phone}</div>}
-            {order.address && <div>📍 {order.address}</div>}
+              {orderPhone && <div>📱 {orderPhone}</div>}
+              {orderEmail && <div>📧 {orderEmail}</div>}
+              {orderAddress && <div>📍 {orderAddress}</div>}
           </div>
         </div>
 
@@ -129,26 +148,31 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
               </tr>
             </thead>
             <tbody>
-              {Array.isArray(order.products) && order.products.length > 0 ? (
+              {products.length > 0 ? (
                 <>
-                  {order.products.map((prod, idx) => (
+                {products.map((prod, idx) => (
                     <tr key={idx}>
-                      <td style={{fontWeight: 'bold'}}>{prod.name}</td>
+                        <td style={{fontWeight: 'bold'}}>
+                          <div style={{display: 'flex', alignItems: 'center', gap: '10px'}}>
+                            {prod.image ? <img src={prod.image} alt={prod.name} style={{width: '52px', height: '52px', objectFit: 'cover', borderRadius: '8px', border: '1px solid #e2e8f0'}} /> : null}
+                            <span>{prod.name}</span>
+                          </div>
+                        </td>
                       <td style={{textAlign: 'center'}}>{prod.unit}</td>
                       <td style={{textAlign: 'center', color: '#4299e1'}}>{prod.price.toFixed(3)} د.ك</td>
                       <td style={{textAlign: 'center', fontWeight: 'bold'}}>{prod.quantity}</td>
-                      <td style={{textAlign: 'center', fontWeight: 'bold', color: '#48bb78'}}>{(prod.price * prod.quantity).toFixed(3)} د.ك</td>
+                        <td style={{textAlign: 'center', fontWeight: 'bold', color: '#48bb78'}}>{prod.total.toFixed(3)} د.ك</td>
                     </tr>
                   ))}
                   <tr className="delivery-row">
                     <td colSpan={3} style={{textAlign: 'left', fontWeight: 'bold'}}>🚚 رسوم التوصيل</td>
                     <td style={{textAlign: 'center', fontWeight: 'bold'}}>-</td>
-                    <td style={{textAlign: 'center', fontWeight: 'bold'}}>{order.deliveryFee ? order.deliveryFee.toFixed(3) : '0.000'} د.ك</td>
+                    <td style={{textAlign: 'center', fontWeight: 'bold'}}>{pricing.deliveryFee.toFixed(3)} د.ك</td>
                   </tr>
                   <tr className="total-row">
                     <td colSpan={3} style={{textAlign: 'left'}}>💰 المجموع الكلي</td>
-                    <td style={{textAlign: 'center'}}>{order.products.reduce((sum, p) => sum + (p.quantity || 0), 0)}</td>
-                    <td style={{textAlign: 'center'}}>{((order.total || 0) + (order.deliveryFee || 0)).toFixed(3)} د.ك</td>
+                    <td style={{textAlign: 'center'}}>{products.reduce((sum, p) => sum + (p.quantity || 0), 0)}</td>
+                    <td style={{textAlign: 'center'}}>{pricing.total.toFixed(3)} د.ك</td>
                   </tr>
                 </>
               ) : (

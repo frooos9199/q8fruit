@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import OrderEditModal from "./OrderEditModal";
 import InvoiceModal from "./InvoiceModal";
 import { sendInvoiceViaWhatsApp } from "../../../lib/whatsappInvoice";
+import { getOrderDisplayNumber, getOrderPricing, normalizeOrderForDisplay } from '../../../lib/orderUtils';
 import { db } from "../../../lib/firebase";
 import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "firebase/firestore";
 
@@ -56,6 +57,7 @@ function OrdersTable() {
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
   const [printOrder, setPrintOrder] = useState<Order | null>(null);
   const [sendingWhatsApp, setSendingWhatsApp] = useState<{ orderId: string; type: string } | null>(null);
+  const [browserNotificationsEnabled, setBrowserNotificationsEnabled] = useState(false);
 
   // Transform Firebase order to match Order interface
   function transformFirebaseOrder(doc: any): Order {
@@ -78,40 +80,7 @@ function OrdersTable() {
       'ملغي': 'ملغي'
     };
 
-    // Build address from delivery object
-    let address = '';
-    
-    // التحقق من deliveryAddress (من التطبيق) أو delivery (من الموقع)
-    const deliveryData = data.deliveryAddress || data.delivery;
-    
-    if (deliveryData) {
-      // إذا كان هناك fullAddress جاهز، استخدمه مباشرة
-      if (deliveryData.fullAddress) {
-        address = deliveryData.fullAddress;
-      } else {
-        // بناء العنوان من الحقول المنفصلة
-        const parts = [];
-        if (deliveryData.area) parts.push(deliveryData.area);
-        if (deliveryData.block) parts.push(`قطعة ${deliveryData.block}`);
-        if (deliveryData.street) parts.push(`شارع ${deliveryData.street}`);
-        if (deliveryData.building) parts.push(`بناية ${deliveryData.building}`);
-        if (deliveryData.floor) parts.push(`دور ${deliveryData.floor}`);
-        if (deliveryData.apartment) parts.push(`شقة ${deliveryData.apartment}`);
-        address = parts.join('، ');
-        if (deliveryData.notes) address += ` - ${deliveryData.notes}`;
-      }
-    }
-
-    // Get products from items or products field
-    const products = (data.items || data.products || []).map((item: any) => ({
-      productId: item.productId || '',
-      name: item.name || '',
-      unit: item.unit || '',
-      price: item.price || 0,
-      quantity: item.quantity || 0,
-      total: item.total || (item.price * item.quantity),
-      image: item.image || ''
-    }));
+    const normalized = normalizeOrderForDisplay({ id: doc.id, ...data });
 
     // Get date
     let date = new Date().toISOString();
@@ -127,44 +96,49 @@ function OrdersTable() {
       date = new Date(data.timestamp).toISOString();
     }
     
-    // Get customer name - handle different formats
-    let customerName = 'عميل';
-    if (data.customer) {
-      if (typeof data.customer === 'string') {
-        customerName = data.customer;
-      } else if (data.customer.name) {
-        customerName = data.customer.name;
-      }
-    }
-    
-    // Get phone - handle different formats
-    let phone = '';
-    if (data.customer && typeof data.customer === 'object' && data.customer.phone) {
-      phone = data.customer.phone;
-    } else if (data.phone) {
-      phone = data.phone;
-    }
-
     return {
       id: doc.id,
-      orderNumber: data.orderNumber || `#${doc.id.slice(-6)}`,
-      customer: customerName,
-      phone: phone,
-      email: data.customer?.email || data.email || '',
-      address: address || data.deliveryAddress?.fullAddress || data.delivery?.address || data.address || 'غير محدد',
-      total: data.pricing?.total || data.total || 0,
+      orderNumber: normalized.orderNumber,
+      customer: normalized.customer,
+      phone: normalized.phone,
+      email: normalized.email,
+      address: normalized.address,
+      total: normalized.total,
       status: statusMap[data.status] || 'جديد',
       date,
-      products,
-      deliveryFee: data.pricing?.deliveryPrice || data.deliveryFee || 0,
-      paymentType: data.paymentType || 'نقدي',
-      delivery: data.delivery,
-      pricing: data.pricing,
-      items: data.items,
+      products: normalized.products,
+      deliveryFee: normalized.deliveryFee,
+      paymentType: normalized.paymentMethod,
+      delivery: data.delivery || data.deliveryAddress,
+      pricing: data.pricing || {
+        subtotal: normalized.subtotal,
+        deliveryPrice: normalized.deliveryFee,
+        total: normalized.total,
+      },
+      items: normalized.items,
       createdAt: data.createdAt,
       timestamp: data.timestamp
     };
   }
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !("Notification" in window)) {
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      setBrowserNotificationsEnabled(true);
+      return;
+    }
+
+    Notification.requestPermission().then((permission) => {
+      if (permission === 'granted') {
+        setBrowserNotificationsEnabled(true);
+      }
+    }).catch(() => {
+      setBrowserNotificationsEnabled(false);
+    });
+  }, []);
 
   // تحديث الطلبات من Firebase
   useEffect(() => {
@@ -199,6 +173,8 @@ function OrdersTable() {
     
     console.log('🔥 Setting up Firebase listener for orders...');
     
+    const seenOrders = new Set<string>();
+
     const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
       console.log('📦 Received orders from Firebase:', snapshot.docs.length, 'orders');
       const firebaseOrders = snapshot.docs.map(doc => {
@@ -229,6 +205,21 @@ function OrdersTable() {
       // Merge orders (Firebase first, then localStorage)
       const allOrders = [...firebaseOrders, ...localOrders];
       console.log('🎯 Total orders to display:', allOrders.length, 'orders');
+
+      if (browserNotificationsEnabled) {
+        firebaseOrders.forEach((order) => {
+          if (!seenOrders.has(order.id)) {
+            if (seenOrders.size > 0) {
+              new Notification('طلب جديد وصل', {
+                body: `${order.customer} - ${getOrderPricing(order).total.toFixed(3)} د.ك`,
+                tag: order.id,
+              });
+            }
+            seenOrders.add(order.id);
+          }
+        });
+      }
+
       setOrders(allOrders);
     }, (error) => {
       console.error('❌ Error listening to orders:', error);
@@ -397,7 +388,7 @@ function OrdersTable() {
         <div className="bg-gradient-to-r from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 rounded-xl p-4 text-center border border-purple-200 dark:border-purple-700">
           <div className="text-2xl mb-2">💰</div>
           <div className="text-sm font-medium text-gray-600 dark:text-gray-300">إجمالي المبيعات</div>
-          <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{orders.reduce((sum, o) => sum + (o.total + (o.deliveryFee || 0)), 0).toFixed(3)} د.ك</div>
+          <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{orders.reduce((sum, o) => sum + getOrderPricing(o).total, 0).toFixed(3)} د.ك</div>
         </div>
       </div>
 
@@ -426,10 +417,10 @@ function OrdersTable() {
             <tbody>
               {sortedOrders.map((order, index) => (
                 <tr key={order.id} className={`border-b border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${index % 2 === 0 ? 'bg-white dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-750'}`}>
-                  <td className="p-4 font-bold text-blue-600 dark:text-blue-400">{order.orderNumber || `#${order.id}`}</td>
+                  <td className="p-4 font-bold text-blue-600 dark:text-blue-400">{getOrderDisplayNumber(order)}</td>
                   <td className="p-4 font-medium">{order.customer}</td>
                   <td className="p-4 text-gray-600 dark:text-gray-400">{order.phone || 'غير محدد'}</td>
-                  <td className="p-4 font-bold text-green-600 dark:text-green-400">{((order.total || 0) + (order.deliveryFee || 0)).toFixed(3)} د.ك</td>
+                  <td className="p-4 font-bold text-green-600 dark:text-green-400">{getOrderPricing(order).total.toFixed(3)} د.ك</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                       order.status === 'مكتمل' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :

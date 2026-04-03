@@ -1,3 +1,13 @@
+import {
+  getOrderAddress,
+  getOrderCustomerName,
+  getOrderDisplayNumber,
+  getOrderPaymentMethod,
+  getOrderPhone,
+  getOrderPricing,
+  getOrderProducts,
+} from './orderUtils';
+
 // دالة للحصول على الرقم الرئيسي من الإعدادات
 const getPrimaryWhatsAppNumber = () => {
   if (typeof window !== "undefined") {
@@ -13,31 +23,34 @@ const getPrimaryWhatsAppNumber = () => {
 // دالة لإرسال الفاتورة عبر الواتساب
 export const sendInvoiceToWhatsApp = (invoice: any) => {
   const whatsappNumber = getPrimaryWhatsAppNumber();
+  const products = getOrderProducts(invoice);
+  const pricing = getOrderPricing(invoice);
+  const paymentMethod = getOrderPaymentMethod(invoice);
   
   // تنسيق رسالة الفاتورة
   const message = `
 🍎 *فاتورة متجر الفواكه والخضار - Q8 Fruit*
 
 📋 *تفاصيل الطلب:*
-رقم الطلب: ${invoice.id}
-التاريخ: ${invoice.date}
+رقم الطلب: ${getOrderDisplayNumber(invoice)}
+التاريخ: ${invoice.date || new Date().toLocaleString('ar-EG')}
 
 👤 *بيانات العميل:*
-الاسم: ${invoice.userInfo.name}
-الهاتف: ${invoice.userInfo.phone}
-العنوان: ${invoice.userInfo.address}
+الاسم: ${getOrderCustomerName(invoice)}
+الهاتف: ${getOrderPhone(invoice) || 'غير متوفر'}
+العنوان: ${getOrderAddress(invoice)}
 
 🛒 *المنتجات:*
-${invoice.items.map((item: any) => 
-  `• ${item.name} (${item.unit}) - الكمية: ${item.quantity} - السعر: ${(item.price * item.quantity).toFixed(3)} د.ك`
+${products.map((item) => 
+  `• ${item.name} (${item.unit}) - الكمية: ${item.quantity} - الإجمالي: ${item.total.toFixed(3)} د.ك${item.image ? ` - صورة: ${item.image}` : ''}`
 ).join('\n')}
 
 💰 *الملخص المالي:*
-إجمالي المنتجات: ${(invoice.total - invoice.deliveryPrice).toFixed(3)} د.ك
-رسوم التوصيل: ${invoice.deliveryPrice.toFixed(3)} د.ك
-المجموع الكلي: ${invoice.total.toFixed(3)} د.ك
+إجمالي المنتجات: ${pricing.subtotal.toFixed(3)} د.ك
+رسوم التوصيل: ${pricing.deliveryFee.toFixed(3)} د.ك
+المجموع الكلي: ${pricing.total.toFixed(3)} د.ك
 
-💳 طريقة الدفع: ${invoice.paymentType === 'knet' ? 'رابط كنت' : 'نقدي عند الاستلام'}
+💳 طريقة الدفع: ${paymentMethod === 'knet' ? 'رابط كنت' : 'نقدي عند الاستلام'}
 
 ${invoice.userNote ? `📝 ملاحظات العميل: ${invoice.userNote}` : ''}
 
@@ -56,7 +69,13 @@ ${invoice.userNote ? `📝 ملاحظات العميل: ${invoice.userNote}` : '
 export const sendInvoiceViaWhatsApp = async (order: any, recipient: 'admin' | 'customer') => {
   try {
     const adminNumber = getPrimaryWhatsAppNumber();
-    const customerNumber = order.phone ? `965${order.phone.replace(/^\+?965/, '')}` : null;
+    const customerPhone = getOrderPhone(order);
+    const customerNumber = customerPhone ? `965${customerPhone.replace(/^\+?965/, '')}` : null;
+    const products = getOrderProducts(order);
+    const pricing = getOrderPricing(order);
+    const customerName = getOrderCustomerName(order);
+    const address = getOrderAddress(order);
+    const paymentMethod = getOrderPaymentMethod(order);
     
     if (recipient === 'customer' && !customerNumber) {
       return { success: false, message: 'رقم هاتف العميل غير متوفر' };
@@ -64,42 +83,30 @@ export const sendInvoiceViaWhatsApp = async (order: any, recipient: 'admin' | 'c
     
     const targetNumber = recipient === 'admin' ? adminNumber : customerNumber;
     
-    // Extract numeric ID from order.id (can be "local_123" or Firebase ID)
-    let displayId = 1000;
-    if (order.id) {
-      if (typeof order.id === 'string' && order.id.startsWith('local_')) {
-        displayId = 1000 + parseInt(order.id.replace('local_', ''));
-      } else if (typeof order.id === 'string') {
-        displayId = parseInt(order.id.slice(-6), 16); // Use last 6 chars as hex
-      } else {
-        displayId = 1000 + order.id;
-      }
-    }
-    
     // تنسيق رسالة الفاتورة
     const message = `
 🍎 *فاتورة متجر الفواكه والخضار - Q8 Fruit*
 
 📋 *تفاصيل الطلب:*
-رقم الطلب: ${order.orderNumber || `#${displayId}`}
-التاريخ: ${order.date}
+رقم الطلب: ${getOrderDisplayNumber(order)}
+التاريخ: ${order.date || new Date().toLocaleString('ar-EG')}
 
 👤 *بيانات العميل:*
-الاسم: ${order.customer}
-الهاتف: ${order.phone || 'غير محدد'}
-العنوان: ${order.address || 'غير محدد'}
+الاسم: ${customerName}
+الهاتف: ${customerPhone || 'غير محدد'}
+العنوان: ${address}
 
 🛒 *المنتجات:*
-${order.products.map((item: any) => 
-  `• ${item.name} (${item.unit}) - الكمية: ${item.quantity} - السعر: ${(item.price * item.quantity).toFixed(3)} د.ك`
+${products.map((item) => 
+  `• ${item.name} (${item.unit}) - الكمية: ${item.quantity} - الإجمالي: ${item.total.toFixed(3)} د.ك${item.image ? ` - صورة: ${item.image}` : ''}`
 ).join('\n')}
 
 💰 *الملخص المالي:*
-إجمالي المنتجات: ${(order.total - (order.deliveryFee || 0)).toFixed(3)} د.ك
-رسوم التوصيل: ${(order.deliveryFee || 0).toFixed(3)} د.ك
-المجموع الكلي: ${(order.total + (order.deliveryFee || 0)).toFixed(3)} د.ك
+إجمالي المنتجات: ${pricing.subtotal.toFixed(3)} د.ك
+رسوم التوصيل: ${pricing.deliveryFee.toFixed(3)} د.ك
+المجموع الكلي: ${pricing.total.toFixed(3)} د.ك
 
-💳 طريقة الدفع: ${order.paymentType === 'knet' ? 'رابط كنت' : 'نقدي عند الاستلام'}
+💳 طريقة الدفع: ${paymentMethod === 'knet' ? 'رابط كنت' : 'نقدي عند الاستلام'}
 
 📊 حالة الطلب: ${order.status}
 

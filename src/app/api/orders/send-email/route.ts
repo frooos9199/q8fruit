@@ -1,4 +1,14 @@
 import { NextResponse } from 'next/server';
+import {
+  getOrderAddress,
+  getOrderCustomerName,
+  getOrderDateLabel,
+  getOrderDisplayNumber,
+  getOrderPaymentMethod,
+  getOrderPhone,
+  getOrderPricing,
+  getOrderProducts,
+} from '../../../../lib/orderUtils';
 
 export async function POST(request: Request) {
   try {
@@ -48,31 +58,29 @@ export async function POST(request: Request) {
       recipientEmails = ['summit_kw@hotmail.com'];
     }
     
-    // تنسيق بيانات المنتجات
-    const itemsHtml = orderData.items.map((item: any) => `
+    const products = getOrderProducts(orderData);
+    const pricing = getOrderPricing(orderData);
+    const paymentMethod = getOrderPaymentMethod(orderData);
+    const customerName = getOrderCustomerName(orderData);
+    const customerPhone = getOrderPhone(orderData);
+    const displayNumber = getOrderDisplayNumber(orderData);
+    const dateLabel = getOrderDateLabel(orderData);
+    const address = getOrderAddress(orderData);
+
+    const itemsHtml = products.map((item) => `
       <tr>
-        <td style="padding: 8px; border: 1px solid #ddd;">${item.name || item.productName}</td>
-        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.unit || item.unitName || ''}</td>
+        <td style="padding: 8px; border: 1px solid #ddd;">
+          <div style="display:flex; align-items:center; gap:10px;">
+            ${item.image ? `<img src="${item.image}" alt="${item.name}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid #ddd;">` : ''}
+            <span>${item.name}</span>
+          </div>
+        </td>
+        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.unit}</td>
         <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.quantity}</td>
-        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.price?.toFixed(3) || item.unitPrice?.toFixed(3)} د.ك</td>
-        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${(item.total || (item.price * item.quantity) || (item.unitPrice * item.quantity)).toFixed(3)} د.ك</td>
+        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.price.toFixed(3)} د.ك</td>
+        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${item.total.toFixed(3)} د.ك</td>
       </tr>
     `).join('');
-
-    // تنسيق العنوان
-    let address = '';
-    if (orderData.deliveryAddress && typeof orderData.deliveryAddress === 'object') {
-      address = `
-        المنطقة: ${orderData.deliveryAddress.area || ''}<br>
-        القطعة: ${orderData.deliveryAddress.block || ''}<br>
-        الشارع: ${orderData.deliveryAddress.street || ''}<br>
-        البناية: ${orderData.deliveryAddress.building || ''}<br>
-        ${orderData.deliveryAddress.floor ? `الدور: ${orderData.deliveryAddress.floor}<br>` : ''}
-        ${orderData.deliveryAddress.apartment ? `الشقة: ${orderData.deliveryAddress.apartment}<br>` : ''}
-      `;
-    } else if (orderData.address || orderData.userInfo?.address) {
-      address = orderData.address || orderData.userInfo.address;
-    }
 
     // تنسيق الإيميل
     const htmlContent = `
@@ -95,16 +103,16 @@ export async function POST(request: Request) {
             <!-- Order Info -->
             <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
               <h2 style="color: #16a34a; margin-top: 0;">📋 معلومات الطلب</h2>
-              <p style="margin: 5px 0;"><strong>رقم الطلب:</strong> ${orderData.orderNumber || orderData.id || 'جديد'}</p>
-              <p style="margin: 5px 0;"><strong>التاريخ:</strong> ${orderData.date || new Date().toLocaleString('ar-EG')}</p>
+              <p style="margin: 5px 0;"><strong>رقم الطلب:</strong> ${displayNumber}</p>
+              <p style="margin: 5px 0;"><strong>التاريخ:</strong> ${dateLabel}</p>
               <p style="margin: 5px 0;"><strong>الحالة:</strong> <span style="background-color: #fef3c7; padding: 4px 8px; border-radius: 4px; color: #92400e;">جديد</span></p>
             </div>
 
             <!-- Customer Info -->
             <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
               <h2 style="color: #16a34a; margin-top: 0;">👤 بيانات العميل</h2>
-              <p style="margin: 5px 0;"><strong>الاسم:</strong> ${orderData.customerName || orderData.customer || orderData.userInfo?.name}</p>
-              <p style="margin: 5px 0;"><strong>الهاتف:</strong> ${orderData.phoneNumber || orderData.phone || orderData.userInfo?.phone}</p>
+              <p style="margin: 5px 0;"><strong>الاسم:</strong> ${customerName}</p>
+              <p style="margin: 5px 0;"><strong>الهاتف:</strong> ${customerPhone || 'غير متوفر'}</p>
               <p style="margin: 5px 0;"><strong>العنوان:</strong><br>${address}</p>
               ${orderData.deliveryNotes || orderData.userNote ? `<p style="margin: 5px 0;"><strong>ملاحظات:</strong> ${orderData.deliveryNotes || orderData.userNote}</p>` : ''}
             </div>
@@ -133,18 +141,18 @@ export async function POST(request: Request) {
               <h2 style="color: #16a34a; margin-top: 0;">💰 الملخص المالي</h2>
               <div style="display: flex; justify-content: space-between; margin: 8px 0;">
                 <span>إجمالي المنتجات:</span>
-                <strong>${(orderData.subtotal || orderData.total - (orderData.deliveryFee || orderData.deliveryPrice || 0)).toFixed(3)} د.ك</strong>
+                <strong>${pricing.subtotal.toFixed(3)} د.ك</strong>
               </div>
               <div style="display: flex; justify-content: space-between; margin: 8px 0;">
                 <span>رسوم التوصيل:</span>
-                <strong>${(orderData.deliveryFee || orderData.deliveryPrice || 0).toFixed(3)} د.ك</strong>
+                <strong>${pricing.deliveryFee.toFixed(3)} د.ك</strong>
               </div>
               <hr style="border: none; border-top: 2px solid #ddd; margin: 10px 0;">
               <div style="display: flex; justify-content: space-between; margin: 8px 0; font-size: 18px;">
                 <span><strong>المجموع الكلي:</strong></span>
-                <strong style="color: #16a34a;">${orderData.total.toFixed(3)} د.ك</strong>
+                <strong style="color: #16a34a;">${pricing.total.toFixed(3)} د.ك</strong>
               </div>
-              <p style="margin: 10px 0 0 0;"><strong>طريقة الدفع:</strong> ${orderData.paymentMethod === 'knet' || orderData.paymentType === 'knet' ? 'رابط كنت' : 'نقدي عند الاستلام'}</p>
+              <p style="margin: 10px 0 0 0;"><strong>طريقة الدفع:</strong> ${paymentMethod === 'knet' ? 'رابط كنت' : 'نقدي عند الاستلام'}</p>
             </div>
 
             <!-- Footer Note -->
@@ -193,7 +201,7 @@ export async function POST(request: Request) {
               email: email,
               name: 'Q8 Fruit Admin'
             }],
-            subject: `🍎 طلب جديد #${orderData.orderNumber || orderData.id || 'جديد'} من ${orderData.customerName || orderData.customer || orderData.userInfo?.name}`,
+            subject: `🍎 طلب جديد ${displayNumber} من ${customerName}`,
             htmlContent: htmlContent,
           }),
         });
