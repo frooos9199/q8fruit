@@ -1,5 +1,6 @@
 # Dependencies
 /node_modules
+/functions/node_modules
 /.pnp
 .pnp.js
 
@@ -40,3 +41,12 @@ next-env.d.ts
 /mobile-app/*.tar.gz
 /mobile-app/ios
 /mobile-app/android
+/FruitQ8Mobile/.env
+/FruitQ8Mobile/.env.*
+/FruitQ8Mobile/.bundle/
+/FruitQ8Mobile/android/build.log
+/FruitQ8Mobile/android/app/src/main/assets/*.bundle
+/FruitQ8Mobile/android/app/google-services.json
+/FruitQ8Mobile/ios/GoogleService-Info.plist
+/FruitQ8Mobile/android/app/debug.keystore
+/FruitQ8Mobile.git.backup/
