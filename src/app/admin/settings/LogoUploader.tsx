@@ -21,10 +21,9 @@ export default function LogoUploader() {
     // حفظ الشعار في localStorage ليظهر في الشريط الجانبي
     if (logo) {
       window.localStorage.setItem('siteLogo', logo);
-      // مزامنة فورية مع Firebase
       try {
-        const { syncAllDataToFirebase } = await import('../../../lib/firebaseSync');
-        await syncAllDataToFirebase();
+        const { syncLogoToFirebase } = await import('../../../lib/firebaseSync');
+        await syncLogoToFirebase(logo);
       } catch (error) {
         console.error('خطأ في مزامنة الشعار:', error);
       }

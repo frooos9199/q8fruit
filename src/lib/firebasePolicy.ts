@@ -1,34 +1,18 @@
 /**
- * 🚨 تحذير مهم: Firebase للنسخ الاحتياطي فقط
- * 
- * هذا الملف يوضح السياسة الجديدة لاستخدام Firebase:
- * 
- * ✅ المسموح:
- * - حفظ البيانات في Firebase (النسخ الاحتياطي)
- * - مزامنة التغييرات من الموقع إلى Firebase
- * - الجلب الطارئ في حالات الضرورة القصوى
- * 
- * ❌ الممنوع:
- * - جلب البيانات من Firebase تلقائياً
- * - استخدام Firebase كمصدر أساسي للبيانات
- * - مراقبة تغييرات Firebase في الوقت الفعلي
- * 
- * 🎯 الهدف:
- * - الموقع يعتمد على localStorage كمصدر وحيد
- * - Firebase يحتوي على نسخة احتياطية نظيفة
- * - عدم تداخل البيانات أو تغييرها من Firebase
- * 
- * 📱 للمطورين:
- * - استخدم localStorage للقراءة دائماً
- * - استخدم syncAllDataToFirebase() للحفظ
- * - استخدم emergencyLoadFromFirebase() للطوارئ فقط
+ * سياسة البيانات الحالية:
+ * - Firebase هو المصدر المعتمد للقراءة عند تحميل بيانات المتجر.
+ * - localStorage يستخدم ككاش محلي لتحسين الاستجابة فقط.
+ * - يمنع استخدام المزامنة الشاملة لتمرير المنتجات والطلبات من localStorage تلقائياً.
+ * - أي كتابة حساسة يجب أن تكون بدوال مخصصة لكل نطاق بيانات.
  */
 
 export const FIREBASE_POLICY = {
-  READ_FROM_FIREBASE: false,
+  READ_FROM_FIREBASE: true,
   WRITE_TO_FIREBASE: true,
-  EMERGENCY_LOAD_ONLY: true,
-  LOCAL_STORAGE_IS_SOURCE: true
+  EMERGENCY_LOAD_ONLY: false,
+  LOCAL_STORAGE_IS_CACHE: true,
+  ALLOW_BULK_PRODUCT_SYNC: false,
+  ALLOW_BULK_ORDER_SYNC: false,
 } as const;
 
-console.log('🔒 Firebase Policy: النسخ الاحتياطي فقط - لا قراءة تلقائية');
+console.log('🔒 Firebase Policy: Firebase source with local cache and scoped writes only');

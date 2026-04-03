@@ -1,17 +1,14 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { syncData, checkCompatibility } from "../lib/dataSync";
 import {
   getBannersFromFirebase,
   getCategoriesFromFirebase,
   getLogoFromFirebase,
   getProductsFromFirebase,
   loadAllDataFromFirebase,
-  syncAllDataToFirebase,
 } from "../lib/firebaseSync";
-import { forceLoadAllData, checkDataCompleteness, retryDataLoad } from "../lib/forceSync";
-import { syncProductImages, fullImageSync } from "../lib/imageSync";
+import { syncProductImages } from "../lib/imageSync";
 
 // تعريفات TypeScript أعلى الملف
 interface Product {
@@ -360,51 +357,8 @@ export default function Home() {
     }
   }
   
-  // دالة إعادة تحميل البيانات يدوياً
-  const handleForceReload = async () => {
-    setDataLoading(true);
-
-    try {
-      console.log('🔄 بدء إعادة تحميل البيانات...');
-
-      // 1. جلب من Firebase أولاً
-      const dataSuccess = await loadAllDataFromFirebase();
-
-      if (dataSuccess) {
-        // 2. مزامنة الصور
-        await syncProductImages();
-
-        // 3. تحديث الواجهة
-        await fetchProducts();
-        await fetchCategories();
-
-        // 4. مزامنة مع Firebase في الخلفية (بدون تداخل)
-        setTimeout(() => {
-          syncAllDataToFirebase().then(() => {
-            console.log('✅ تم مزامنة البيانات مع Firebase');
-          });
-        }, 2000); // تأخير لتجنب التداخل
-
-        console.log('✅ تم إعادة تحميل البيانات بنجاح');
-      } else {
-        console.error('❌ فشل في إعادة تحميل البيانات من Firebase');
-        // في حالة الخطأ، أعد تحميل من localStorage
-        await fetchProducts();
-        await fetchCategories();
-      }
-    } catch (error) {
-      console.error('❌ خطأ في إعادة تحميل البيانات:', error);
-      // في حالة الخطأ، أعد تحميل من localStorage
-      await fetchProducts();
-      await fetchCategories();
-    }
-
-    setDataLoading(false);
-  };
-  
   const [cartCount, setCartCount] = useState(0);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
-  const [dataLoading, setDataLoading] = useState(false);
   
   // دالة لجلب التصنيفات
   const fetchCategories = async () => {
@@ -486,122 +440,106 @@ export default function Home() {
     // لا تعرض المنتجات الافتراضية - انتظر البيانات الحقيقية
     setProducts([]);
     setCategories([]);
-    
-    // تحقق من التوافق وبدء التزامن
-    if (checkCompatibility()) {
-      const cleanup = syncData();
-      
-      if (typeof window !== "undefined") {
-        // تسلسل تحميل البيانات بشكل صحيح
-        const loadDataSequentially = async () => {
+
+    if (typeof window !== "undefined") {
+      const loadDataSequentially = async () => {
+        try {
+          console.log('🔄 بدء تحميل البيانات...');
+          await loadAllDataFromFirebase();
+          await syncProductImages();
+          await fetchProducts();
+          await fetchCategories();
+          await fetchBranding();
+        } catch (error) {
+          console.error('❌ خطأ في تحميل البيانات:', error);
+          setProducts([]);
+          setCategories([]);
+        }
+      };
+
+      loadDataSequentially();
+
+      setIsAdmin(window.localStorage.getItem("isAdmin") === "true");
+      const userStr = window.localStorage.getItem("currentUser");
+      if (userStr) {
+        try {
+          setCurrentUser(JSON.parse(userStr));
+        } catch {
+          setCurrentUser(null);
+        }
+      } else {
+        setCurrentUser(null);
+      }
+
+      const storedBanners = window.localStorage.getItem("banners");
+      if (storedBanners) {
+        try {
+          const parsed = JSON.parse(storedBanners);
+          setBanners(Array.isArray(parsed) ? parsed : []);
+        } catch {
+          setBanners([]);
+        }
+      } else {
+        setBanners([]);
+      }
+
+      const updateCartCount = () => {
+        const cartRaw = window.localStorage.getItem("cart");
+        if (cartRaw) {
           try {
-            console.log('🔄 بدء تحميل البيانات...');
-
-            console.log('📱 تحميل البيانات الفعلية من Firebase...');
-            await loadAllDataFromFirebase();
-            await syncProductImages();
-            await fetchProducts();
-            await fetchCategories();
-            await fetchBranding();
-
-          } catch (error) {
-            console.error('❌ خطأ في تحميل البيانات:', error);
-            // عدم عرض بيانات افتراضية عند الخطأ
-            setProducts([]);
-            setCategories([]);
+            const cart = JSON.parse(cartRaw);
+            setCartCount(Array.isArray(cart) ? cart.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0);
+          } catch {
+            setCartCount(0);
           }
-        };
-        
-        loadDataSequentially();
-        
-        // تحقق من حالة الأدمن
-        setIsAdmin(window.localStorage.getItem("isAdmin") === "true");
-        // جلب المستخدم الحالي
-        const userStr = window.localStorage.getItem("currentUser");
-        if (userStr) {
+        } else {
+          setCartCount(0);
+        }
+      };
+
+      updateCartCount();
+      const cartObserver = setInterval(() => {
+        updateCartCount();
+      }, 1000);
+
+      const onStorage = (e: StorageEvent) => {
+        if (e.key === "products") {
+          if (e.newValue === null || e.newValue === '') {
+            console.log('تم مسح المنتجات من localStorage');
+            setProducts([]);
+          } else {
+            fetchProducts();
+          }
+        }
+        if (e.key === "siteLogo") {
+          setLogo(e.newValue);
+        }
+        if (e.key === "isAdmin") setIsAdmin(e.newValue === "true");
+        if (e.key === "cateringCategories") {
+          fetchCategories();
+        }
+        if (e.key === "currentUser") {
           try {
-            setCurrentUser(JSON.parse(userStr));
+            setCurrentUser(e.newValue ? JSON.parse(e.newValue) : null);
           } catch {
             setCurrentUser(null);
           }
-        } else {
-          setCurrentUser(null);
         }
-        // البنرات
-        const storedBanners = window.localStorage.getItem("banners");
-        if (storedBanners) {
+        if (e.key === "banners") {
           try {
-            const parsed = JSON.parse(storedBanners);
+            const parsed = e.newValue ? JSON.parse(e.newValue) : [];
             setBanners(Array.isArray(parsed) ? parsed : []);
           } catch {
             setBanners([]);
           }
-        } else {
-          setBanners([]);
         }
-        // تحديث رقم السلة مباشرة عند كل تغيير في localStorage (cart)
-        const updateCartCount = () => {
-          const cartRaw = window.localStorage.getItem("cart");
-          if (cartRaw) {
-            try {
-              const cart = JSON.parse(cartRaw);
-              setCartCount(Array.isArray(cart) ? cart.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0);
-            } catch {
-              setCartCount(0);
-            }
-          } else {
-            setCartCount(0);
-          }
-        };
-        updateCartCount();
-        // مراقبة التغييرات على cart أو البنرات أو المنتجات في localStorage بشكل مباشر
-        const cartObserver = setInterval(() => {
-          updateCartCount();
-        }, 1000); // تحديث أسرع للموبايل
-        const onStorage = (e: StorageEvent) => {
-          if (e.key === "products") {
-            // إذا تم مسح المنتجات تماماً، لا تعيد تحميل تلقائياً
-            if (e.newValue === null || e.newValue === '') {
-              console.log('تم مسح المنتجات من localStorage');
-              setProducts([]); // اعرض قائمة فارغة
-            } else {
-              fetchProducts();
-            }
-            // لا تزامن مع Firebase تلقائياً عند كل تغيير
-          }
-          if (e.key === "siteLogo") {
-            setLogo(e.newValue);
-            // لا تزامن مع Firebase عند كل تغيير
-          }
-          if (e.key === "isAdmin") setIsAdmin(e.newValue === "true");
-          if (e.key === "cateringCategories") {
-            fetchCategories();
-            // لا تزامن مع Firebase عند كل تغيير
-          }
-          if (e.key === "currentUser") {
-            try {
-              setCurrentUser(e.newValue ? JSON.parse(e.newValue) : null);
-            } catch {
-              setCurrentUser(null);
-            }
-          }
-          if (e.key === "banners") {
-            try {
-              const parsed = e.newValue ? JSON.parse(e.newValue) : [];
-              setBanners(Array.isArray(parsed) ? parsed : []);
-              // لا تزامن مع Firebase عند كل تغيير
-            } catch {
-              setBanners([]);
-            }
-          }
-        };
-        window.addEventListener("storage", onStorage);
-        return () => {
-          clearInterval(cartObserver);
-          window.removeEventListener("storage", onStorage);
-          if (cleanup) cleanup();
-        };
-      }
+      };
+
+      window.addEventListener("storage", onStorage);
+      return () => {
+        clearInterval(cartObserver);
+        window.removeEventListener("storage", onStorage);
+      };
     }
   }, []);
 

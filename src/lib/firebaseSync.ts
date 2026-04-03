@@ -11,6 +11,17 @@ import {
   query
 } from 'firebase/firestore';
 
+type SyncAllDataOptions = {
+  banners?: boolean;
+  logo?: boolean;
+  users?: boolean;
+  orders?: boolean;
+  delivery?: boolean;
+  whatsappNumbers?: boolean;
+  products?: boolean;
+  catering?: boolean;
+};
+
 // مزامنة المنتجات مع Firebase (تحديث آمن)
 export const syncProductsToFirebase = async (products: any[]) => {
   if (!db) {
@@ -214,6 +225,36 @@ export const syncLogoToFirebase = async (logo: string) => {
   }
 };
 
+export const syncWhatsAppNumbersToFirebase = async (numbers: string[]) => {
+  try {
+    await setDoc(doc(db!, 'settings', 'whatsappNumbers'), {
+      numbers,
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log('تم مزامنة أرقام الواتساب مع Firebase');
+    return true;
+  } catch (error) {
+    console.error('خطأ في مزامنة أرقام الواتساب:', error);
+    return false;
+  }
+};
+
+export const getWhatsAppNumbersFromFirebase = async () => {
+  try {
+    const docRef = doc(db!, 'settings', 'whatsappNumbers');
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return docSnap.data().numbers || [];
+    }
+    return [];
+  } catch (error) {
+    console.error('خطأ في جلب أرقام الواتساب:', error);
+    return [];
+  }
+};
+
 // جلب الشعار من Firebase
 export const getLogoFromFirebase = async () => {
   try {
@@ -339,66 +380,94 @@ export const getDeliverySettingsFromFirebase = async () => {
 };
 
 // مزامنة شاملة لجميع البيانات
-export const syncAllDataToFirebase = async () => {
+export const syncAllDataToFirebase = async (options: SyncAllDataOptions = {}) => {
   if (typeof window === 'undefined') return;
+
+  const syncOptions: Required<SyncAllDataOptions> = {
+    banners: options.banners ?? true,
+    logo: options.logo ?? true,
+    users: options.users ?? false,
+    orders: options.orders ?? false,
+    delivery: options.delivery ?? true,
+    whatsappNumbers: options.whatsappNumbers ?? true,
+    products: options.products ?? false,
+    catering: options.catering ?? false,
+  };
   
   try {
-    // مزامنة المنتجات بدون حماية مفرطة
-    const products = localStorage.getItem('products');
-    if (products) {
-      const parsedProducts = JSON.parse(products);
-      if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
-        await syncProductsToFirebase(parsedProducts);
-      } else {
-        console.warn('لا توجد منتجات في localStorage');
+    if (syncOptions.products) {
+      const products = localStorage.getItem('products');
+      if (products) {
+        const parsedProducts = JSON.parse(products);
+        if (Array.isArray(parsedProducts) && parsedProducts.length > 0) {
+          await syncProductsToFirebase(parsedProducts);
+        } else {
+          console.warn('لا توجد منتجات في localStorage');
+        }
       }
     }
-    
-    // مزامنة فئات الكيترنج
-    const cateringCategories = localStorage.getItem('cateringCategories');
-    if (cateringCategories) {
-      const parsedCateringCategories = JSON.parse(cateringCategories);
-      if (Array.isArray(parsedCateringCategories) && parsedCateringCategories.length > 0) {
-        await syncCateringToFirebase(parsedCateringCategories);
-        console.log(`✅ تم مزامنة ${parsedCateringCategories.length} فئة كيترنج`);
+
+    if (syncOptions.catering) {
+      const cateringCategories = localStorage.getItem('cateringCategories');
+      if (cateringCategories) {
+        const parsedCateringCategories = JSON.parse(cateringCategories);
+        if (Array.isArray(parsedCateringCategories) && parsedCateringCategories.length > 0) {
+          await syncCateringToFirebase(parsedCateringCategories);
+          console.log(`✅ تم مزامنة ${parsedCateringCategories.length} فئة كيترنج`);
+        }
       }
     }
-    
-    // مزامنة البانرات
-    const banners = localStorage.getItem('banners');
-    if (banners) {
-      const parsedBanners = JSON.parse(banners);
-      await syncBannersToFirebase(parsedBanners);
+
+    if (syncOptions.banners) {
+      const banners = localStorage.getItem('banners');
+      if (banners) {
+        const parsedBanners = JSON.parse(banners);
+        await syncBannersToFirebase(parsedBanners);
+      }
     }
-    
-    // مزامنة الشعار
-    const logo = localStorage.getItem('siteLogo');
-    if (logo) {
-      await syncLogoToFirebase(logo);
+
+    if (syncOptions.logo) {
+      const logo = localStorage.getItem('siteLogo');
+      if (logo) {
+        await syncLogoToFirebase(logo);
+      }
     }
-    
-    // مزامنة المستخدمين
-    const users = localStorage.getItem('users');
-    if (users) {
-      const parsedUsers = JSON.parse(users);
-      await syncUsersToFirebase(parsedUsers);
+
+    if (syncOptions.users) {
+      const users = localStorage.getItem('users');
+      if (users) {
+        const parsedUsers = JSON.parse(users);
+        await syncUsersToFirebase(parsedUsers);
+      }
     }
-    
-    // مزامنة الطلبات
-    const orders = localStorage.getItem('orders');
-    if (orders) {
-      const parsedOrders = JSON.parse(orders);
-      await syncOrdersToFirebase(parsedOrders);
+
+    if (syncOptions.orders) {
+      const orders = localStorage.getItem('orders');
+      if (orders) {
+        const parsedOrders = JSON.parse(orders);
+        await syncOrdersToFirebase(parsedOrders);
+      }
     }
-    
-    // مزامنة إعدادات التوصيل
-    const deliveryPrice = localStorage.getItem('deliveryPrice');
-    const deliveryTime = localStorage.getItem('deliveryTime');
-    if (deliveryPrice || deliveryTime) {
-      await syncDeliverySettingsToFirebase({
-        deliveryPrice: deliveryPrice ? Number(deliveryPrice) : 2.5,
-        deliveryTime: deliveryTime || 'خلال ساعتين'
-      });
+
+    if (syncOptions.delivery) {
+      const deliveryPrice = localStorage.getItem('deliveryPrice');
+      const deliveryTime = localStorage.getItem('deliveryTime');
+      if (deliveryPrice || deliveryTime) {
+        await syncDeliverySettingsToFirebase({
+          deliveryPrice: deliveryPrice ? Number(deliveryPrice) : 2.5,
+          deliveryTime: deliveryTime || 'خلال ساعتين'
+        });
+      }
+    }
+
+    if (syncOptions.whatsappNumbers) {
+      const whatsappNumbers = localStorage.getItem('whatsappNumbers');
+      if (whatsappNumbers) {
+        const parsedNumbers = JSON.parse(whatsappNumbers);
+        if (Array.isArray(parsedNumbers)) {
+          await syncWhatsAppNumbersToFirebase(parsedNumbers);
+        }
+      }
     }
     
     console.log('تم مزامنة جميع البيانات مع Firebase');
@@ -447,6 +516,12 @@ export const loadAllDataFromFirebase = async () => {
     if (logo) {
       localStorage.setItem('siteLogo', logo);
       console.log('✅ تم حفظ الشعار في localStorage');
+    }
+
+    const whatsappNumbers = await getWhatsAppNumbersFromFirebase();
+    if (whatsappNumbers.length > 0) {
+      localStorage.setItem('whatsappNumbers', JSON.stringify(whatsappNumbers));
+      console.log('✅ تم حفظ أرقام الواتساب في localStorage');
     }
     
     console.log('✅ اكتمل جلب البيانات من Firebase');

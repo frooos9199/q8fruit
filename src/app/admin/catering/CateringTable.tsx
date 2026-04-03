@@ -24,12 +24,10 @@ export default function CateringTable() {
   // مزامنة الكاترينج مع localStorage عند أي تغيير
   const syncCategoriesToStorage = async (cats: CateringCategory[]) => {
     if (typeof window !== 'undefined') {
-      // حفظ كل البيانات بما فيها الصور والمنتجات
       window.localStorage.setItem("cateringCategories", JSON.stringify(cats));
-      // مزامنة فورية مع Firebase
       try {
-        const { syncAllDataToFirebase } = await import('../../../lib/firebaseSync');
-        await syncAllDataToFirebase();
+        const { syncCateringToFirebase } = await import('../../../lib/firebaseSync');
+        await syncCateringToFirebase(cats);
       } catch (error) {
         console.error('خطأ في مزامنة الكاترينج:', error);
       }

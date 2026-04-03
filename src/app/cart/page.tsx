@@ -300,11 +300,6 @@ export default function CartPage() {
         }
       }
       
-      // مزامنة فورية مع Firebase
-      import('../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-        syncAllDataToFirebase().catch(console.error);
-      });
-
       try {
         if (db) {
           await addDoc(collection(db, 'adminNotifications'), {

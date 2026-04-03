@@ -55,8 +55,8 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
         );
         localStorage.setItem('products', JSON.stringify(updatedProducts));
         
-        const { syncAllDataToFirebase } = await import('../../../lib/firebaseSync');
-        await syncAllDataToFirebase();
+        const { syncProductsToFirebase } = await import('../../../lib/firebaseSync');
+        await syncProductsToFirebase(updatedProducts);
       }
       
       alert(`تم رفع ${imageUrls.length} صورة بنجاح! ✅`);
@@ -79,8 +79,8 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
     localStorage.setItem('products', JSON.stringify(updatedProducts));
     
     try {
-      const { syncAllDataToFirebase } = await import('../../../lib/firebaseSync');
-      await syncAllDataToFirebase();
+      const { syncProductsToFirebase } = await import('../../../lib/firebaseSync');
+      await syncProductsToFirebase(updatedProducts);
     } catch (error) {
       console.error('Error syncing to Firebase:', error);
     }

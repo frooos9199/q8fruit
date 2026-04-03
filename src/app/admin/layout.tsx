@@ -105,7 +105,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavLink href="/admin/catering" icon="🍽️" text="الكَاتِرِينج" />
           <NavLink href="/admin/bulk-message" icon="📢" text="رسائل جماعية" />
           <NavLink href="/admin/settings" icon="⚙️" text="الإعدادات" />
-          <NavLink href="/clean-products" icon="🧹" text="تنظيف البيانات" special />
         </nav>
         
         {/* زر العودة للموقع */}

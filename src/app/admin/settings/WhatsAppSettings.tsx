@@ -7,24 +7,38 @@ export default function WhatsAppSettings() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // تحميل الأرقام المحفوظة
-    if (typeof window !== "undefined") {
+    const loadNumbers = async () => {
+      if (typeof window === "undefined") return;
+
+      try {
+        const { getWhatsAppNumbersFromFirebase } = await import('../../../lib/firebaseSync');
+        const firebaseNumbers = await getWhatsAppNumbersFromFirebase();
+
+        if (Array.isArray(firebaseNumbers) && firebaseNumbers.length > 0) {
+          setWhatsappNumbers(firebaseNumbers);
+          localStorage.setItem("whatsappNumbers", JSON.stringify(firebaseNumbers));
+          return;
+        }
+      } catch (error) {
+        console.error('خطأ في تحميل أرقام الواتساب من Firebase:', error);
+      }
+
       const saved = localStorage.getItem("whatsappNumbers");
       if (saved) {
         setWhatsappNumbers(JSON.parse(saved));
       } else {
-        // رقم افتراضي
         setWhatsappNumbers(["96550540999"]);
       }
-    }
+    };
+
+    loadNumbers();
   }, []);
 
   const saveNumbers = (numbers: string[]) => {
     if (typeof window !== "undefined") {
       localStorage.setItem("whatsappNumbers", JSON.stringify(numbers));
-      // مزامنة مع Firebase
-      import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-        syncAllDataToFirebase().catch(console.error);
+      import('../../../lib/firebaseSync').then(({ syncWhatsAppNumbersToFirebase }) => {
+        syncWhatsAppNumbersToFirebase(numbers).catch(console.error);
       });
     }
   };

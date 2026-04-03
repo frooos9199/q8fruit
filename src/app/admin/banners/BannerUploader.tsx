@@ -35,9 +35,8 @@ export default function BannerUploader() {
               const updated = [...prev, ...newBanners];
               if (typeof window !== "undefined") {
                 window.localStorage.setItem("banners", JSON.stringify(updated));
-                // مزامنة فورية مع Firebase
-                import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-                  syncAllDataToFirebase().catch(console.error);
+                import('../../../lib/firebaseSync').then(({ syncBannersToFirebase }) => {
+                  syncBannersToFirebase(updated).catch(console.error);
                 });
               }
               return updated;
@@ -54,9 +53,8 @@ export default function BannerUploader() {
       const updated = prev.filter((_, i) => i !== idx);
       if (typeof window !== "undefined") {
         window.localStorage.setItem("banners", JSON.stringify(updated));
-        // مزامنة فورية مع Firebase
-        import('../../../lib/firebaseSync').then(({ syncAllDataToFirebase }) => {
-          syncAllDataToFirebase().catch(console.error);
+        import('../../../lib/firebaseSync').then(({ syncBannersToFirebase }) => {
+          syncBannersToFirebase(updated).catch(console.error);
         });
       }
       return updated;

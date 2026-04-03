@@ -238,16 +238,6 @@ export default function ProductsPage() {
         <button onClick={handleExportExcel} className="px-4 py-2 rounded bg-emerald-700 text-white font-bold hover:bg-emerald-900">📈 تحميل باكاب Excel</button>
         <button onClick={handleExportXML} className="px-4 py-2 rounded bg-green-700 text-white font-bold hover:bg-green-900">تحميل XML</button>
         <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 rounded bg-blue-700 text-white font-bold hover:bg-blue-900">رفع XML</button>
-        <button 
-          onClick={async () => {
-            const { syncAllDataToFirebase } = await import('../../../lib/firebaseSync');
-            const success = await syncAllDataToFirebase();
-            alert(success ? '✅ تم مزامنة جميع البيانات مع Firebase' : '❌ فشل في المزامنة');
-          }}
-          className="px-4 py-2 rounded bg-purple-700 text-white font-bold hover:bg-purple-900"
-        >
-          🔄 مزامنة Firebase
-        </button>
         <input ref={fileInputRef} type="file" accept=".xml" className="hidden" onChange={handleImportXML} />
       </div>
 
