@@ -114,7 +114,7 @@ export default function InvoicesPage() {
               ×
             </button>
             <InvoicePrint
-              invoiceNumber={selectedInvoice.id}
+              invoiceNumber={selectedInvoice.orderNumber || selectedInvoice.id}
               customer={selectedInvoice.userInfo?.name || selectedInvoice.customer || "عميل"}
               phone={selectedInvoice.userInfo?.phone || selectedInvoice.phone || ""}
               address={selectedInvoice.userInfo?.address || selectedInvoice.address || ""}

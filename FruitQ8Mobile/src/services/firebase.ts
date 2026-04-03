@@ -1,8 +1,9 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { collection, getDocs, getFirestore, doc, getDoc, query, where, updateDoc, deleteDoc, addDoc, setDoc, arrayUnion } from 'firebase/firestore';
+import { collection, getDocs, getFirestore, doc, getDoc, query, where, updateDoc, deleteDoc, addDoc, setDoc, arrayUnion, runTransaction } from 'firebase/firestore';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { firebaseConfig } from './firebaseConfig';
+import { API_CONFIG } from '../config/api';
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const db = getFirestore(app);
@@ -10,6 +11,32 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 
 export { db, auth };
+
+const ORDER_COUNTER_START = 99;
+
+export const getNextOrderNumber = async () => {
+  const counterRef = doc(db, 'settings', 'orderCounter');
+
+  return runTransaction(db, async (transaction) => {
+    const counterSnapshot = await transaction.get(counterRef);
+    const lastOrderNumber = counterSnapshot.exists()
+      ? Number(counterSnapshot.data().lastOrderNumber) || ORDER_COUNTER_START
+      : ORDER_COUNTER_START;
+
+    const nextOrderNumber = Math.max(lastOrderNumber + 1, 100);
+
+    transaction.set(
+      counterRef,
+      {
+        lastOrderNumber: nextOrderNumber,
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    );
+
+    return nextOrderNumber;
+  });
+};
 
 export const saveUserFcmToken = async (userId: string, token: string) => {
   try {
@@ -136,6 +163,12 @@ export const fetchOrders = async (status?: string) => {
     if (status) {
       orders = orders.filter((order: any) => order.status === status);
     }
+
+    orders.sort((firstOrder: any, secondOrder: any) => {
+      const firstDate = firstOrder.createdAt?.toDate?.() || new Date(firstOrder.createdAt || firstOrder.timestamp || 0);
+      const secondDate = secondOrder.createdAt?.toDate?.() || new Date(secondOrder.createdAt || secondOrder.timestamp || 0);
+      return secondDate.getTime() - firstDate.getTime();
+    });
     
     return orders;
   } catch (error) {
@@ -272,6 +305,7 @@ export const createOrder = async (orderData: any) => {
   try {
     const ordersRef = collection(db, 'orders');
     const orderRef = doc(ordersRef);
+    const orderNumber = await getNextOrderNumber();
     const currentUser = auth.currentUser;
     const deliveryAddress = {
       ...(orderData.deliveryAddress || {}),
@@ -305,7 +339,7 @@ export const createOrder = async (orderData: any) => {
     const newOrder = {
       ...orderData,
       id: orderRef.id,
-      orderNumber: `#${orderRef.id.slice(-8)}`,
+      orderNumber,
       source: 'mobile',
       userId: currentUser?.uid || orderData.userId || '',
       customer: {
@@ -341,8 +375,9 @@ export const createOrder = async (orderData: any) => {
     // Send notification to admin
     await sendAdminNotification({
       title: '📦 طلب جديد',
-      message: `طلب جديد من ${orderData.customerName} - ${(orderData.total || 0).toFixed(3)} د.ك`,
+      message: `طلب جديد رقم ${orderNumber} من ${orderData.customerName} - ${(orderData.total || 0).toFixed(3)} د.ك`,
       orderId: orderRef.id,
+      orderNumber,
       type: 'new_order',
     });
     
@@ -381,7 +416,13 @@ export const fetchUserOrders = async (userId: string) => {
     const ordersRef = collection(db, 'orders');
     const q = query(ordersRef, where('userId', '==', userId));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() }))
+      .sort((firstOrder: any, secondOrder: any) => {
+        const firstDate = firstOrder.createdAt?.toDate?.() || new Date(firstOrder.createdAt || firstOrder.timestamp || 0);
+        const secondDate = secondOrder.createdAt?.toDate?.() || new Date(secondOrder.createdAt || secondOrder.timestamp || 0);
+        return secondDate.getTime() - firstDate.getTime();
+      });
   } catch (error) {
     console.error('Error fetching user orders:', error);
     return [];
@@ -536,11 +577,38 @@ export const updateDeliverySettings = async (fee: number, freeAbove: number) => 
 export const sendAdminNotification = async (notification: any) => {
   try {
     const notificationsRef = collection(db, 'adminNotifications');
-    await addDoc(notificationsRef, {
+    const createdNotification = {
       ...notification,
       read: false,
       createdAt: new Date(),
-    });
+    };
+
+    await addDoc(notificationsRef, createdNotification);
+
+    try {
+      await fetch(`${API_CONFIG.BASE_URL}/api/notifications/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: createdNotification.title,
+          body: createdNotification.message,
+          topic: 'admin-orders',
+          badgeSource: 'adminNotifications',
+          data: {
+            type: createdNotification.type || 'admin_notification',
+            screen: createdNotification.type === 'new_order' ? 'ManageOrders' : 'Notifications',
+            orderId: createdNotification.orderId || '',
+            orderNumber: createdNotification.orderNumber ? String(createdNotification.orderNumber) : '',
+            channelId: 'q8fruit-orders',
+          },
+        }),
+      });
+    } catch (pushError) {
+      console.error('Error sending admin push notification:', pushError);
+    }
+
     return { success: true };
   } catch (error) {
     console.error('Error sending admin notification:', error);

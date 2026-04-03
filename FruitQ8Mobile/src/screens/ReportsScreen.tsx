@@ -30,6 +30,8 @@ export const ReportsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
   });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
 
+  const getOrderNumber = (order: any) => String(order.orderNumber || order.id);
+
   const loadData = async () => {
     try {
       const statsData = await fetchAdminStats();
@@ -162,7 +164,7 @@ export const ReportsScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
               return (
                 <View key={order.id} style={styles.orderCard}>
                   <View style={styles.orderHeader}>
-                    <Text style={styles.orderId}>#{order.id.substring(0, 8)}</Text>
+                    <Text style={styles.orderId}>#{getOrderNumber(order)}</Text>
                     <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
                       <Text style={styles.statusText}>{getStatusText(order.status)}</Text>
                     </View>

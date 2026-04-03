@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
 import { db, fetchAdminNotifications, markNotificationAsRead } from '../services/firebase';
+import { setAppIconBadgeCount } from '../services/notifications';
 
 interface Notification {
   id: string;
@@ -89,6 +90,16 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
   };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  useEffect(() => {
+    if (notifications.length === 0) {
+      return;
+    }
+
+    setAppIconBadgeCount(unreadCount).catch((error) => {
+      console.error('Error syncing app icon badge count:', error);
+    });
+  }, [notifications.length, unreadCount]);
 
   return (
     <NotificationContext.Provider

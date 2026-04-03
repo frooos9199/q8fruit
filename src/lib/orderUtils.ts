@@ -105,7 +105,8 @@ export const getOrderDisplayNumber = (order: any) => {
   }
 
   if (typeof order.id === 'string' && order.id.startsWith('local_')) {
-    return `#${1000 + toNumber(order.id.replace('local_', ''))}`;
+    const normalizedLocalId = order.id.replace('local_', '');
+    return String(toNumber(normalizedLocalId, Number(normalizedLocalId) || 100));
   }
 
   if (order.id) {

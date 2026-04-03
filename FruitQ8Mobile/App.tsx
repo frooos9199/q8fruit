@@ -8,7 +8,7 @@ import './src/utils/i18n';
 
 function AppShell(): React.JSX.Element {
   const navigationRef = useNavigationContainerRef();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [navigationReady, setNavigationReady] = useState(false);
 
   useEffect(() => {
@@ -16,8 +16,8 @@ function AppShell(): React.JSX.Element {
       return;
     }
 
-    initializePushNotifications(navigationRef, user?.id);
-  }, [navigationReady, navigationRef, user?.id]);
+    initializePushNotifications(navigationRef, user?.id, isAdmin);
+  }, [isAdmin, navigationReady, navigationRef, user?.id]);
 
   return (
     <NavigationContainer ref={navigationRef} onReady={() => setNavigationReady(true)}>

@@ -4,11 +4,54 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_CONFIG } from '../config/api';
 import { saveUserFcmToken } from './firebase';
 
+const APP_BADGE_COUNT_KEY = 'appBadgeCount';
+
 let notificationsInitialized = false;
 let foregroundUnsubscribe: (() => void) | null = null;
 let tokenRefreshUnsubscribe: (() => void) | null = null;
 let notificationOpenedUnsubscribe: (() => void) | null = null;
 let currentNotificationUserId: string | undefined;
+let currentNotificationIsAdmin = false;
+
+function parseBadgeCount(value: unknown): number | null {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+    return null;
+  }
+
+  return Math.floor(parsedValue);
+}
+
+async function getStoredBadgeCount() {
+  const storedValue = await AsyncStorage.getItem(APP_BADGE_COUNT_KEY);
+  const parsedValue = parseBadgeCount(storedValue);
+  return parsedValue ?? 0;
+}
+
+export async function setAppIconBadgeCount(count: number) {
+  const normalizedCount = Math.max(0, Math.floor(count));
+  await AsyncStorage.setItem(APP_BADGE_COUNT_KEY, String(normalizedCount));
+  await notifee.setBadgeCount(normalizedCount);
+  return normalizedCount;
+}
+
+export async function incrementAppIconBadgeCount(explicitCount?: unknown) {
+  const parsedExplicitCount = parseBadgeCount(explicitCount);
+  const nextCount = parsedExplicitCount ?? ((await getStoredBadgeCount()) + 1);
+  return setAppIconBadgeCount(nextCount);
+}
+
+export async function syncStoredAppIconBadgeCount() {
+  return setAppIconBadgeCount(await getStoredBadgeCount());
+}
+
+export async function clearAppIconBadgeCount() {
+  return setAppIconBadgeCount(0);
+}
 
 function getNavigationPayload(data?: any) {
   if (!data) {
@@ -91,6 +134,8 @@ export function registerBackgroundMessageHandler() {
   messaging().setBackgroundMessageHandler(async (remoteMessage: any) => {
     console.log('📩 Background message received:', remoteMessage);
 
+    const badgeCount = await incrementAppIconBadgeCount(remoteMessage?.data?.badgeCount);
+
     if (remoteMessage?.data) {
       await queuePendingNavigation(remoteMessage.data);
     }
@@ -102,7 +147,8 @@ export function registerBackgroundMessageHandler() {
         remoteMessage.data.title,
         remoteMessage.data.body,
         remoteMessage.data,
-        remoteMessage.data.channelId || 'q8fruit-orders'
+        remoteMessage.data.channelId || 'q8fruit-orders',
+        badgeCount
       );
     }
   });
@@ -160,9 +206,14 @@ export async function displayNotification(
   title: string,
   body: string,
   data?: any,
-  channelId: string = 'q8fruit-orders'
+  channelId: string = 'q8fruit-orders',
+  badgeCount?: number
 ) {
   try {
+    if (badgeCount !== undefined) {
+      await setAppIconBadgeCount(badgeCount);
+    }
+
     await notifee.displayNotification({
       title,
       body,
@@ -198,9 +249,10 @@ export function setupForegroundMessageHandler() {
 
     const { title, body } = remoteMessage.notification || {};
     const data = remoteMessage.data;
+    const badgeCount = await incrementAppIconBadgeCount(remoteMessage?.data?.badgeCount);
 
     if (title && body) {
-      await displayNotification(title, body, data);
+      await displayNotification(title, body, data, data?.channelId || 'q8fruit-orders', badgeCount);
     }
   });
 }
@@ -244,23 +296,32 @@ export async function unsubscribeFromTopic(topic: string) {
 }
 
 // Subscribe to default topics
-export async function subscribeToDefaultTopics(userId?: string) {
+export async function subscribeToDefaultTopics(userId?: string, isAdmin?: boolean) {
   await subscribeToTopic('all-users');
   await subscribeToTopic('promotions');
   
   if (userId) {
     await subscribeToTopic(`user-${userId}`);
   }
+
+  if (isAdmin) {
+    await subscribeToTopic('admin-orders');
+  }
 }
 
 // Initialize push notifications
-export async function initializePushNotifications(navigation: any, userId?: string) {
+export async function initializePushNotifications(navigation: any, userId?: string, isAdmin: boolean = false) {
   try {
     if (currentNotificationUserId && currentNotificationUserId !== userId) {
       await unsubscribeFromTopic(`user-${currentNotificationUserId}`);
     }
 
+    if (currentNotificationIsAdmin && !isAdmin) {
+      await unsubscribeFromTopic('admin-orders');
+    }
+
     currentNotificationUserId = userId;
+    currentNotificationIsAdmin = isAdmin;
 
     // Request permission
     const hasPermission = await requestNotificationPermission();
@@ -272,6 +333,7 @@ export async function initializePushNotifications(navigation: any, userId?: stri
 
     // Create channels (Android)
     await createNotificationChannel();
+    await syncStoredAppIconBadgeCount();
 
     // Get FCM token
     const fcmToken = await getFCMToken();
@@ -299,8 +361,8 @@ export async function initializePushNotifications(navigation: any, userId?: stri
     }
 
     // Subscribe to topics
-    await subscribeToDefaultTopics(userId);
-  await consumePendingNotificationNavigation(navigation);
+    await subscribeToDefaultTopics(userId, isAdmin);
+    await consumePendingNotificationNavigation(navigation);
 
     console.log('✅ Push notifications initialized');
     return fcmToken;
@@ -315,7 +377,8 @@ export async function sendNotificationToUser(
   userId: string,
   title: string,
   body: string,
-  data?: any
+  data?: any,
+  badgeCount?: number
 ) {
   try {
     const response = await fetch(`${API_CONFIG.BASE_URL}/api/notifications/send`, {
@@ -327,6 +390,7 @@ export async function sendNotificationToUser(
         title,
         body,
         data,
+        badgeCount,
         topic: `user-${userId}`,
       }),
     });

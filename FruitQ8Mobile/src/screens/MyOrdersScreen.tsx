@@ -25,6 +25,8 @@ export const MyOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   const [refreshing, setRefreshing] = useState(false);
   const [userPhone, setUserPhone] = useState('');
 
+  const getOrderNumber = (order: any) => String(order.orderNumber || order.id);
+
   useEffect(() => {
     loadUserPhone();
   }, []);
@@ -152,7 +154,7 @@ export const MyOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
               onPress={() => navigation.navigate('OrderDetails', { order })}
             >
               <View style={styles.orderHeader}>
-                <Text style={styles.orderId}>#{order.id.substring(0, 8)}</Text>
+                <Text style={styles.orderId}>#{getOrderNumber(order)}</Text>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
                   <Text style={styles.statusText}>{getStatusText(order.status)}</Text>
                 </View>

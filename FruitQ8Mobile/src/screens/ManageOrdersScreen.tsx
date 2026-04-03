@@ -21,6 +21,8 @@ export const ManageOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }
   const [refreshing, setRefreshing] = useState(false);
   const [filter, setFilter] = useState<string>('all');
 
+  const getOrderNumber = (order: any) => String(order.orderNumber || order.id);
+
   const loadOrders = async () => {
     try {
       const data = await fetchOrders(filter === 'all' ? undefined : filter);
@@ -136,7 +138,7 @@ export const ManageOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }
               }}
             >
               <View style={styles.orderHeader}>
-                <Text style={styles.orderId}>#{order.id.substring(0, 8)}</Text>
+                <Text style={styles.orderId}>#{getOrderNumber(order)}</Text>
                 <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
                   <Text style={styles.statusText}>{getStatusText(order.status)}</Text>
                 </View>

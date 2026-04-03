@@ -11,6 +11,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
   const { isAdmin } = useAuth();
   const isArabic = i18n.language === 'ar';
   const { order } = route.params;
+  const orderNumber = String(order.orderNumber || order.id);
 
   const getStatusColor = (status: string) => {
     const colors: any = {
@@ -65,7 +66,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
     const addressText = typeof address === 'string' ? address : 
       `${address.area || ''} - قطعة ${address.block || ''} - شارع ${address.street || ''} - بناية ${address.building || ''}${address.floor ? ` - دور ${address.floor}` : ''}${address.apartment ? ` - شقة ${address.apartment}` : ''}`;
     
-    const message = `🛒 *طلب جديد #${order.id.substring(0, 8)}*\n\n` +
+    const message = `🛒 *طلب جديد #${orderNumber}*\n\n` +
       `👤 *العميل:* ${order.customerName || order.customer?.name || order.userName || order.name || ''}\n` +
       `📱 *الهاتف:* ${order.phoneNumber || order.customer?.phone || order.customerPhone || order.userPhone || order.phone || ''}\n` +
       `📍 *العنوان:* ${addressText}\n\n` +
@@ -84,7 +85,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
     }
     
     const message = `مرحباً ${order.customerName || order.userName || order.name || ''},\n\n` +
-      `طلبك #${order.id.substring(0, 8)} ${getStatusText(order.status)}\n\n` +
+      `طلبك #${orderNumber} ${getStatusText(order.status)}\n\n` +
       `شكراً لك - فكهاني الكويت 🍎`;
     
     Linking.openURL(`https://wa.me/${phone.startsWith('965') ? phone : '965' + phone}?text=${encodeURIComponent(message)}`);
@@ -102,7 +103,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
         {/* Order Info */}
         <View style={styles.section}>
           <View style={styles.orderHeader}>
-            <Text style={styles.orderId}>#{order.id.substring(0, 8)}</Text>
+            <Text style={styles.orderId}>#{orderNumber}</Text>
             <View style={[styles.statusBadge, { backgroundColor: getStatusColor(order.status) }]}>
               <Text style={styles.statusText}>{getStatusText(order.status)}</Text>
             </View>

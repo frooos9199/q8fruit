@@ -1,10 +1,12 @@
 import UIKit
 import React
 import React_RCTAppDelegate
+import ReactAppDependencyProvider
+import FirebaseCore
 
 @main
 class AppDelegate: RCTAppDelegate {
-  override func sourceURL(for bridge: RCTBridge) -> URL? {
+  override func bundleURL() -> URL? {
     #if DEBUG
     return RCTBundleURLProvider.sharedSettings().jsBundleURL(forBundleRoot: "index")
     #else
@@ -17,7 +19,12 @@ class AppDelegate: RCTAppDelegate {
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
   ) -> Bool {
     self.moduleName = "FruitQ8Mobile"
+    self.dependencyProvider = RCTAppDependencyProvider()
     self.initialProps = [:]
+
+    if FirebaseApp.app() == nil {
+      FirebaseApp.configure()
+    }
     
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }

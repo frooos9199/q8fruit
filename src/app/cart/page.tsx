@@ -10,7 +10,7 @@ import BackToHome from "../../components/BackToHome";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sendInvoiceToWhatsApp } from "../../lib/whatsappInvoice";
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
 interface CartItem {
@@ -174,18 +174,21 @@ export default function CartPage() {
       try {
         const { db } = await import('../../lib/firebase');
         if (db) {
-          const { doc, getDoc, setDoc } = await import('firebase/firestore');
-          const counterDoc = await getDoc(doc(db, 'settings', 'orderCounter'));
-          
-          if (counterDoc.exists()) {
-            orderNumber = counterDoc.data().lastOrderNumber + 1;
-          }
-          
-          // تحديث العداد في Firebase
-          await setDoc(doc(db, 'settings', 'orderCounter'), {
-            lastOrderNumber: orderNumber,
-            updatedAt: new Date().toISOString(),
-          }, { merge: true });
+          orderNumber = await runTransaction(db, async (transaction) => {
+            const counterRef = doc(db, 'settings', 'orderCounter');
+            const counterDoc = await transaction.get(counterRef);
+            const lastOrderNumber = counterDoc.exists()
+              ? Number(counterDoc.data().lastOrderNumber) || 99
+              : 99;
+            const nextOrderNumber = Math.max(lastOrderNumber + 1, 100);
+
+            transaction.set(counterRef, {
+              lastOrderNumber: nextOrderNumber,
+              updatedAt: new Date().toISOString(),
+            }, { merge: true });
+
+            return nextOrderNumber;
+          });
           
           console.log('✅ رقم الطلب/الفاتورة الجديد:', orderNumber);
         } else {
@@ -220,7 +223,7 @@ export default function CartPage() {
         userEmail: userEmail || "زائر",
         isGuest: !userEmail, // علامة للطلبات الضيوف
       };
-      invoices.push(invoice);
+      invoices.unshift(invoice);
       window.localStorage.setItem("invoices", JSON.stringify(invoices));
 
       // إضافة الطلب إلى orders (للإدارة)
@@ -279,7 +282,7 @@ export default function CartPage() {
         timestamp: Date.now(),
         isGuest: !userEmail, // علامة للطلبات الضيوف
       };
-      orders.push(order);
+      orders.unshift(order);
       window.localStorage.setItem("orders", JSON.stringify(orders));
       
       // حفظ العنوان في بيانات المستخدم إذا كان مسجل دخول
@@ -306,13 +309,34 @@ export default function CartPage() {
         if (db) {
           await addDoc(collection(db, 'adminNotifications'), {
             title: '📦 طلب جديد',
-            message: `طلب جديد من ${userInfo.name} - ${invoice.total.toFixed(3)} د.ك`,
+            message: `طلب جديد رقم ${orderNumber} من ${userInfo.name} - ${invoice.total.toFixed(3)} د.ك`,
             type: 'new_order',
             orderId: String(orderNumber),
+            orderNumber,
             customerName: userInfo.name,
             phoneNumber: userInfo.phone,
             read: false,
             createdAt: serverTimestamp(),
+          });
+
+          await fetch('/api/notifications/send', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title: '📦 طلب جديد',
+              body: `طلب جديد رقم ${orderNumber} من ${userInfo.name} - ${invoice.total.toFixed(3)} د.ك`,
+              topic: 'admin-orders',
+              badgeSource: 'adminNotifications',
+              data: {
+                type: 'new_order',
+                screen: 'ManageOrders',
+                orderId: String(orderNumber),
+                orderNumber: String(orderNumber),
+                channelId: 'q8fruit-orders',
+              },
+            }),
           });
         }
       } catch (notificationError) {

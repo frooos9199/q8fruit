@@ -1,6 +1,36 @@
 import admin from 'firebase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 
+function parseBadgeCount(value: unknown) {
+  if (value === undefined || value === null || value === '') {
+    return null;
+  }
+
+  const parsedValue = Number(value);
+  if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+    return null;
+  }
+
+  return Math.floor(parsedValue);
+}
+
+async function resolveBadgeCount(badgeSource?: string) {
+  if (!badgeSource || !admin.apps.length) {
+    return null;
+  }
+
+  if (badgeSource === 'adminNotifications') {
+    const unreadNotificationsSnapshot = await admin.firestore()
+      .collection('adminNotifications')
+      .where('read', '==', false)
+      .get();
+
+    return unreadNotificationsSnapshot.size;
+  }
+
+  return null;
+}
+
 // Initialize Firebase Admin (do this once in your app)
 if (!admin.apps.length) {
   try {
@@ -34,7 +64,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { userId, token, title, body, data, topic } = await request.json();
+    const { userId, token, title, body, data, topic, badgeCount, badgeSource } = await request.json();
     const notificationData = Object.entries(data || {}).reduce<Record<string, string>>((accumulator, [key, value]) => {
       if (value === undefined || value === null) {
         return accumulator;
@@ -43,6 +73,12 @@ export async function POST(request: NextRequest) {
       accumulator[key] = typeof value === 'string' ? value : JSON.stringify(value);
       return accumulator;
     }, {});
+    const resolvedBadgeCount =
+      parseBadgeCount(badgeCount) ??
+      (await resolveBadgeCount(badgeSource)) ??
+      parseBadgeCount(notificationData.badgeCount) ??
+      1;
+    notificationData.badgeCount = String(resolvedBadgeCount);
 
     let message: admin.messaging.Message;
 
@@ -60,6 +96,7 @@ export async function POST(request: NextRequest) {
             channelId: notificationData.channelId || 'q8fruit-orders',
             color: '#10b981',
             icon: 'ic_launcher',
+            notificationCount: resolvedBadgeCount,
             sound: 'default',
           },
         },
@@ -70,7 +107,7 @@ export async function POST(request: NextRequest) {
           payload: {
             aps: {
               sound: 'default',
-              badge: 1,
+              badge: resolvedBadgeCount,
               contentAvailable: true,
               mutableContent: true,
             },
@@ -92,6 +129,7 @@ export async function POST(request: NextRequest) {
             channelId: notificationData.channelId || 'q8fruit-orders',
             color: '#10b981',
             icon: 'ic_launcher',
+            notificationCount: resolvedBadgeCount,
             sound: 'default',
           },
         },
@@ -102,7 +140,7 @@ export async function POST(request: NextRequest) {
           payload: {
             aps: {
               sound: 'default',
-              badge: 1,
+              badge: resolvedBadgeCount,
               contentAvailable: true,
               mutableContent: true,
             },
@@ -160,6 +198,7 @@ export async function sendPromotionalNotification(
           channelId: 'q8fruit-promotions',
           color: '#10b981',
           icon: 'ic_notification',
+          notificationCount: 1,
         },
       },
       apns: {
@@ -225,6 +264,18 @@ export async function sendOrderUpdateNotification(
           channelId: 'q8fruit-orders',
           color: '#10b981',
           icon: 'ic_notification',
+          notificationCount: 1,
+        },
+      },
+      apns: {
+        headers: {
+          'apns-priority': '10',
+        },
+        payload: {
+          aps: {
+            sound: 'default',
+            badge: 1,
+          },
         },
       },
     };
