@@ -41,6 +41,10 @@
 	<string>نحتاج الوصول للكاميرا لالتقاط صور المنتجات</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>نحتاج حفظ الصور في مكتبة الصور</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>RCTNewArchEnabled</key>
 	<true/>
 	<key>UILaunchStoryboardName</key>
