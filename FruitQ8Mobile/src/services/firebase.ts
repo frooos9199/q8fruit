@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { collection, getDocs, getFirestore, doc, getDoc, query, where, updateDoc, deleteDoc, addDoc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, getFirestore, doc, getDoc, query, where, updateDoc, deleteDoc, addDoc, setDoc, arrayUnion } from 'firebase/firestore';
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from 'firebase/auth';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { firebaseConfig } from './firebaseConfig';
@@ -10,6 +10,31 @@ const storage = getStorage(app);
 const auth = getAuth(app);
 
 export { db, auth };
+
+export const saveUserFcmToken = async (userId: string, token: string) => {
+  try {
+    if (!userId || !token) {
+      return { success: false, error: 'Missing userId or token' };
+    }
+
+    const userRef = doc(db, 'users', userId);
+    await setDoc(
+      userRef,
+      {
+        fcmToken: token,
+        fcmTokens: arrayUnion(token),
+        fcmTokenUpdatedAt: new Date(),
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    );
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error saving FCM token:', error);
+    return { success: false, error: error.message || error };
+  }
+};
 
 export const fetchProductsFromFirebase = async () => {
   const snapshot = await getDocs(collection(db, 'products'));
@@ -526,7 +551,18 @@ export const sendAdminNotification = async (notification: any) => {
 export const fetchAdminNotifications = async () => {
   try {
     const snapshot = await getDocs(collection(db, 'adminNotifications'));
-    const notifications = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    const notifications = snapshot.docs.map((document) => {
+      const raw = document.data() as Record<string, any>;
+      return {
+        id: document.id,
+        title: raw.title || '',
+        message: raw.message || '',
+        type: raw.type || 'order',
+        orderId: raw.orderId,
+        createdAt: raw.createdAt || new Date(),
+        read: Boolean(raw.read),
+      };
+    });
     return notifications.sort((a: any, b: any) => {
       const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt);
       const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt);

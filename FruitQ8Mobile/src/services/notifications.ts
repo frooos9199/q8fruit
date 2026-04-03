@@ -1,6 +1,13 @@
 import messaging from '@react-native-firebase/messaging';
-import notifee, { AndroidImportance } from '@notifee/react-native';
+import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_CONFIG } from '../config/api';
+import { saveUserFcmToken } from './firebase';
+
+let notificationsInitialized = false;
+let foregroundUnsubscribe: (() => void) | null = null;
+let tokenRefreshUnsubscribe: (() => void) | null = null;
+let currentNotificationUserId: string | undefined;
 
 // Request notification permission
 export async function requestNotificationPermission() {
@@ -33,6 +40,17 @@ export async function getFCMToken() {
   } catch (error) {
     console.error('Error getting FCM token:', error);
     return null;
+  }
+}
+
+async function syncUserFcmToken(userId: string | undefined, token: string | null) {
+  if (!userId || !token) {
+    return;
+  }
+
+  const result = await saveUserFcmToken(userId, token);
+  if (!result.success) {
+    console.error('Error syncing FCM token:', result.error);
   }
 }
 
@@ -77,7 +95,7 @@ export async function displayNotification(
         pressAction: {
           id: 'default',
         },
-        largeIcon: require('../assets/icon.png'),
+        largeIcon: require('../assets/images/logo.png'),
         smallIcon: 'ic_notification',
         color: '#10b981',
       },
@@ -97,7 +115,7 @@ export async function displayNotification(
 
 // Handle foreground messages
 export function setupForegroundMessageHandler() {
-  return messaging().onMessage(async (remoteMessage) => {
+  return messaging().onMessage(async (remoteMessage: any) => {
     console.log('📩 Foreground message received:', remoteMessage);
 
     const { title, body } = remoteMessage.notification || {};
@@ -111,7 +129,7 @@ export function setupForegroundMessageHandler() {
 
 // Handle background messages
 export async function setupBackgroundMessageHandler() {
-  messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+  messaging().setBackgroundMessageHandler(async (remoteMessage: any) => {
     console.log('📩 Background message received:', remoteMessage);
     
     const { title, body } = remoteMessage.notification || {};
@@ -125,8 +143,8 @@ export async function setupBackgroundMessageHandler() {
 
 // Handle notification press
 export function setupNotificationPressHandler(navigation: any) {
-  notifee.onForegroundEvent(({ type, detail }) => {
-    if (type === 1) { // Press event
+  notifee.onForegroundEvent(({ type, detail }: any) => {
+    if (type === EventType.PRESS) {
       const data = detail.notification?.data;
       
       if (data?.orderId) {
@@ -139,8 +157,8 @@ export function setupNotificationPressHandler(navigation: any) {
     }
   });
 
-  notifee.onBackgroundEvent(async ({ type, detail }) => {
-    if (type === 1) {
+  notifee.onBackgroundEvent(async ({ type, detail }: any) => {
+    if (type === EventType.PRESS) {
       const data = detail.notification?.data;
       await AsyncStorage.setItem('pendingNavigation', JSON.stringify(data));
     }
@@ -180,6 +198,12 @@ export async function subscribeToDefaultTopics(userId?: string) {
 // Initialize push notifications
 export async function initializePushNotifications(navigation: any, userId?: string) {
   try {
+    if (currentNotificationUserId && currentNotificationUserId !== userId) {
+      await unsubscribeFromTopic(`user-${currentNotificationUserId}`);
+    }
+
+    currentNotificationUserId = userId;
+
     // Request permission
     const hasPermission = await requestNotificationPermission();
     
@@ -193,21 +217,24 @@ export async function initializePushNotifications(navigation: any, userId?: stri
 
     // Get FCM token
     const fcmToken = await getFCMToken();
+    await syncUserFcmToken(userId, fcmToken);
 
-    // Setup message handlers
-    setupForegroundMessageHandler();
-    await setupBackgroundMessageHandler();
-    setupNotificationPressHandler(navigation);
+    if (!notificationsInitialized) {
+      foregroundUnsubscribe = setupForegroundMessageHandler();
+      await setupBackgroundMessageHandler();
+      setupNotificationPressHandler(navigation);
+
+      tokenRefreshUnsubscribe = messaging().onTokenRefresh(async (newToken: string) => {
+        console.log('🔄 FCM token refreshed:', newToken);
+        await AsyncStorage.setItem('fcmToken', newToken);
+        await syncUserFcmToken(currentNotificationUserId, newToken);
+      });
+
+      notificationsInitialized = true;
+    }
 
     // Subscribe to topics
     await subscribeToDefaultTopics(userId);
-
-    // Handle token refresh
-    messaging().onTokenRefresh(async (newToken) => {
-      console.log('🔄 FCM token refreshed:', newToken);
-      await AsyncStorage.setItem('fcmToken', newToken);
-      // TODO: Update token on server
-    });
 
     console.log('✅ Push notifications initialized');
     return fcmToken;
@@ -225,16 +252,16 @@ export async function sendNotificationToUser(
   data?: any
 ) {
   try {
-    const response = await fetch('https://your-api.com/api/notifications/send', {
+    const response = await fetch(`${API_CONFIG.BASE_URL}/api/notifications/send`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        userId,
         title,
         body,
         data,
+        topic: `user-${userId}`,
       }),
     });
 
