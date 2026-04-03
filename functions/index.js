@@ -5,6 +5,21 @@ const fetch = require('node-fetch');
 
 admin.initializeApp();
 
+function getBrevoSender() {
+  return {
+    name: process.env.BREVO_SENDER_NAME || 'Q8 Fruit',
+    email: process.env.BREVO_SENDER_EMAIL || 'noreply@q8fruit.com',
+  };
+}
+
+async function readBrevoError(response) {
+  try {
+    return await response.json();
+  } catch (error) {
+    return { message: await response.text(), parseError: error.message };
+  }
+}
+
 // Define BREVO_API_KEY as a parameter
 const brevoApiKey = defineString('BREVO_API_KEY');
 
@@ -172,6 +187,7 @@ exports.sendOrderNotificationEmail = onDocumentCreated('orders/{orderId}', async
       // إرسال إيميل لكل مستلم
       const sendPromises = recipientEmails.map(async (email) => {
         try {
+          const sender = getBrevoSender();
           const response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
@@ -180,10 +196,7 @@ exports.sendOrderNotificationEmail = onDocumentCreated('orders/{orderId}', async
               'content-type': 'application/json',
             },
             body: JSON.stringify({
-              sender: {
-                name: 'Q8 Fruit',
-                email: 'noreply@q8fruit.com',
-              },
+              sender,
               to: [
                 {
                   email: email,
@@ -199,9 +212,9 @@ exports.sendOrderNotificationEmail = onDocumentCreated('orders/{orderId}', async
             console.log(`✅ تم إرسال الإيميل بنجاح إلى: ${email}`);
             return { success: true, email };
           } else {
-            const errorData = await response.json();
+            const errorData = await readBrevoError(response);
             console.error(`❌ فشل إرسال الإيميل إلى ${email}:`, errorData);
-            return { success: false, email, error: errorData };
+            return { success: false, email, sender, error: errorData };
           }
         } catch (error) {
           console.error(`❌ خطأ في إرسال الإيميل إلى ${email}:`, error);

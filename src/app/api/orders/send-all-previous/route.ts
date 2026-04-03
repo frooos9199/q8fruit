@@ -1,9 +1,25 @@
 import { NextResponse } from 'next/server';
 
+function getBrevoSender() {
+  return {
+    name: process.env.BREVO_SENDER_NAME || 'Q8 Fruit - الأرشيف',
+    email: process.env.BREVO_SENDER_EMAIL || 'orders@q8fruit.com',
+  };
+}
+
+async function readBrevoError(response: Response) {
+  try {
+    return await response.json();
+  } catch {
+    return { message: await response.text() };
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const { orders } = await request.json();
     const apiKey = process.env.BREVO_API_KEY;
+    const sender = getBrevoSender();
     
     if (!apiKey) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
@@ -149,10 +165,7 @@ export async function POST(request: Request) {
             'accept': 'application/json',
           },
           body: JSON.stringify({
-            sender: { 
-              name: 'Q8 Fruit - الأرشيف', 
-              email: 'orders@q8fruit.com' 
-            },
+            sender,
             to: [{ 
               email: 'summit_kw@hotmail.com',
               name: 'Q8 Fruit Admin'
@@ -166,9 +179,9 @@ export async function POST(request: Request) {
           results.sent++;
           console.log(`✅ تم إرسال الطلب ${i + 1}/${orders.length}`);
         } else {
-          const errorData = await res.json();
+          const errorData = await readBrevoError(res);
           results.failed++;
-          results.errors.push({ order: order.id || order.orderNumber, error: errorData });
+          results.errors.push({ order: order.id || order.orderNumber, sender, error: errorData });
           console.error(`❌ فشل إرسال الطلب ${order.id}:`, errorData);
         }
 

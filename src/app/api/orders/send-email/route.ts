@@ -10,10 +10,26 @@ import {
   getOrderProducts,
 } from '../../../../lib/orderUtils';
 
+function getBrevoSender() {
+  return {
+    name: process.env.BREVO_SENDER_NAME || 'Q8 Fruit - نظام الطلبات',
+    email: process.env.BREVO_SENDER_EMAIL || 'orders@q8fruit.com',
+  };
+}
+
+async function readBrevoError(response: Response) {
+  try {
+    return await response.json();
+  } catch {
+    return { message: await response.text() };
+  }
+}
+
 export async function POST(request: Request) {
   try {
     const orderData = await request.json();
     const apiKey = process.env.BREVO_API_KEY;
+    const sender = getBrevoSender();
     
     if (!apiKey) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 });
@@ -193,10 +209,7 @@ export async function POST(request: Request) {
             'accept': 'application/json',
           },
           body: JSON.stringify({
-            sender: { 
-              name: 'Q8 Fruit - نظام الطلبات', 
-              email: 'orders@q8fruit.com' 
-            },
+            sender,
             to: [{ 
               email: email,
               name: 'Q8 Fruit Admin'
@@ -210,13 +223,25 @@ export async function POST(request: Request) {
           results.sent++;
           console.log(`✅ تم إرسال إيميل الطلب إلى ${email}`);
         } else {
-          const errorData = await res.json();
+          const errorData = await readBrevoError(res);
           results.failed++;
           console.error(`❌ فشل إرسال الإيميل إلى ${email}:`, errorData);
+          return NextResponse.json({
+            error: 'فشل إرسال الإيميل',
+            provider: 'brevo',
+            sender,
+            recipient: email,
+            details: errorData,
+          }, { status: 502 });
         }
       } catch (error) {
         results.failed++;
         console.error(`❌ خطأ في إرسال الإيميل إلى ${email}:`, error);
+        return NextResponse.json({
+          error: 'خطأ أثناء محاولة إرسال الإيميل',
+          recipient: email,
+          details: error instanceof Error ? error.message : String(error),
+        }, { status: 500 });
       }
     }
     
@@ -229,7 +254,8 @@ export async function POST(request: Request) {
     } else {
       return NextResponse.json({ 
         error: 'فشل إرسال جميع الإيميلات',
-        results 
+        results,
+        sender,
       }, { status: 500 });
     }
   } catch (error) {
