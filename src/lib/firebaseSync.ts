@@ -40,7 +40,9 @@ export const syncProductsToFirebase = async (products: any[]) => {
     
     // ✅ تحديث/إضافة المنتجات فقط (بدون حذف شامل)
     const updatePromises = products.map(async (product) => {
+      const resolvedDocId = String(product.docId || product.id);
       const productData = {
+        id: product.id ?? resolvedDocId,
         name: product.name || '',
         units: Array.isArray(product.units) ? product.units : [],
         category: product.category || '',
@@ -55,7 +57,7 @@ export const syncProductsToFirebase = async (products: any[]) => {
         updatedAt: new Date().toISOString()
       };
       
-      return setDoc(doc(productsRef, product.id.toString()), productData);
+      return setDoc(doc(productsRef, resolvedDocId), productData);
     });
     
     await Promise.all(updatePromises);

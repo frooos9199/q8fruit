@@ -13,7 +13,8 @@ interface ProductUnit {
 }
 
 interface Product {
-  id: number;
+  id: number | string;
+  docId?: string;
   name: string;
   units: ProductUnit[];
   quantity: number;
@@ -26,6 +27,25 @@ interface Product {
   hasOffer?: boolean; // هل المنتج عليه عرض
   discount?: number; // نسبة الخصم (مثال: 15 = 15%)
 }
+
+const getProductDocId = (product: Product) => {
+  if (product.docId && String(product.docId).trim()) return String(product.docId);
+  return String(product.id);
+};
+
+const getProductDisplayId = (product: Product) => {
+  const numericId = Number(product.id);
+  if (Number.isFinite(numericId)) {
+    return numericId;
+  }
+
+  const numericDocId = Number(product.docId);
+  if (Number.isFinite(numericDocId)) {
+    return numericDocId;
+  }
+
+  return "-";
+};
 
 export default function ProductTable() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -54,11 +74,20 @@ export default function ProductTable() {
         if (db) {
           try {
             const snapshot = await getDocs(collection(db, 'products'));
-            const firebaseProducts = snapshot.docs.map(doc => ({
-              id: parseInt(doc.id),
-              ...doc.data(),
-              order: doc.data().order ?? 0
-            })) as Product[];
+            const firebaseProducts = snapshot.docs.map((productDoc) => {
+              const data = productDoc.data() as Record<string, unknown>;
+              const resolvedId =
+                typeof data.id === 'number' || typeof data.id === 'string'
+                  ? data.id
+                  : productDoc.id;
+
+              return {
+                ...data,
+                id: resolvedId,
+                docId: productDoc.id,
+                order: typeof data.order === 'number' ? data.order : Number(data.order ?? 0) || 0,
+              } as Product;
+            });
             
             firebaseProducts.sort((a, b) => (a.order || 0) - (b.order || 0));
             
@@ -142,14 +171,14 @@ export default function ProductTable() {
     }
   };
 
-  const toggleActive = async (id: number) => {
-    console.log(`🔄 تغيير حالة المنتج ${id}`);
+  const toggleActive = async (docId: string) => {
+    console.log(`🔄 تغيير حالة المنتج ${docId}`);
     
     setProducts((prev) => {
-      const updated = prev.map((p) => (p.id === id ? { ...p, active: !p.active } : p));
-      const updatedProduct = updated.find(p => p.id === id);
+      const updated = prev.map((p) => (getProductDocId(p) === docId ? { ...p, active: !p.active } : p));
+      const updatedProduct = updated.find(p => getProductDocId(p) === docId);
       
-      console.log(`✅ حالة جديدة للمنتج ${id}:`, updatedProduct?.active);
+      console.log(`✅ حالة جديدة للمنتج ${docId}:`, updatedProduct?.active);
       
       // حفظ فوري في localStorage و Firebase
       saveProductsToStorage(updated);
@@ -158,25 +187,25 @@ export default function ProductTable() {
     });
   };
 
-  const removeProduct = async (id: number) => {
+  const removeProduct = async (docId: string) => {
     if (!confirm(`هل أنت متأكد من حذف المنتج؟`)) return;
     
-    console.log(`🗑️ بدء حذف المنتج ${id}`);
+    console.log(`🗑️ بدء حذف المنتج ${docId}`);
     
     // حذف من localStorage أولاً (عرض فوري)
     setProducts((prev) => {
-      const updated = prev.filter((p) => p.id !== id);
+      const updated = prev.filter((p) => getProductDocId(p) !== docId);
       saveProductsToStorage(updated);
-      console.log(`✅ تم حذف المنتج ${id} من localStorage`);
+      console.log(`✅ تم حذف المنتج ${docId} من localStorage`);
       return updated;
     });
     
     // 🔥 حذف من Firebase في الخلفية
     if (db) {
       try {
-        const productRef = doc(db, 'products', id.toString());
+        const productRef = doc(db, 'products', docId);
         await deleteDoc(productRef);
-        console.log(`✅ تم حذف المنتج ${id} من Firebase`);
+        console.log(`✅ تم حذف المنتج ${docId} من Firebase`);
         alert('✅ تم حذف المنتج بنجاح!');
       } catch (err) {
         console.error('❌ خطأ في حذف المنتج من Firebase:', err);
@@ -187,10 +216,10 @@ export default function ProductTable() {
     }
   };
 
-  const updateProductCategories = async (productId: number, categoryName: string, isChecked: boolean) => {
+  const updateProductCategories = async (docId: string, categoryName: string, isChecked: boolean) => {
     setProducts((prev) => {
       const updated = prev.map((product) => {
-        if (product.id === productId) {
+        if (getProductDocId(product) === docId) {
           let categories = product.categories || [product.category];
           
           if (isChecked) {
@@ -216,9 +245,9 @@ export default function ProductTable() {
       saveProductsToStorage(updated);
       
       // 🔥 تحديث Firebase أيضاً
-      const updatedProduct = updated.find(p => p.id === productId);
+      const updatedProduct = updated.find(p => getProductDocId(p) === docId);
       if (updatedProduct && db) {
-        const productRef = doc(db, 'products', productId.toString());
+        const productRef = doc(db, 'products', getProductDocId(updatedProduct));
         updateDoc(productRef, {
           categories: updatedProduct.categories,
           category: updatedProduct.category
@@ -230,10 +259,10 @@ export default function ProductTable() {
   };
 
   // 🎁 تفعيل/إلغاء العرض
-  const toggleOffer = async (productId: number) => {
+  const toggleOffer = async (docId: string) => {
     setProducts((prev) => {
       const updated = prev.map((product) => {
-        if (product.id === productId) {
+        if (getProductDocId(product) === docId) {
           return {
             ...product,
             hasOffer: !product.hasOffer,
@@ -246,9 +275,9 @@ export default function ProductTable() {
       saveProductsToStorage(updated);
       
       // 🔥 حفظ في Firebase للتطبيق
-      const updatedProduct = updated.find(p => p.id === productId);
+      const updatedProduct = updated.find(p => getProductDocId(p) === docId);
       if (updatedProduct && db) {
-        const productRef = doc(db, 'products', productId.toString());
+        const productRef = doc(db, 'products', getProductDocId(updatedProduct));
         updateDoc(productRef, {
           hasOffer: updatedProduct.hasOffer || false,
           discount: updatedProduct.discount || 0
@@ -259,17 +288,17 @@ export default function ProductTable() {
     });
   };
 
-  const updateDiscount = async (productId: number, discount: number) => {
+  const updateDiscount = async (docId: string, discount: number) => {
     if (discount < 0 || discount > 100) {
       alert('يجب أن تكون نسبة الخصم بين 0 و 100');
       return;
     }
 
-    console.log(`💰 تحديث خصم المنتج ${productId} إلى ${discount}%`);
+    console.log(`💰 تحديث خصم المنتج ${docId} إلى ${discount}%`);
 
     setProducts((prev) => {
       const updated = prev.map((product) => {
-        if (product.id === productId) {
+        if (getProductDocId(product) === docId) {
           return {
             ...product,
             discount: discount > 0 ? discount : undefined,
@@ -298,9 +327,10 @@ export default function ProductTable() {
       
       // 🔥 حفظ في Firebase فوراً مع جميع البيانات
       if (db) {
-        const productRef = doc(db, 'products', updated.id.toString());
+        const productRef = doc(db, 'products', getProductDocId(updated));
         await setDoc(productRef, {
           ...updated,
+          docId: getProductDocId(updated),
           updatedAt: new Date().toISOString()
         }, { merge: false });
         
@@ -323,14 +353,19 @@ export default function ProductTable() {
     setProducts((prev) => {
       console.log('📊 المنتجات الحالية:', prev.length);
 
-      const maxId = prev.length > 0 ? Math.max(...prev.map(p => p.id)) : 0;
+      const maxId = prev.length > 0
+        ? Math.max(...prev.map((p) => {
+            const numericId = Number(p.id);
+            return Number.isFinite(numericId) ? numericId : 0;
+          }))
+        : 0;
       const maxOrder = prev.length > 0 ? Math.max(...prev.map(p => p.order || 0)) : -1;
       const newId = maxId + 1;
       const newOrder = maxOrder + 1;
 
       console.log('🆔 ID جديد:', newId, 'ترتيب جديد:', newOrder);
 
-      const productWithId = { ...newProduct, id: newId, order: newOrder };
+      const productWithId = { ...newProduct, id: newId, docId: String(newId), order: newOrder };
       const newProducts = [...prev, productWithId];
 
       console.log('✅ المنتجات بعد الإضافة:', newProducts.length);
@@ -498,14 +533,14 @@ export default function ProductTable() {
                 <tr
                   key={`product-${product.id}-${index}`}
                   className={`border-b border-slate-200 cursor-move transition-colors hover:bg-emerald-50/60 ${
-                    draggedItem === product.id ? 'opacity-50' : ''
+                    draggedItem === Number(product.id) ? 'opacity-50' : ''
                   }`}
                   draggable
-                  onDragStart={(e) => handleDragStart(e, product.id)}
+                  onDragStart={(e) => handleDragStart(e, Number(product.id))}
                   onDragOver={handleDragOver}
                 >
                   <td className="p-2 font-bold text-gray-600">{index + 1}</td>
-                  <td className="p-2">{product.id}</td>
+                  <td className="p-2">{getProductDisplayId(product)}</td>
                   <td className="p-2">
                     {product.images && product.images.length > 0 ? (
                       <img src={product.images[0]} alt={product.name} className="w-16 h-16 object-cover rounded mx-auto" />
@@ -533,7 +568,7 @@ export default function ProductTable() {
                           <input
                             type="checkbox"
                             checked={isSelected}
-                            onChange={(e) => updateProductCategories(product.id, category.name, e.target.checked)}
+                            onChange={(e) => updateProductCategories(getProductDocId(product), category.name, e.target.checked)}
                           />
                           <span className="ml-1">{category.name}</span>
                         </label>
@@ -543,7 +578,7 @@ export default function ProductTable() {
                   <td className="p-2">
                     <button
                       className={`px-2 py-1 rounded ${product.hasOffer ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'}`}
-                      onClick={() => toggleOffer(product.id)}
+                      onClick={() => toggleOffer(getProductDocId(product))}
                     >
                       {product.hasOffer ? "🎁 عرض مفعل" : "تفعيل عرض"}
                     </button>
@@ -554,7 +589,7 @@ export default function ProductTable() {
                           min={0}
                           max={100}
                           value={product.discount || 0}
-                          onChange={(e) => updateDiscount(product.id, parseInt(e.target.value) || 0)}
+                          onChange={(e) => updateDiscount(getProductDocId(product), parseInt(e.target.value) || 0)}
                           className="border rounded p-1 w-16 text-center"
                         />
                         <span className="ml-1">%</span>
@@ -572,7 +607,7 @@ export default function ProductTable() {
                   <td className="p-2">
                     <button
                       className="px-2 py-1 bg-blue-500 text-white rounded"
-                      onClick={() => toggleActive(product.id)}
+                      onClick={() => toggleActive(getProductDocId(product))}
                     >
                       {product.active ? "إيقاف" : "تفعيل"}
                     </button>
@@ -588,7 +623,7 @@ export default function ProductTable() {
                   <td className="p-2">
                     <button
                       className="px-2 py-1 bg-red-500 text-white rounded"
-                      onClick={() => removeProduct(product.id)}
+                      onClick={() => removeProduct(getProductDocId(product))}
                     >
                       حذف
                     </button>

@@ -9,7 +9,8 @@ interface ProductUnit {
 }
 
 interface Product {
-  id: number;
+  id: number | string;
+  docId?: string;
   name: string;
   units: ProductUnit[];
   quantity: number;
