@@ -35,6 +35,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { userId, token, title, body, data, topic } = await request.json();
+    const notificationData = Object.entries(data || {}).reduce<Record<string, string>>((accumulator, [key, value]) => {
+      if (value === undefined || value === null) {
+        return accumulator;
+      }
+
+      accumulator[key] = typeof value === 'string' ? value : JSON.stringify(value);
+      return accumulator;
+    }, {});
 
     let message: admin.messaging.Message;
 
@@ -45,7 +53,29 @@ export async function POST(request: NextRequest) {
           title,
           body,
         },
-        data,
+        data: notificationData,
+        android: {
+          priority: 'high',
+          notification: {
+            channelId: notificationData.channelId || 'q8fruit-orders',
+            color: '#10b981',
+            icon: 'ic_launcher',
+            sound: 'default',
+          },
+        },
+        apns: {
+          headers: {
+            'apns-priority': '10',
+          },
+          payload: {
+            aps: {
+              sound: 'default',
+              badge: 1,
+              contentAvailable: true,
+              mutableContent: true,
+            },
+          },
+        },
         topic,
       };
     } else if (token) {
@@ -55,7 +85,29 @@ export async function POST(request: NextRequest) {
           title,
           body,
         },
-        data,
+        data: notificationData,
+        android: {
+          priority: 'high',
+          notification: {
+            channelId: notificationData.channelId || 'q8fruit-orders',
+            color: '#10b981',
+            icon: 'ic_launcher',
+            sound: 'default',
+          },
+        },
+        apns: {
+          headers: {
+            'apns-priority': '10',
+          },
+          payload: {
+            aps: {
+              sound: 'default',
+              badge: 1,
+              contentAvailable: true,
+              mutableContent: true,
+            },
+          },
+        },
         token,
       };
     } else {

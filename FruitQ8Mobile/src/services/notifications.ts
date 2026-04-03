@@ -7,7 +7,64 @@ import { saveUserFcmToken } from './firebase';
 let notificationsInitialized = false;
 let foregroundUnsubscribe: (() => void) | null = null;
 let tokenRefreshUnsubscribe: (() => void) | null = null;
+let notificationOpenedUnsubscribe: (() => void) | null = null;
 let currentNotificationUserId: string | undefined;
+
+function getNavigationPayload(data?: any) {
+  if (!data) {
+    return null;
+  }
+
+  if (data.orderId) {
+    return { screen: 'OrderDetails', params: { orderId: data.orderId } };
+  }
+
+  if (data.productId) {
+    return { screen: 'ProductDetails', params: { productId: data.productId } };
+  }
+
+  if (data.screen) {
+    return { screen: data.screen, params: data.params ? JSON.parse(data.params) : undefined };
+  }
+
+  return null;
+}
+
+async function queuePendingNavigation(data?: any) {
+  if (!data) {
+    return;
+  }
+
+  await AsyncStorage.setItem('pendingNavigation', JSON.stringify(data));
+}
+
+async function handleNotificationNavigation(navigation: any, data?: any) {
+  const target = getNavigationPayload(data);
+
+  if (!target || !navigation?.isReady?.()) {
+    await queuePendingNavigation(data);
+    return;
+  }
+
+  navigation.navigate(target.screen, target.params);
+}
+
+export async function consumePendingNotificationNavigation(navigation: any) {
+  const pendingNavigation = await AsyncStorage.getItem('pendingNavigation');
+
+  if (!pendingNavigation) {
+    return;
+  }
+
+  await AsyncStorage.removeItem('pendingNavigation');
+
+  try {
+    const data = JSON.parse(pendingNavigation);
+    await handleNotificationNavigation(navigation, data);
+  } catch (error) {
+    console.error('Error processing pending notification navigation:', error);
+  }
+}
 
 // Request notification permission
 export async function requestNotificationPermission() {
@@ -28,6 +85,27 @@ export async function requestNotificationPermission() {
     console.error('Error requesting notification permission:', error);
     return false;
   }
+}
+
+export function registerBackgroundMessageHandler() {
+  messaging().setBackgroundMessageHandler(async (remoteMessage: any) => {
+    console.log('📩 Background message received:', remoteMessage);
+
+    if (remoteMessage?.data) {
+      await queuePendingNavigation(remoteMessage.data);
+    }
+
+    // When the app is backgrounded or closed, the OS displays notification payloads.
+    // Only render a local notification for data-only messages.
+    if (!remoteMessage?.notification && remoteMessage?.data?.title && remoteMessage?.data?.body) {
+      await displayNotification(
+        remoteMessage.data.title,
+        remoteMessage.data.body,
+        remoteMessage.data,
+        remoteMessage.data.channelId || 'q8fruit-orders'
+      );
+    }
+  });
 }
 
 // Get FCM token
@@ -96,7 +174,7 @@ export async function displayNotification(
           id: 'default',
         },
         largeIcon: require('../assets/images/logo.png'),
-        smallIcon: 'ic_notification',
+        smallIcon: 'ic_launcher',
         color: '#10b981',
       },
       ios: {
@@ -127,40 +205,20 @@ export function setupForegroundMessageHandler() {
   });
 }
 
-// Handle background messages
-export async function setupBackgroundMessageHandler() {
-  messaging().setBackgroundMessageHandler(async (remoteMessage: any) => {
-    console.log('📩 Background message received:', remoteMessage);
-    
-    const { title, body } = remoteMessage.notification || {};
-    const data = remoteMessage.data;
-
-    if (title && body) {
-      await displayNotification(title, body, data);
-    }
-  });
-}
-
 // Handle notification press
 export function setupNotificationPressHandler(navigation: any) {
   notifee.onForegroundEvent(({ type, detail }: any) => {
     if (type === EventType.PRESS) {
       const data = detail.notification?.data;
-      
-      if (data?.orderId) {
-        navigation.navigate('OrderDetails', { orderId: data.orderId });
-      } else if (data?.productId) {
-        navigation.navigate('ProductDetails', { productId: data.productId });
-      } else if (data?.screen) {
-        navigation.navigate(data.screen);
-      }
+
+      handleNotificationNavigation(navigation, data);
     }
   });
 
   notifee.onBackgroundEvent(async ({ type, detail }: any) => {
     if (type === EventType.PRESS) {
       const data = detail.notification?.data;
-      await AsyncStorage.setItem('pendingNavigation', JSON.stringify(data));
+      await queuePendingNavigation(data);
     }
   });
 }
@@ -221,8 +279,15 @@ export async function initializePushNotifications(navigation: any, userId?: stri
 
     if (!notificationsInitialized) {
       foregroundUnsubscribe = setupForegroundMessageHandler();
-      await setupBackgroundMessageHandler();
       setupNotificationPressHandler(navigation);
+      notificationOpenedUnsubscribe = messaging().onNotificationOpenedApp(async (remoteMessage: any) => {
+        await handleNotificationNavigation(navigation, remoteMessage?.data);
+      });
+
+      const initialNotification = await messaging().getInitialNotification();
+      if (initialNotification?.data) {
+        await queuePendingNavigation(initialNotification.data);
+      }
 
       tokenRefreshUnsubscribe = messaging().onTokenRefresh(async (newToken: string) => {
         console.log('🔄 FCM token refreshed:', newToken);
@@ -235,6 +300,7 @@ export async function initializePushNotifications(navigation: any, userId?: stri
 
     // Subscribe to topics
     await subscribeToDefaultTopics(userId);
+  await consumePendingNotificationNavigation(navigation);
 
     console.log('✅ Push notifications initialized');
     return fcmToken;
