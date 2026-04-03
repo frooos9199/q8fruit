@@ -111,7 +111,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* زر العودة للموقع */}
         <div className="mt-auto pt-4 border-t border-gray-200 dark:border-gray-700">
           <a
-            href="https://fruitq8.com" 
+            href="https://www.q8fruit.com" 
             target="_blank"
             rel="noopener noreferrer"
             className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white rounded-xl font-bold text-center transition-all duration-200 flex items-center justify-center gap-3 shadow-lg hover:shadow-xl transform hover:scale-105"

@@ -12,6 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Header } from '../components';
 import { fetchOrders } from '../services/firebase';
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants';
+import { formatOrderDateTime } from '../utils/orderDate';
 
 export const ManageOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { t, i18n } = useTranslation();
@@ -166,8 +167,7 @@ export const ManageOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }
                   {(order.total || 0).toFixed(3)} {isArabic ? 'د.ك' : 'KD'}
                 </Text>
                 <Text style={styles.orderDate}>
-                  {order.createdAt?.toDate?.().toLocaleDateString('ar-EG') || 
-                   new Date(order.createdAt).toLocaleDateString('ar-EG')}
+                  {formatOrderDateTime(order, isArabic ? 'ar-EG' : 'en-US')}
                 </Text>
               </View>
             </TouchableOpacity>

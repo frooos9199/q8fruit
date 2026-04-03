@@ -43,7 +43,7 @@ export default function ReferralProgram({ userId, userName }: ReferralProgramPro
     const shareData = {
       title: 'انضم لـ Q8 Fruit',
       text: `استخدم كود الدعوة ${referralCode} واحصل على خصم 2 دينار كويتي على أول طلب! 🍎🥬`,
-      url: `https://q8fruit.com?ref=${referralCode}`,
+      url: `https://www.q8fruit.com?ref=${referralCode}`,
     };
 
     try {

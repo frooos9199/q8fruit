@@ -4,6 +4,7 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, si
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { firebaseConfig } from './firebaseConfig';
 import { API_CONFIG } from '../config/api';
+import { getOrderDate } from '../utils/orderDate';
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const db = getFirestore(app);
@@ -118,7 +119,11 @@ export const fetchAdminStats = async () => {
     const orders = ordersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
     const todayOrders = orders.filter((order: any) => {
-      const orderDate = order.createdAt?.toDate?.() || new Date(order.createdAt);
+      const orderDate = getOrderDate(order);
+      if (!orderDate) {
+        return false;
+      }
+
       return orderDate >= today;
     });
     
@@ -165,8 +170,8 @@ export const fetchOrders = async (status?: string) => {
     }
 
     orders.sort((firstOrder: any, secondOrder: any) => {
-      const firstDate = firstOrder.createdAt?.toDate?.() || new Date(firstOrder.createdAt || firstOrder.timestamp || 0);
-      const secondDate = secondOrder.createdAt?.toDate?.() || new Date(secondOrder.createdAt || secondOrder.timestamp || 0);
+      const firstDate = getOrderDate(firstOrder) || new Date(0);
+      const secondDate = getOrderDate(secondOrder) || new Date(0);
       return secondDate.getTime() - firstDate.getTime();
     });
     
@@ -179,12 +184,35 @@ export const fetchOrders = async (status?: string) => {
 
 export const updateOrderStatus = async (orderId: string, status: string) => {
   try {
-    const orderRef = doc(db, 'orders', orderId);
+    let resolvedOrderId = orderId;
+
+    if (!resolvedOrderId) {
+      return { success: false, error: 'Missing order id' };
+    }
+
+    const directOrderRef = doc(db, 'orders', resolvedOrderId);
+    const directOrderSnapshot = await getDoc(directOrderRef);
+
+    if (!directOrderSnapshot.exists()) {
+      const ordersSnapshot = await getDocs(collection(db, 'orders'));
+      const matchingOrder = ordersSnapshot.docs.find((orderDocument) => {
+        const raw = orderDocument.data() as Record<string, any>;
+        return raw.id === orderId || String(raw.orderNumber || '') === String(orderId);
+      });
+
+      if (!matchingOrder) {
+        return { success: false, error: 'Order not found' };
+      }
+
+      resolvedOrderId = matchingOrder.id;
+    }
+
+    const orderRef = doc(db, 'orders', resolvedOrderId);
     await updateDoc(orderRef, { status, updatedAt: new Date() });
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating order:', error);
-    return { success: false };
+    return { success: false, error: error?.message || 'Failed to update order' };
   }
 };
 
@@ -419,8 +447,8 @@ export const fetchUserOrders = async (userId: string) => {
     return snapshot.docs
       .map(doc => ({ id: doc.id, ...doc.data() }))
       .sort((firstOrder: any, secondOrder: any) => {
-        const firstDate = firstOrder.createdAt?.toDate?.() || new Date(firstOrder.createdAt || firstOrder.timestamp || 0);
-        const secondDate = secondOrder.createdAt?.toDate?.() || new Date(secondOrder.createdAt || secondOrder.timestamp || 0);
+        const firstDate = getOrderDate(firstOrder) || new Date(0);
+        const secondDate = getOrderDate(secondOrder) || new Date(0);
         return secondDate.getTime() - firstDate.getTime();
       });
   } catch (error) {
@@ -632,8 +660,8 @@ export const fetchAdminNotifications = async () => {
       };
     });
     return notifications.sort((a: any, b: any) => {
-      const dateA = a.createdAt?.toDate?.() || new Date(a.createdAt);
-      const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt);
+      const dateA = getOrderDate(a) || new Date(0);
+      const dateB = getOrderDate(b) || new Date(0);
       return dateB.getTime() - dateA.getTime();
     });
   } catch (error) {

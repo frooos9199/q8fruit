@@ -5,6 +5,7 @@ import { Header } from '../components';
 import { useAuth } from '../context';
 import { updateOrderStatus } from '../services/firebase';
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants';
+import { formatOrderDateTime } from '../utils/orderDate';
 
 export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
   const { i18n } = useTranslation();
@@ -50,6 +51,11 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
             if (result.success) {
               Alert.alert(isArabic ? 'نجح' : 'Success', isArabic ? 'تم التحديث' : 'Updated successfully');
               navigation.goBack();
+            } else {
+              Alert.alert(
+                isArabic ? 'خطأ' : 'Error',
+                result.error || (isArabic ? 'فشل تحديث حالة الطلب' : 'Failed to update order status')
+              );
             }
           },
         },
@@ -109,8 +115,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
             </View>
           </View>
           <Text style={styles.orderDate}>
-            {order.createdAt?.toDate?.().toLocaleString('ar-EG') || 
-             new Date(order.createdAt).toLocaleString('ar-EG')}
+            {formatOrderDateTime(order, isArabic ? 'ar-EG' : 'en-US')}
           </Text>
         </View>
 

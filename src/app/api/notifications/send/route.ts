@@ -1,6 +1,17 @@
 import admin from 'firebase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 
+type AdminTokenOwner = {
+  userId: string;
+  matchesPrimaryToken: boolean;
+};
+
+const INVALID_FCM_ERROR_CODES = new Set([
+  'messaging/invalid-argument',
+  'messaging/invalid-registration-token',
+  'messaging/registration-token-not-registered',
+]);
+
 function parseBadgeCount(value: unknown) {
   if (value === undefined || value === null || value === '') {
     return null;
@@ -33,7 +44,10 @@ async function resolveBadgeCount(badgeSource?: string) {
 
 async function getAdminDeviceTokens() {
   if (!admin.apps.length) {
-    return [] as string[];
+    return {
+      tokenOwners: new Map<string, AdminTokenOwner[]>(),
+      tokens: [] as string[],
+    };
   }
 
   const usersCollection = admin.firestore().collection('users');
@@ -43,26 +57,84 @@ async function getAdminDeviceTokens() {
   ]);
 
   const tokens = new Set<string>();
+  const tokenOwners = new Map<string, AdminTokenOwner[]>();
+
+  const trackToken = (userId: string, token: string, matchesPrimaryToken: boolean) => {
+    const trimmedToken = token.trim();
+    if (!trimmedToken) {
+      return;
+    }
+
+    tokens.add(trimmedToken);
+
+    const owners = tokenOwners.get(trimmedToken) || [];
+    owners.push({ userId, matchesPrimaryToken });
+    tokenOwners.set(trimmedToken, owners);
+  };
 
   for (const snapshot of [adminFlagSnapshot, adminRoleSnapshot]) {
     for (const document of snapshot.docs) {
       const data = document.data() || {};
 
       if (typeof data.fcmToken === 'string' && data.fcmToken.trim()) {
-        tokens.add(data.fcmToken.trim());
+        trackToken(document.id, data.fcmToken, true);
       }
 
       if (Array.isArray(data.fcmTokens)) {
         for (const token of data.fcmTokens) {
           if (typeof token === 'string' && token.trim()) {
-            tokens.add(token.trim());
+            trackToken(document.id, token, false);
           }
         }
       }
     }
   }
 
-  return Array.from(tokens);
+  return {
+    tokenOwners,
+    tokens: Array.from(tokens),
+  };
+}
+
+async function cleanupInvalidAdminTokens(
+  tokenOwners: Map<string, AdminTokenOwner[]>,
+  invalidTokens: string[]
+) {
+  if (!admin.apps.length || invalidTokens.length === 0) {
+    return;
+  }
+
+  const firestore = admin.firestore();
+  const updatesByUser = new Map<string, { clearPrimaryToken: boolean; tokensToRemove: string[] }>();
+
+  for (const token of invalidTokens) {
+    const owners = tokenOwners.get(token) || [];
+
+    for (const owner of owners) {
+      const currentUpdate = updatesByUser.get(owner.userId) || {
+        clearPrimaryToken: false,
+        tokensToRemove: [],
+      };
+
+      currentUpdate.tokensToRemove.push(token);
+      currentUpdate.clearPrimaryToken ||= owner.matchesPrimaryToken;
+      updatesByUser.set(owner.userId, currentUpdate);
+    }
+  }
+
+  await Promise.all(
+    Array.from(updatesByUser.entries()).map(async ([userId, update]) => {
+      const updatePayload: Record<string, unknown> = {
+        fcmTokens: admin.firestore.FieldValue.arrayRemove(...update.tokensToRemove),
+      };
+
+      if (update.clearPrimaryToken) {
+        updatePayload.fcmToken = admin.firestore.FieldValue.delete();
+      }
+
+      await firestore.collection('users').doc(userId).update(updatePayload);
+    })
+  );
 }
 
 // Initialize Firebase Admin (do this once in your app)
@@ -191,9 +263,10 @@ export async function POST(request: NextRequest) {
     }
 
     let response: string;
+    let diagnostics: Record<string, unknown> | undefined;
 
     if (shouldFanOutToAdminDevices) {
-      const adminTokens = await getAdminDeviceTokens();
+      const { tokenOwners, tokens: adminTokens } = await getAdminDeviceTokens();
 
       if (adminTokens.length > 0) {
         const multicastMessage: admin.messaging.MulticastMessage = {
@@ -205,10 +278,51 @@ export async function POST(request: NextRequest) {
         };
 
         const multicastResponse = await admin.messaging().sendEachForMulticast(multicastMessage);
+        const failureDetails = multicastResponse.responses
+          .map((result, index) => {
+            if (result.success || !result.error) {
+              return null;
+            }
+
+            const failedToken = adminTokens[index];
+            const errorCode = result.error.code || 'unknown';
+            const errorMessage = result.error.message || 'Unknown Firebase messaging error';
+
+            return {
+              code: errorCode,
+              message: errorMessage,
+              tokenPreview: `${failedToken.slice(0, 12)}...${failedToken.slice(-6)}`,
+            };
+          })
+          .filter((result): result is NonNullable<typeof result> => Boolean(result));
+        const invalidTokens = multicastResponse.responses
+          .map((result, index) => {
+            if (result.success || !result.error?.code || !INVALID_FCM_ERROR_CODES.has(result.error.code)) {
+              return null;
+            }
+
+            return adminTokens[index];
+          })
+          .filter((result): result is string => Boolean(result));
+
+        if (invalidTokens.length > 0) {
+          await cleanupInvalidAdminTokens(tokenOwners, invalidTokens);
+        }
+
         console.log('✅ Admin multicast notification result:', {
           successCount: multicastResponse.successCount,
           failureCount: multicastResponse.failureCount,
+          failures: failureDetails,
+          cleanedInvalidTokens: invalidTokens.length,
         });
+
+        diagnostics = {
+          cleanedInvalidTokens: invalidTokens.length,
+          failureCount: multicastResponse.failureCount,
+          failures: failureDetails,
+          successCount: multicastResponse.successCount,
+          totalAdminTokens: adminTokens.length,
+        };
 
         response = `admin-multicast:${multicastResponse.successCount}/${adminTokens.length}`;
       } else {
@@ -222,6 +336,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json({
       success: true,
+      diagnostics,
       messageId: response,
     });
   } catch (error) {
@@ -249,7 +364,7 @@ export async function sendPromotionalNotification(
       },
       data: {
         type: 'promotion',
-        url: actionUrl || 'https://q8fruit.com',
+        url: actionUrl || 'https://www.q8fruit.com',
       },
       topic: 'promotions',
       android: {

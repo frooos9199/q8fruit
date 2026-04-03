@@ -102,7 +102,7 @@ export const metadata: Metadata = {
     },
   },
   other: {
-    "apple-itunes-app": "app-id=YOUR_APP_ID, app-argument=https://q8fruit.com",
+    "apple-itunes-app": "app-id=YOUR_APP_ID, app-argument=https://www.q8fruit.com",
     "google-play-app": "app-id=com.q8fruit.app",
   },
 };
