@@ -37,7 +37,7 @@ export const HomeScreen: React.FC = () => {
       const rawProducts = await fetchProductsFromFirebase();
       console.log('✅ Raw products:', rawProducts.length, rawProducts);
       const mappedProducts: Product[] = rawProducts
-        .filter((item) => item && item.name && !item.isHidden)
+        .filter((item: any) => item && item.name && !item.isHidden)
         .map((item: any) => {
           const units = Array.isArray(item.units) ? item.units : [];
           const firstUnit = units[0];

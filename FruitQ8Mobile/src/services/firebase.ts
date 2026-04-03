@@ -356,9 +356,9 @@ export const updateProduct = async (productId: string, data: any) => {
     const productRef = doc(db, 'products', productId);
     await updateDoc(productRef, updateData);
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating product:', error);
-    return { success: false, error };
+    return { success: false, error: error?.message || 'Failed to update product' };
   }
 };
 
@@ -400,9 +400,9 @@ export const addProduct = async (data: any) => {
     const productsRef = collection(db, 'products');
     const docRef = await addDoc(productsRef, productData);
     return { success: true, id: docRef.id };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error adding product:', error);
-    return { success: false, error };
+    return { success: false, error: error?.message || 'Failed to add product' };
   }
 };
 

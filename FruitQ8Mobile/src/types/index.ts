@@ -14,6 +14,9 @@ export interface Product {
   units?: { name: string; nameAr?: string; price: number }[];
   stock: number;
   discount?: number;
+  isHidden?: boolean;
+  quantity?: number;
+  order?: number;
 }
 
 export interface CartItem {
@@ -55,7 +58,10 @@ export type RootStackParamList = {
   AddEditProduct: { product?: any };
   Checkout: undefined;
   MyOrders: undefined;
+  Address: undefined;
   OrderDetails: { order: any };
+  DeliverySettings: undefined;
+  Notifications: undefined;
 };
 
 export type MainTabParamList = {
