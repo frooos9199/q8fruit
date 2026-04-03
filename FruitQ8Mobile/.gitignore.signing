@@ -1,0 +1,11 @@
+# ⚠️ ملفات سرية - لا ترفع على Git
+
+# Keystore files
+*.keystore
+*.jks
+
+# Gradle configuration with passwords
+gradle.properties
+
+# Release APK/AAB with signing info
+android/app/build/outputs/
