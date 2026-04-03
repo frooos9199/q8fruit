@@ -53,6 +53,18 @@ export async function clearAppIconBadgeCount() {
   return setAppIconBadgeCount(0);
 }
 
+async function ensureDeviceRegisteredForRemoteMessages() {
+  try {
+    if (!messaging().isDeviceRegisteredForRemoteMessages) {
+      await messaging().registerDeviceForRemoteMessages();
+      console.log('✅ Device registered for remote messages');
+    }
+  } catch (error) {
+    console.error('Error registering device for remote messages:', error);
+    throw error;
+  }
+}
+
 function getNavigationPayload(data?: any) {
   if (!data) {
     return null;
@@ -112,6 +124,14 @@ export async function consumePendingNotificationNavigation(navigation: any) {
 // Request notification permission
 export async function requestNotificationPermission() {
   try {
+    await ensureDeviceRegisteredForRemoteMessages();
+
+    await notifee.requestPermission({
+      alert: true,
+      badge: true,
+      sound: true,
+    });
+
     const authStatus = await messaging().requestPermission();
     const enabled =
       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
@@ -157,6 +177,8 @@ export function registerBackgroundMessageHandler() {
 // Get FCM token
 export async function getFCMToken() {
   try {
+    await ensureDeviceRegisteredForRemoteMessages();
+
     const token = await messaging().getToken();
     console.log('📱 FCM Token:', token);
     await AsyncStorage.setItem('fcmToken', token);

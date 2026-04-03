@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loginWithEmail, registerWithEmail, logoutUser } from '../services/firebase';
+import { loginWithEmail, registerWithEmail, logoutUser, getUserData } from '../services/firebase';
 
 interface User {
   id: string;
@@ -31,7 +31,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loadUser = async () => {
     try {
       const saved = await AsyncStorage.getItem('user');
-      if (saved) setUser(JSON.parse(saved));
+      if (!saved) {
+        return;
+      }
+
+      const parsedUser = JSON.parse(saved) as User;
+      const userId = parsedUser.id || await AsyncStorage.getItem('@user_id');
+
+      if (!userId) {
+        setUser(parsedUser);
+        return;
+      }
+
+      try {
+        const latestUserData = await getUserData(userId);
+        if (latestUserData) {
+          const refreshedUser: User = {
+            ...parsedUser,
+            id: userId,
+            name: latestUserData.name || parsedUser.name,
+            email: latestUserData.email || parsedUser.email,
+            phone: latestUserData.phone || parsedUser.phone,
+            isAdmin: Boolean(latestUserData.isAdmin || latestUserData.role === 'admin'),
+          };
+
+          await saveUser(refreshedUser);
+          return;
+        }
+      } catch (refreshError) {
+        console.error('Error refreshing user profile:', refreshError);
+      }
+
+      setUser(parsedUser);
     } catch (error) {
       console.error('Error loading user:', error);
     }
