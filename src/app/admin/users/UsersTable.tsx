@@ -16,7 +16,19 @@ interface User {
   password?: string;
 }
 
-const initialUsers: User[] = [];
+const resolveRoleLabel = (rawRole: unknown, isAdmin: boolean) => {
+  const roleValue = typeof rawRole === "string" ? rawRole.toLowerCase() : "";
+
+  if (roleValue === "admin" || rawRole === "مدير" || isAdmin) return "مدير";
+  if (roleValue === "delivery" || rawRole === "مندوب") return "مندوب";
+  return "عميل";
+};
+
+const toFirestoreRole = (role?: string) => {
+  if (role === "مدير") return "admin";
+  if (role === "مندوب") return "delivery";
+  return "user";
+};
 
 export default function UsersTable() {
   const [users, setUsers] = useState<User[]>([]);
@@ -54,17 +66,20 @@ export default function UsersTable() {
       }
 
       const firebaseUsers = snapshot.docs.map(doc => {
-        const data = doc.data();
+        const data = doc.data() as Record<string, unknown>;
+        const isAdmin = data.isAdmin === true || data.role === 'admin' || data.role === 'مدير';
+        const isBlocked = data.isBlocked === true || data.active === false;
+
         return {
           id: doc.id,
-          name: data.name || '',
-          email: data.email || '',
-          phone: data.phone || '',
-          active: !data.isBlocked,
-          isAdmin: data.isAdmin || false,
-          isBlocked: data.isBlocked || false,
-          role: data.isAdmin ? 'مدير' : 'عميل',
-          password: data.password || ''
+          name: typeof data.name === 'string' ? data.name : '',
+          email: typeof data.email === 'string' ? data.email : '',
+          phone: typeof data.phone === 'string' ? data.phone : '',
+          active: !isBlocked,
+          isAdmin,
+          isBlocked,
+          role: resolveRoleLabel(data.role, isAdmin),
+          password: typeof data.password === 'string' ? data.password : ''
         } as User;
       });
       
@@ -134,13 +149,33 @@ export default function UsersTable() {
 
   const handleEditSave = async (updated: User) => {
     console.log('💾 حفظ تعديلات المستخدم:', updated);
+
+    const firestoreRole = toFirestoreRole(updated.role);
+    const normalizedUser = {
+      ...updated,
+      role: updated.role,
+      isAdmin: firestoreRole === 'admin',
+      isBlocked: !updated.active,
+      active: updated.active,
+    };
     
-    const updatedUsers = users.map(u => u.id === updated.id ? updated : u);
+    const updatedUsers = users.map(u => u.id === updated.id ? normalizedUser : u);
     setUsers(updatedUsers);
     
     if (db) {
       try {
-        await setDoc(doc(db, 'users', updated.id), updated, { merge: true });
+        await setDoc(doc(db, 'users', updated.id), {
+          id: updated.id,
+          uid: updated.id,
+          name: updated.name,
+          email: updated.email.trim().toLowerCase(),
+          phone: updated.phone,
+          role: firestoreRole,
+          isAdmin: firestoreRole === 'admin',
+          active: updated.active,
+          isBlocked: !updated.active,
+          updatedAt: new Date(),
+        }, { merge: true });
         console.log('✅ تم تحديث المستخدم في Firebase');
         alert('✅ تم حفظ التعديلات بنجاح!');
       } catch (error) {

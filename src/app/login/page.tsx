@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginUser, resetPassword } from "../../lib/auth";
+import { loginUser, persistUserSession, resetPassword } from "../../lib/auth";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -19,19 +19,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const { user, profile } = await loginUser(email.trim().toLowerCase(), password);
+      const { profile } = await loginUser(email.trim().toLowerCase(), password);
       
-      // حفظ بيانات المستخدم محلياً للتوافق مع الكود الحالي
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("isAdmin", profile.role === "admin" ? "true" : "false");
-        window.localStorage.setItem("currentUser", JSON.stringify({
-          uid: profile.uid,
-          name: profile.name,
-          email: profile.email,
-          phone: profile.phone,
-          role: profile.role === "admin" ? "مدير" : "عميل"
-        }));
-      }
+      persistUserSession(profile);
       
       // توجيه المستخدم
       if (profile.role === "admin") {

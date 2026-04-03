@@ -15,6 +15,62 @@ export { db, auth };
 
 const ORDER_COUNTER_START = 99;
 
+const normalizeText = (value: unknown, fallback = '') => {
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number') return String(value);
+  return fallback;
+};
+
+const normalizeDate = (value: unknown) => {
+  if (value instanceof Date) return value;
+  if (value && typeof value === 'object' && typeof (value as { toDate?: () => Date }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate();
+  }
+
+  const parsedDate = value ? new Date(value as string | number | Date) : null;
+  return parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : new Date();
+};
+
+const normalizeUserDocument = (raw: Record<string, any>, uidFallback = '') => {
+  const uid = normalizeText(raw.uid ?? raw.id, uidFallback);
+  const email = normalizeText(raw.email).trim().toLowerCase();
+  const rawRole = normalizeText(raw.role).toLowerCase();
+  const isAdmin = raw.isAdmin === true || rawRole === 'admin' || email === 'summit_kw@hotmail.com';
+  const role = isAdmin ? 'admin' : rawRole === 'delivery' ? 'delivery' : 'user';
+  const isBlocked = raw.isBlocked === true || raw.active === false;
+
+  return {
+    id: uid,
+    uid,
+    name: normalizeText(raw.name, 'User'),
+    email,
+    phone: normalizeText(raw.phone),
+    address: raw.address ?? '',
+    role,
+    isAdmin,
+    active: !isBlocked,
+    isBlocked,
+    createdAt: normalizeDate(raw.createdAt),
+    updatedAt: new Date(),
+  };
+};
+
+const toMobileUser = (raw: Record<string, any>, uidFallback = '') => {
+  const normalized = normalizeUserDocument(raw, uidFallback);
+  return {
+    id: normalized.uid,
+    uid: normalized.uid,
+    name: normalized.name,
+    email: normalized.email,
+    phone: normalized.phone,
+    address: normalized.address,
+    role: normalized.role,
+    isAdmin: normalized.isAdmin,
+    active: normalized.active,
+    isBlocked: normalized.isBlocked,
+  };
+};
+
 export const getNextOrderNumber = async () => {
   const counterRef = doc(db, 'settings', 'orderCounter');
 
@@ -482,31 +538,34 @@ export const loginWithEmail = async (email: string, password: string) => {
   try {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    
-    const usersRef = collection(db, 'users');
-    const q = query(usersRef, where('email', '==', email));
-    const querySnapshot = await getDocs(q);
-    
-    let userData = {
-      id: user.uid,
-      email: user.email || '',
-      name: user.displayName || 'User',
-      phone: '',
-      isAdmin: false,
-    };
-    
-    if (!querySnapshot.empty) {
-      const userDoc = querySnapshot.docs[0].data();
-      userData = {
-        id: user.uid,
-        email: userDoc.email || user.email || '',
-        name: userDoc.name || user.displayName || 'User',
-        phone: userDoc.phone || '',
-        isAdmin: userDoc.isAdmin || userDoc.role === 'admin' || false,
-      };
-    }
-    
-    return { success: true, user: userData };
+
+    const userRef = doc(db, 'users', user.uid);
+    const userSnapshot = await getDoc(userRef);
+    const normalizedUser = normalizeUserDocument(
+      userSnapshot.exists()
+        ? {
+            ...userSnapshot.data(),
+            id: user.uid,
+            uid: user.uid,
+            email: userSnapshot.data().email || user.email || email,
+            name: userSnapshot.data().name || user.displayName || 'User',
+          }
+        : {
+            id: user.uid,
+            uid: user.uid,
+            name: user.displayName || 'User',
+            email: user.email || email,
+            phone: '',
+            role: user.email?.trim().toLowerCase() === 'summit_kw@hotmail.com' ? 'admin' : 'user',
+            active: true,
+            createdAt: new Date(),
+          },
+      user.uid
+    );
+
+    await setDoc(userRef, normalizedUser, { merge: true });
+
+    return { success: true, user: toMobileUser(normalizedUser, user.uid) };
   } catch (error: any) {
     console.error('Login error:', error);
     return { success: false, error: error.code || 'auth/unknown' };
@@ -517,19 +576,21 @@ export const registerWithEmail = async (name: string, email: string, phone: stri
   try {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
-    
-    const userData = {
+
+    const normalizedUser = normalizeUserDocument({
       id: user.uid,
+      uid: user.uid,
       name,
       email,
       phone,
-      isAdmin: false,
+      role: email.trim().toLowerCase() === 'summit_kw@hotmail.com' ? 'admin' : 'user',
+      active: true,
       createdAt: new Date(),
-    };
-    
-    await setDoc(doc(db, 'users', user.uid), userData);
-    
-    return { success: true, user: userData };
+    }, user.uid);
+
+    await setDoc(doc(db, 'users', user.uid), normalizedUser, { merge: true });
+
+    return { success: true, user: toMobileUser(normalizedUser, user.uid) };
   } catch (error: any) {
     console.error('Register error:', error);
     return { success: false, error: error.code || 'auth/unknown' };
@@ -570,7 +631,7 @@ export const reorderProduct = async (productId: string, direction: 'up' | 'down'
 export const fetchUsers = async () => {
   try {
     const snapshot = await getDocs(collection(db, 'users'));
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    return snapshot.docs.map((document) => toMobileUser({ id: document.id, ...document.data() }, document.id));
   } catch (error) {
     console.error('Error fetching users:', error);
     return [];
@@ -580,7 +641,15 @@ export const fetchUsers = async () => {
 export const updateUser = async (userId: string, data: any) => {
   try {
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, { ...data, updatedAt: new Date() });
+    const existingUser = await getDoc(userRef);
+    const normalizedUser = normalizeUserDocument({
+      ...(existingUser.exists() ? existingUser.data() : {}),
+      ...data,
+      id: userId,
+      uid: userId,
+    }, userId);
+
+    await setDoc(userRef, normalizedUser, { merge: true });
     return { success: true };
   } catch (error) {
     console.error('Error updating user:', error);
@@ -705,10 +774,15 @@ export const markNotificationAsRead = async (notificationId: string) => {
 export const updateUserAddress = async (userId: string, data: { name?: string; phone?: string; address?: any }) => {
   try {
     const userRef = doc(db, 'users', userId);
-    await updateDoc(userRef, {
+    const existingUser = await getDoc(userRef);
+    const normalizedUser = normalizeUserDocument({
+      ...(existingUser.exists() ? existingUser.data() : {}),
       ...data,
-      updatedAt: new Date()
-    });
+      id: userId,
+      uid: userId,
+    }, userId);
+
+    await setDoc(userRef, normalizedUser, { merge: true });
     return { success: true };
   } catch (error) {
     console.error('Error updating user address:', error);
@@ -721,7 +795,7 @@ export const getUserData = async (userId: string) => {
     const userRef = doc(db, 'users', userId);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      return userSnap.data();
+      return normalizeUserDocument({ id: userId, ...userSnap.data() }, userId);
     }
     return null;
   } catch (error) {

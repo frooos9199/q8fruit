@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../../lib/firebase";
-import { getUserProfile, normalizeUserProfile, updateUserProfile, logoutUser } from "../../lib/auth";
+import { getUserProfile, normalizeUserProfile, persistUserSession, updateUserProfile, logoutUser } from "../../lib/auth";
 import { useRouter } from "next/navigation";
 import BackToHome from "../../components/BackToHome";
 
@@ -98,14 +98,13 @@ export default function AccountPage() {
     }
 
     try {
-      await updateUserProfile(user.uid, {
+      const updatedProfile = await updateUserProfile(user.uid, {
         name: form.name.trim(),
         phone: form.phone.trim(),
         address: form.address.trim()
       });
 
-      // تحديث البيانات المحلية
-      const updatedUser = {
+      const updatedUser = updatedProfile || {
         ...user,
         name: form.name.trim(),
         phone: form.phone.trim(),
@@ -113,16 +112,7 @@ export default function AccountPage() {
       };
       setUser(updatedUser);
       
-      // تحديث localStorage للتوافق مع الكود الحالي
-      if (typeof window !== "undefined") {
-        window.localStorage.setItem("currentUser", JSON.stringify({
-          uid: updatedUser.uid,
-          name: updatedUser.name,
-          email: updatedUser.email,
-          phone: updatedUser.phone,
-          role: updatedUser.role === "admin" ? "مدير" : "عميل"
-        }));
-      }
+      persistUserSession(updatedUser);
 
       setSuccess("تم حفظ البيانات بنجاح");
       setEditMode(false);

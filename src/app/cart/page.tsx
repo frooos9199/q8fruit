@@ -10,6 +10,7 @@ import BackToHome from "../../components/BackToHome";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sendInvoiceToWhatsApp } from "../../lib/whatsappInvoice";
+import { updateUserProfile } from "../../lib/auth";
 import { addDoc, collection, doc, runTransaction, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
 
@@ -290,13 +291,18 @@ export default function CartPage() {
         const currentUserData = JSON.parse(currentUser);
         currentUserData.address = userInfo.address.trim();
         window.localStorage.setItem("currentUser", JSON.stringify(currentUserData));
-        
-        // تحديث قاعدة بيانات المستخدمين
-        const users = JSON.parse(window.localStorage.getItem("users") || "[]");
-        const userIndex = users.findIndex((u: any) => u.email === userEmail);
-        if (userIndex !== -1) {
-          users[userIndex].address = userInfo.address.trim();
-          window.localStorage.setItem("users", JSON.stringify(users));
+
+        const currentUserId = currentUserData.uid || currentUserData.id;
+        if (currentUserId) {
+          try {
+            await updateUserProfile(currentUserId, {
+              name: userInfo.name.trim(),
+              phone: userInfo.phone.trim(),
+              address: userInfo.address.trim(),
+            });
+          } catch (profileError) {
+            console.error('❌ خطأ في تحديث عنوان المستخدم:', profileError);
+          }
         }
       }
       

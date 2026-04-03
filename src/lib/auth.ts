@@ -6,18 +6,21 @@ import {
   updateProfile,
   User
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
 // أنواع البيانات
 export interface UserProfile {
   uid: string;
+  id?: string;
   name: string;
   email: string;
   phone: string;
   address?: string;
   role: 'admin' | 'user';
   active: boolean;
+  isAdmin?: boolean;
+  isBlocked?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -40,20 +43,74 @@ const normalizeAddress = (value: unknown): string => {
   return '';
 };
 
-export const normalizeUserProfile = (raw: Partial<UserProfile> | Record<string, unknown>, uidFallback = ''): UserProfile => {
-  const roleValue = raw.role;
-  const normalizedRole = roleValue === 'admin' || roleValue === 'مدير' ? 'admin' : 'user';
+const normalizeDate = (value: unknown): Date => {
+  if (value instanceof Date) return value;
+  if (value && typeof value === 'object' && typeof (value as { toDate?: () => Date }).toDate === 'function') {
+    return (value as { toDate: () => Date }).toDate();
+  }
+
+  const parsedDate = value ? new Date(value as string | number | Date) : null;
+  return parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : new Date();
+};
+
+const resolveUserRole = (raw: Partial<UserProfile> | Record<string, unknown>) => {
+  const roleValue = normalizeString((raw as { role?: unknown }).role).toLowerCase();
+  const isAdmin = (raw as { isAdmin?: unknown }).isAdmin === true || roleValue === 'admin' || roleValue === 'مدير';
+  return isAdmin ? 'admin' : 'user';
+};
+
+const toFirestoreUserProfile = (
+  raw: Partial<UserProfile> | Record<string, unknown>,
+  uidFallback = ''
+): UserProfile => {
+  const uid = normalizeString((raw as { uid?: unknown; id?: unknown }).uid ?? (raw as { id?: unknown }).id, uidFallback);
+  const role = resolveUserRole(raw);
+  const isBlocked = (raw as { isBlocked?: unknown }).isBlocked === true || (raw as { active?: unknown }).active === false;
+  const createdAt = normalizeDate((raw as { createdAt?: unknown }).createdAt);
 
   return {
-    uid: normalizeString(raw.uid, uidFallback),
-    name: normalizeString(raw.name),
-    email: normalizeString(raw.email),
-    phone: normalizeString(raw.phone),
-    address: normalizeAddress(raw.address),
-    role: normalizedRole,
-    active: raw.active !== false,
-    createdAt: raw.createdAt instanceof Date ? raw.createdAt : new Date(),
-    updatedAt: raw.updatedAt instanceof Date ? raw.updatedAt : new Date(),
+    uid,
+    id: uid,
+    name: normalizeString((raw as { name?: unknown }).name),
+    email: normalizeString((raw as { email?: unknown }).email).trim().toLowerCase(),
+    phone: normalizeString((raw as { phone?: unknown }).phone),
+    address: normalizeAddress((raw as { address?: unknown }).address),
+    role,
+    isAdmin: role === 'admin',
+    active: !isBlocked,
+    isBlocked,
+    createdAt,
+    updatedAt: new Date(),
+  };
+};
+
+export const persistUserSession = (profile: UserProfile) => {
+  if (typeof window === 'undefined') return;
+
+  const cachedUser = {
+    uid: profile.uid,
+    id: profile.uid,
+    name: profile.name,
+    email: profile.email,
+    phone: profile.phone,
+    address: profile.address || '',
+    role: profile.role,
+    roleLabel: profile.role === 'admin' ? 'مدير' : 'عميل',
+    active: profile.active,
+    isAdmin: profile.role === 'admin',
+  };
+
+  window.localStorage.setItem('isAdmin', profile.role === 'admin' ? 'true' : 'false');
+  window.localStorage.setItem('currentUser', JSON.stringify(cachedUser));
+};
+
+export const normalizeUserProfile = (raw: Partial<UserProfile> | Record<string, unknown>, uidFallback = ''): UserProfile => {
+  const normalized = toFirestoreUserProfile(raw, uidFallback);
+
+  return {
+    ...normalized,
+    createdAt: normalizeDate(normalized.createdAt),
+    updatedAt: normalizeDate(normalized.updatedAt),
   };
 };
 
@@ -90,18 +147,17 @@ export const registerUser = async (userData: {
     });
 
     // حفظ بيانات إضافية في Firestore
-    const userProfile: UserProfile = {
+    const userProfile = toFirestoreUserProfile({
       uid: userCredential.user.uid,
       name: userData.name,
       email: userData.email,
       phone: userData.phone,
-      role: userData.email === 'summit_kw@hotmail.com' ? 'admin' : 'user',
+      role: userData.email.trim().toLowerCase() === 'summit_kw@hotmail.com' ? 'admin' : 'user',
       active: true,
       createdAt: new Date(),
-      updatedAt: new Date()
-    };
+    }, userCredential.user.uid);
 
-    await setDoc(doc(db, 'users', userCredential.user.uid), userProfile);
+    await setDoc(doc(db, 'users', userCredential.user.uid), userProfile, { merge: true });
 
     return { user: userCredential.user, profile: normalizeUserProfile(userProfile, userCredential.user.uid) };
   } catch (error: unknown) {
@@ -126,13 +182,30 @@ export const loginUser = async (email: string, password: string) => {
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     
     // جلب بيانات المستخدم من Firestore
-    const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-    
-    if (!userDoc.exists()) {
-      throw new Error('بيانات المستخدم غير موجودة');
-    }
+    const userRef = doc(db, 'users', userCredential.user.uid);
+    const userDoc = await getDoc(userRef);
 
-    const profile = normalizeUserProfile(userDoc.data() as UserProfile, userCredential.user.uid);
+    const profileSource = userDoc.exists()
+      ? {
+          ...userDoc.data(),
+          uid: userCredential.user.uid,
+          email: userDoc.data().email || userCredential.user.email || email,
+          name: userDoc.data().name || userCredential.user.displayName || '',
+        }
+      : {
+          uid: userCredential.user.uid,
+          name: userCredential.user.displayName || '',
+          email: userCredential.user.email || email,
+          phone: '',
+          role: userCredential.user.email?.trim().toLowerCase() === 'summit_kw@hotmail.com' ? 'admin' : 'user',
+          active: true,
+          createdAt: new Date(),
+        };
+
+    const normalizedProfile = toFirestoreUserProfile(profileSource, userCredential.user.uid);
+    await setDoc(userRef, normalizedProfile, { merge: true });
+
+    const profile = normalizeUserProfile(normalizedProfile, userCredential.user.uid);
     
     // التحقق من أن الحساب مفعل
     if (!profile.active) {
@@ -185,12 +258,18 @@ export const resetPassword = async (email: string) => {
 // تحديث بيانات المستخدم
 export const updateUserProfile = async (uid: string, updates: Partial<UserProfile>) => {
   if (!db) throw new Error('Firebase غير مهيأ');
-  
+
   const userRef = doc(db, 'users', uid);
-  await updateDoc(userRef, {
+  const currentProfile = await getUserProfile(uid);
+  const nextProfile = toFirestoreUserProfile({
+    ...(currentProfile || { uid, createdAt: new Date() }),
     ...updates,
-    updatedAt: new Date()
-  });
+    uid,
+  }, uid);
+
+  await setDoc(userRef, nextProfile, { merge: true });
+
+  return normalizeUserProfile(nextProfile, uid);
 };
 
 // جلب بيانات المستخدم

@@ -2,8 +2,6 @@
 import { useState, useEffect } from "react";
 import { db } from "../../lib/firebase";
 import { collection, getDocs, query, where } from "firebase/firestore";
-
-
 interface Category {
   name: string;
   products?: string[];
@@ -18,25 +16,7 @@ interface Product {
 }
 
 export default function AdminDashboard() {
-  const initialUsers = [
-    { id: 1, name: "محمد أحمد", email: "mohamed@email.com", phone: "55512345", active: true, role: "عميل", password: "1234" },
-    { id: 2, name: "سارة علي", email: "sara@email.com", phone: "55567890", active: true, role: "عميل", password: "1234" },
-    { id: 3, name: "مدير النظام", email: "summit_kw@hotmail.com", phone: "55500000", active: true, role: "مدير", password: "admin1234" },
-    { id: 4, name: "خالد يوسف", email: "khaled@email.com", phone: "55522222", active: false, role: "عميل", password: "1234" },
-  ];
-  const [userCount, setUserCount] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = window.localStorage.getItem("users");
-      if (stored) {
-        try {
-          return JSON.parse(stored).length;
-        } catch {
-          return initialUsers.length;
-        }
-      }
-    }
-    return initialUsers.length;
-  });
+  const [userCount, setUserCount] = useState(0);
 
   // إحصائيات الطلبات
   const [ordersStats, setOrdersStats] = useState({
@@ -56,17 +36,30 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     // تحديث عدد المستخدمين
-    const syncCount = () => {
-      const stored = window.localStorage.getItem("users");
-      if (stored) {
+    const syncCount = async () => {
+      if (db) {
         try {
-          setUserCount(JSON.parse(stored).length);
+          const usersSnapshot = await getDocs(collection(db, 'users'));
+          setUserCount(usersSnapshot.size);
+          return;
         } catch {
-          setUserCount(initialUsers.length);
+          // fallback below
         }
-      } else {
-        setUserCount(initialUsers.length);
       }
+
+      if (typeof window !== "undefined") {
+        const stored = window.localStorage.getItem("users");
+        if (stored) {
+          try {
+            setUserCount(JSON.parse(stored).length);
+            return;
+          } catch {
+            // ignore fallback parsing issues
+          }
+        }
+      }
+
+      setUserCount(0);
     };
     
     window.addEventListener("usersUpdated", syncCount);
@@ -185,7 +178,7 @@ export default function AdminDashboard() {
     const statsInterval = setInterval(() => {
       syncOrders(); // Will be async
       syncCatering();
-      syncCount();
+      void syncCount();
     }, 10000); // كل 10 ثواني
     
     return () => {
