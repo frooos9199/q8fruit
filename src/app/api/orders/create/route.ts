@@ -15,6 +15,8 @@ type CreateOrderItemInput = {
   image?: string;
 };
 
+let firestoreSettingsApplied = false;
+
 function normalizePhoneNumber(input: unknown) {
   if (typeof input !== 'string') return '';
   return input.trim();
@@ -44,15 +46,20 @@ function normalizeItems(input: unknown) {
         return null;
       }
 
+      const productId = normalizeText(raw.productId);
+      const productNameAr = normalizeText(raw.productNameAr);
+      const unit = normalizeText(raw.unit);
+      const image = normalizeText(raw.image);
+
       return {
-        productId: normalizeText(raw.productId),
+        ...(productId ? { productId } : {}),
         productName,
-        productNameAr: normalizeText(raw.productNameAr) || undefined,
-        unit: normalizeText(raw.unit) || undefined,
+        ...(productNameAr ? { productNameAr } : {}),
+        ...(unit ? { unit } : {}),
         quantity,
         price,
         total,
-        image: normalizeText(raw.image) || undefined,
+        ...(image ? { image } : {}),
       };
     })
     .filter(Boolean);
@@ -130,6 +137,14 @@ export async function POST(request: NextRequest) {
     const customerEmail = normalizeText(payload.customerEmail || payload.userEmail || payload.email);
 
     const firestore = admin.firestore();
+    if (!firestoreSettingsApplied) {
+      try {
+        firestore.settings({ ignoreUndefinedProperties: true });
+      } catch (error) {
+        console.warn('Firestore settings warning:', error);
+      }
+      firestoreSettingsApplied = true;
+    }
     const counterRef = firestore.collection('settings').doc('orderCounter');
 
     const created = await firestore.runTransaction(async (transaction) => {
