@@ -1,6 +1,8 @@
 import admin from 'firebase-admin';
 import { NextRequest, NextResponse } from 'next/server';
 
+export const runtime = 'nodejs';
+
 type CreateOrderItemInput = {
   productId?: string;
   name?: string;
