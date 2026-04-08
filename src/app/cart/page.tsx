@@ -206,14 +206,14 @@ export default function CartPage() {
         const data = await response.json();
         if (!response.ok || !data?.success) {
           console.error('❌ فشل إنشاء الطلب في Firestore:', data);
-          alert('حصل خطأ أثناء إرسال الطلب، حاول مرة أخرى');
+          alert(data?.error || 'حصل خطأ أثناء إرسال الطلب، حاول مرة أخرى');
           return;
         }
 
         createdOrder = { orderId: data.orderId, orderNumber: data.orderNumber };
       } catch (error) {
         console.error('❌ خطأ في استدعاء إنشاء الطلب:', error);
-        alert('حصل خطأ أثناء إرسال الطلب، حاول مرة أخرى');
+        alert('تعذر إرسال الطلب حالياً، حاول مرة أخرى');
         return;
       }
 
