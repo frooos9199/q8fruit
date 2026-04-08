@@ -1,10 +1,17 @@
 import messaging from '@react-native-firebase/messaging';
 import notifee, { AndroidImportance, EventType } from '@notifee/react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import { API_CONFIG } from '../config/api';
 import { saveUserFcmToken } from './firebase';
 
 const APP_BADGE_COUNT_KEY = 'appBadgeCount';
+
+// Custom sound names:
+// - Android expects a file in android/app/src/main/res/raw/order_sound.* (referenced without extension)
+// - iOS expects a bundled file in ios (e.g. order_sound.caf) referenced with extension
+const ORDER_SOUND_ANDROID = 'order_sound';
+const ORDER_SOUND_IOS = 'order_sound.caf';
 
 let notificationsInitialized = false;
 let foregroundUnsubscribe: (() => void) | null = null;
@@ -133,6 +140,7 @@ export async function requestNotificationPermission() {
     });
 
     const authStatus = await messaging().requestPermission();
+    console.log('🔔 messaging().requestPermission status:', authStatus);
     const enabled =
       authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
       authStatus === messaging.AuthorizationStatus.PROVISIONAL;
@@ -203,11 +211,32 @@ async function syncUserFcmToken(userId: string | undefined, token: string | null
 // Setup notification channel (Android)
 export async function createNotificationChannel() {
   try {
+    if (Platform.OS === 'android') {
+      try {
+        const existingOrdersChannel = await notifee.getChannel('q8fruit-orders');
+        const existingSound = (existingOrdersChannel as any)?.sound;
+        const existingImportance = (existingOrdersChannel as any)?.importance;
+
+        // Android notification channel sound cannot be changed once created.
+        // If it was created previously with a different sound, delete + recreate.
+        // Also ensure importance is HIGH; if it was created as LOW/MIN, Android will deliver silently.
+        if (
+          existingOrdersChannel &&
+          (existingSound !== ORDER_SOUND_ANDROID || existingImportance !== AndroidImportance.HIGH)
+        ) {
+          await notifee.deleteChannel('q8fruit-orders');
+        }
+      } catch (channelError) {
+        // If get/delete fails, we can still try createChannel below.
+        console.log('Channel check/delete failed (continuing):', channelError);
+      }
+    }
+
     await notifee.createChannel({
       id: 'q8fruit-orders',
       name: 'Order Updates',
       importance: AndroidImportance.HIGH,
-      sound: 'default',
+      sound: ORDER_SOUND_ANDROID,
     });
 
     await notifee.createChannel({
@@ -251,7 +280,7 @@ export async function displayNotification(
         color: '#10b981',
       },
       ios: {
-        sound: 'default',
+        sound: channelId === 'q8fruit-orders' ? ORDER_SOUND_IOS : 'default',
         foregroundPresentationOptions: {
           alert: true,
           badge: true,
@@ -319,6 +348,7 @@ export async function unsubscribeFromTopic(topic: string) {
 
 // Subscribe to default topics
 export async function subscribeToDefaultTopics(userId?: string, isAdmin?: boolean) {
+  console.log('📣 Subscribing to topics. userId:', userId ? 'yes' : 'no', 'isAdmin:', Boolean(isAdmin));
   await subscribeToTopic('all-users');
   await subscribeToTopic('promotions');
   
