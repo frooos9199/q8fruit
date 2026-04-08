@@ -11,8 +11,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { sendInvoiceToWhatsApp } from "../../lib/whatsappInvoice";
 import { updateUserProfile } from "../../lib/auth";
-import { addDoc, collection, doc, runTransaction, serverTimestamp } from 'firebase/firestore';
-import { db } from '../../lib/firebase';
 
 interface CartItem {
   id: number;
@@ -159,9 +157,9 @@ export default function CartPage() {
   };
 
   const handleCheckout = async () => {
-    // تحقق من تعبئة الحقول الأساسية فقط (الاسم ورقم الهاتف)
-    if (!userInfo.name.trim() || !userInfo.phone.trim()) {
-      alert("يرجى تعبئة الاسم ورقم الهاتف على الأقل");
+    // تحقق من تعبئة الحقول الأساسية (الاسم + الهاتف + العنوان)
+    if (!userInfo.name.trim() || !userInfo.phone.trim() || !userInfo.address.trim()) {
+      alert("يرجى تعبئة الاسم ورقم الهاتف والعنوان");
       return;
     }
     if (typeof window !== "undefined") {
@@ -169,42 +167,58 @@ export default function CartPage() {
       const invoices = JSON.parse(window.localStorage.getItem("invoices") || "[]");
       const currentUser = window.localStorage.getItem("currentUser");
       const userEmail = currentUser ? JSON.parse(currentUser).email : undefined;
-      
-      // الحصول على رقم الطلب التالي (يبدأ من 100)
-      let orderNumber = 100;
+
+      const normalizedItems = cart.map((item) => ({
+        productId: String(item.id),
+        name: item.name,
+        unit: item.unit,
+        price: item.price,
+        quantity: item.quantity,
+        total: item.price * item.quantity,
+        image: item.image || '',
+      }));
+
+      const addressText = userInfo.address.trim();
+
+      // إنشاء الطلب في Firestore (حتى يظهر مباشرة في تطبيق الإدارة)
+      let createdOrder: { orderId: string; orderNumber: number } | null = null;
       try {
-        const { db } = await import('../../lib/firebase');
-        if (db) {
-          orderNumber = await runTransaction(db, async (transaction) => {
-            const counterRef = doc(db, 'settings', 'orderCounter');
-            const counterDoc = await transaction.get(counterRef);
-            const lastOrderNumber = counterDoc.exists()
-              ? Number(counterDoc.data().lastOrderNumber) || 99
-              : 99;
-            const nextOrderNumber = Math.max(lastOrderNumber + 1, 100);
+        const response = await fetch('/api/orders/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            customerName: userInfo.name.trim(),
+            customerEmail: userEmail || '',
+            phoneNumber: userInfo.phone.trim(),
+            address: addressText,
+            userNote: userNote.trim() || undefined,
+            items: normalizedItems,
+            subtotal: total,
+            deliveryFee: deliveryPrice,
+            total: total + deliveryPrice,
+            paymentMethod: paymentType,
+            source: 'web',
+          }),
+        });
 
-            transaction.set(counterRef, {
-              lastOrderNumber: nextOrderNumber,
-              updatedAt: new Date().toISOString(),
-            }, { merge: true });
-
-            return nextOrderNumber;
-          });
-          
-          console.log('✅ رقم الطلب/الفاتورة الجديد:', orderNumber);
-        } else {
-          // fallback: استخدام localStorage
-          const lastOrder = window.localStorage.getItem('lastOrderNumber');
-          orderNumber = lastOrder ? parseInt(lastOrder) + 1 : 100;
-          window.localStorage.setItem('lastOrderNumber', orderNumber.toString());
+        const data = await response.json();
+        if (!response.ok || !data?.success) {
+          console.error('❌ فشل إنشاء الطلب في Firestore:', data);
+          alert('حصل خطأ أثناء إرسال الطلب، حاول مرة أخرى');
+          return;
         }
+
+        createdOrder = { orderId: data.orderId, orderNumber: data.orderNumber };
       } catch (error) {
-        console.error('❌ خطأ في الحصول على رقم الطلب:', error);
-        // fallback: استخدام localStorage
-        const lastOrder = window.localStorage.getItem('lastOrderNumber');
-        orderNumber = lastOrder ? parseInt(lastOrder) + 1 : 100;
-        window.localStorage.setItem('lastOrderNumber', orderNumber.toString());
+        console.error('❌ خطأ في استدعاء إنشاء الطلب:', error);
+        alert('حصل خطأ أثناء إرسال الطلب، حاول مرة أخرى');
+        return;
       }
+
+      const orderNumber = createdOrder.orderNumber;
+      const orderId = createdOrder.orderId;
       
       const invoice = {
         id: orderNumber,
@@ -217,8 +231,7 @@ export default function CartPage() {
         deliveryTime,
         userInfo: {
           ...userInfo,
-          // إذا ما كتب عنوان، حط رسالة توضيحية
-          address: userInfo.address.trim() || "سيتم التواصل لتحديد العنوان"
+          address: addressText,
         },
         paymentType,
         userEmail: userEmail || "زائر",
@@ -227,63 +240,32 @@ export default function CartPage() {
       invoices.unshift(invoice);
       window.localStorage.setItem("invoices", JSON.stringify(invoices));
 
-      // إضافة الطلب إلى orders (للإدارة)
+      // حفظ نسخة محلية للعميل (اختياري) — الإدارة تعتمد على Firestore
       const orders = JSON.parse(window.localStorage.getItem("orders") || "[]");
-      const normalizedProducts = cart.map(item => ({
-        productId: String(item.id),
-        name: item.name,
-        unit: item.unit,
-        price: item.price,
-        quantity: item.quantity,
-        total: item.price * item.quantity,
-        image: item.image || '',
-      }));
-
-      const addressText = userInfo.address.trim() || "سيتم التواصل لتحديد العنوان";
-
-      const order = {
-        id: orderNumber,
-        orderNumber: orderNumber, // رقم موحد للفاتورة والطلبية
+      orders.unshift({
+        id: orderId,
+        orderNumber,
         source: 'web',
-        customer: userInfo.name,
-        customerName: userInfo.name,
-        customerEmail: userEmail || '',
-        phone: userInfo.phone,
-        phoneNumber: userInfo.phone,
+        customerName: userInfo.name.trim(),
+        phoneNumber: userInfo.phone.trim(),
         address: addressText,
-        deliveryAddress: {
-          fullAddress: addressText,
-          notes: userNote.trim() || '',
-        },
-        delivery: {
-          address: addressText,
-          fullAddress: addressText,
-          notes: userNote.trim() || '',
-        },
-        userInfo: {
-          ...userInfo,
-          email: userEmail || '',
-        },
+        deliveryAddress: addressText,
         subtotal: total,
-        total: invoice.total,
         deliveryFee: deliveryPrice,
-        status: "جديد",
-        date: invoice.date,
-        products: normalizedProducts,
-        items: normalizedProducts,
-        pricing: {
-          subtotal: total,
-          deliveryPrice,
-          total: invoice.total,
-        },
-        paymentType: paymentType,
+        total: total + deliveryPrice,
         paymentMethod: paymentType,
-        deliveryNotes: userNote.trim() || undefined,
+        paymentType,
+        status: 'pending',
+        date: invoice.date,
+        items: normalizedItems.map((item: any) => ({
+          ...item,
+          productName: item.name,
+        })),
         userNote: userNote.trim() || undefined,
+        deliveryNotes: userNote.trim() || undefined,
         timestamp: Date.now(),
-        isGuest: !userEmail, // علامة للطلبات الضيوف
-      };
-      orders.unshift(order);
+        isGuest: !userEmail,
+      });
       window.localStorage.setItem("orders", JSON.stringify(orders));
       
       // حفظ العنوان في بيانات المستخدم إذا كان مسجل دخول
@@ -306,43 +288,7 @@ export default function CartPage() {
         }
       }
       
-      try {
-        if (db) {
-          await addDoc(collection(db, 'adminNotifications'), {
-            title: '📦 طلب جديد',
-            message: `طلب جديد رقم ${orderNumber} من ${userInfo.name} - ${invoice.total.toFixed(3)} د.ك`,
-            type: 'new_order',
-            orderId: String(orderNumber),
-            orderNumber,
-            customerName: userInfo.name,
-            phoneNumber: userInfo.phone,
-            read: false,
-            createdAt: serverTimestamp(),
-          });
-
-          await fetch('/api/notifications/send', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              title: '📦 طلب جديد',
-              body: `طلب جديد رقم ${orderNumber} من ${userInfo.name} - ${invoice.total.toFixed(3)} د.ك`,
-              topic: 'admin-orders',
-              badgeSource: 'adminNotifications',
-              data: {
-                type: 'new_order',
-                screen: 'ManageOrders',
-                orderId: String(orderNumber),
-                orderNumber: String(orderNumber),
-                channelId: 'q8fruit-orders',
-              },
-            }),
-          });
-        }
-      } catch (notificationError) {
-        console.error('❌ خطأ في إنشاء إشعار الطلب:', notificationError);
-      }
+      // إشعارات الإدارة + الإيميل يتمان عبر Cloud Functions عند إنشاء طلب Firestore.
 
       // إرسال الفاتورة عبر الواتساب تلقائياً
       const invoiceWithNote = {
@@ -352,71 +298,6 @@ export default function CartPage() {
       
       // إرسال فوري بدون تأخير
       sendInvoiceToWhatsApp(invoiceWithNote);
-
-      // إرسال إيميل للإدارة
-      // الحصول على قائمة الإيميلات من Firebase
-      let recipientEmails = ['summit_kw@hotmail.com']; // الافتراضي
-      
-      try {
-        const { db } = await import('../../lib/firebase');
-        if (db) {
-          const { doc, getDoc } = await import('firebase/firestore');
-          const settingsDoc = await getDoc(doc(db, 'settings', 'orderNotificationEmails'));
-          
-          if (settingsDoc.exists()) {
-            const data = settingsDoc.data();
-            if (data.emails && Array.isArray(data.emails) && data.emails.length > 0) {
-              recipientEmails = data.emails;
-            }
-          }
-        }
-      } catch (error) {
-        console.error('خطأ في قراءة إيميلات الإشعارات من Firebase:', error);
-        // استخدام الإيميل الافتراضي في حالة الخطأ
-      }
-
-      fetch('/api/orders/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          recipientEmails: recipientEmails, // إضافة قائمة الإيميلات
-          orderNumber: orderNumber,
-          id: orderNumber,
-          date: invoice.date,
-          customerName: userInfo.name,
-          customer: userInfo.name,
-          phone: userInfo.phone,
-          phoneNumber: userInfo.phone,
-          address: userInfo.address.trim() || "سيتم التواصل لتحديد العنوان",
-          userInfo: invoice.userInfo,
-          items: cart.map(item => ({
-            name: item.name,
-            unit: item.unit,
-            quantity: item.quantity,
-            price: item.price,
-            total: item.price * item.quantity,
-            image: item.image || '',
-          })),
-          subtotal: total,
-          deliveryPrice: deliveryPrice,
-          deliveryFee: deliveryPrice,
-          total: invoice.total,
-          paymentType: paymentType,
-          paymentMethod: paymentType,
-          userNote: userNote.trim() || undefined,
-          deliveryNotes: userNote.trim() || undefined,
-        }),
-      }).then(res => {
-        if (res.ok) {
-          console.log('✅ تم إرسال إيميل الطلب بنجاح');
-        } else {
-          console.error('❌ فشل إرسال إيميل الطلب');
-        }
-      }).catch(error => {
-        console.error('❌ خطأ في إرسال إيميل الطلب:', error);
-      });
 
       // رسالة تأكيد للمستخدم
       alert(`شكراً ${userInfo.name}! تم استلام طلبك بنجاح 🎉\nسيتم إرسال الفاتورة عبر الواتساب الآن`);
@@ -603,12 +484,13 @@ export default function CartPage() {
                 />
               </div>
               <div className="mb-2 w-full">
-                <label className="mb-1 block text-slate-700">العنوان (اختياري)</label>
+                <label className="mb-1 block text-slate-700">العنوان *</label>
                 <textarea
                   className="min-h-[48px] w-full rounded-xl border-2 border-emerald-200 bg-white p-3 text-slate-900 outline-none transition-all focus:ring-2 focus:ring-emerald-300"
                   value={userInfo.address}
                   onChange={e => setUserInfo({ ...userInfo, address: e.target.value })}
-                  placeholder="يمكنك كتابة العنوان هنا أو إرساله عبر الواتساب لاحقاً"
+                  placeholder="اكتب العنوان بالتفصيل..."
+                  required
                 />
               </div>
             </div>
@@ -660,12 +542,10 @@ export default function CartPage() {
                   <span className="text-slate-500">📱 الهاتف:</span>
                   <span className="font-bold">{userInfo.phone}</span>
                 </div>
-                {userInfo.address && (
-                  <div className="flex justify-between text-slate-800">
-                    <span className="text-slate-500">📍 العنوان:</span>
-                    <span className="font-bold text-sm">{userInfo.address}</span>
-                  </div>
-                )}
+                <div className="flex justify-between text-slate-800">
+                  <span className="text-slate-500">📍 العنوان:</span>
+                  <span className="font-bold text-sm">{userInfo.address}</span>
+                </div>
                 <div className="flex justify-between border-t border-slate-200 pt-3 text-slate-800">
                   <span className="text-slate-500">💳 طريقة الدفع:</span>
                   <span className={`font-bold ${paymentType === 'knet' ? 'text-cyan-700' : 'text-emerald-700'}`}>
@@ -702,8 +582,8 @@ export default function CartPage() {
               <button 
                 onClick={() => {
                   // التحقق من البيانات قبل الانتقال
-                  if (currentStep === 2 && (!userInfo.name.trim() || !userInfo.phone.trim())) {
-                    alert("يرجى تعبئة الاسم ورقم الهاتف");
+                  if (currentStep === 2 && (!userInfo.name.trim() || !userInfo.phone.trim() || !userInfo.address.trim())) {
+                    alert("يرجى تعبئة الاسم ورقم الهاتف والعنوان");
                     return;
                   }
                   // الانتقال للخطوة التالية
@@ -717,8 +597,8 @@ export default function CartPage() {
               <button 
                 onClick={() => {
                   // التحقق النهائي قبل الإتمام
-                  if (!userInfo.name.trim() || !userInfo.phone.trim()) {
-                    alert("يرجى تعبئة الاسم ورقم الهاتف");
+                  if (!userInfo.name.trim() || !userInfo.phone.trim() || !userInfo.address.trim()) {
+                    alert("يرجى تعبئة الاسم ورقم الهاتف والعنوان");
                     setCurrentStep(2);
                     return;
                   }
