@@ -7,6 +7,8 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Header } from '../components';
@@ -46,6 +48,30 @@ export const AddressScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         setFloor(userInfo.floor || '');
         setApartment(userInfo.apartment || '');
       }
+
+      // If the user is logged in, load the latest saved address from Firebase.
+      try {
+        const userId = await AsyncStorage.getItem('@user_id');
+        if (userId) {
+          const { getUserData } = await import('../services/firebase');
+          const userData = await getUserData(userId);
+
+          if (userData) {
+            if (userData.name) setName(userData.name);
+            if (userData.phone) setPhone(userData.phone);
+            if (userData.address) {
+              if (userData.address.area) setArea(userData.address.area);
+              if (userData.address.block) setBlock(userData.address.block);
+              if (userData.address.street) setStreet(userData.address.street);
+              if (userData.address.building) setBuilding(userData.address.building);
+              if (userData.address.floor) setFloor(userData.address.floor);
+              if (userData.address.apartment) setApartment(userData.address.apartment);
+            }
+          }
+        }
+      } catch (fbError) {
+        console.log('Firebase load skipped:', fbError);
+      }
     } catch (error) {
       console.error('Error loading user info:', error);
     }
@@ -61,10 +87,24 @@ export const AddressScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
     }
 
     try {
-      await AsyncStorage.setItem(
-        USER_INFO_KEY,
-        JSON.stringify({ name, phone, area, block, street, building, floor, apartment })
-      );
+      const userInfo = { name, phone, area, block, street, building, floor, apartment };
+      await AsyncStorage.setItem(USER_INFO_KEY, JSON.stringify(userInfo));
+
+      // Also persist to Firebase so it stays across devices and is reused at checkout.
+      try {
+        const userId = await AsyncStorage.getItem('@user_id');
+        if (userId) {
+          const { updateUserAddress } = await import('../services/firebase');
+          await updateUserAddress(userId, {
+            name,
+            phone,
+            address: { area, block, street, building, floor, apartment },
+          });
+        }
+      } catch (fbError) {
+        console.log('Firebase save skipped:', fbError);
+      }
+
       Alert.alert(
         isArabic ? 'نجح' : 'Success',
         isArabic ? 'تم حفظ العنوان بنجاح' : 'Address saved successfully',
@@ -87,8 +127,19 @@ export const AddressScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
         onBack={() => navigation.goBack()}
       />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.section}>
+      <KeyboardAvoidingView
+        style={styles.content}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 24}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
+          <View style={styles.section}>
           <Text style={styles.sectionTitle}>{isArabic ? 'المعلومات الشخصية' : 'Personal Information'}</Text>
           
           <View style={styles.inputGroup}>
@@ -191,19 +242,22 @@ export const AddressScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
           </View>
         </View>
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>
-            {isArabic ? 'حفظ العنوان' : 'Save Address'}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.saveButtonText}>
+              {isArabic ? 'حفظ العنوان' : 'Save Address'}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
+  content: { flex: 1 },
   scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: SPACING.xl },
   section: {
     backgroundColor: COLORS.white,
     margin: SPACING.md,

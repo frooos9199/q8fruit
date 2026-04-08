@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Header } from '../components';
@@ -21,6 +23,11 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   const { items, subtotal, total, deliveryFee, clearCart } = useCart();
   const isArabic = i18n.language === 'ar';
 
+  const isMountedRef = useRef(true);
+  const isSubmittingRef = useRef(false);
+  const orderIdRef = useRef<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [area, setArea] = useState('');
@@ -34,7 +41,17 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
   useEffect(() => {
     loadUserInfo();
+    return () => {
+      isMountedRef.current = false;
+    };
   }, []);
+
+  const generateOrderId = () => {
+    // Client-side idempotency key (avoids adding a uuid dependency).
+    const nowPart = Date.now().toString(36);
+    const randomPart = Math.random().toString(36).slice(2, 10);
+    return `m_${nowPart}_${randomPart}`;
+  };
 
   const loadUserInfo = async () => {
     try {
@@ -105,6 +122,8 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
   };
 
   const handlePlaceOrder = async () => {
+    if (isSubmittingRef.current) return;
+
     if (!name || !phone || !area || !block || !street || !building) {
       Alert.alert(
         isArabic ? 'خطأ' : 'Error',
@@ -113,9 +132,17 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
       return;
     }
 
-    saveUserInfo();
+    isSubmittingRef.current = true;
+    if (isMountedRef.current) setIsSubmitting(true);
+
+    const orderId = orderIdRef.current || generateOrderId();
+    orderIdRef.current = orderId;
+
+    await saveUserInfo();
 
     const orderData = {
+      id: orderId,
+      clientOrderId: orderId,
       customerName: name,
       phoneNumber: phone,
       deliveryAddress: {
@@ -153,11 +180,14 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
       
       if (result.success) {
         clearCart();
-        Alert.alert(
-          isArabic ? 'تم إتمام الطلب' : 'Order Placed',
-          isArabic ? 'تم إرسال طلبك بنجاح. سنتواصل معك قريباً!' : 'Your order has been placed successfully. We will contact you soon!',
-          [{ text: isArabic ? 'حسناً' : 'OK', onPress: () => navigation.reset({ index: 0, routes: [{ name: 'Main' }] }) }]
-        );
+        try {
+          navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
+        } catch (navError) {
+          console.log('Navigation reset failed:', navError);
+        }
+        isSubmittingRef.current = false;
+        orderIdRef.current = null;
+        if (isMountedRef.current) setIsSubmitting(false);
       } else {
         throw new Error('Order failed');
       }
@@ -167,6 +197,9 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         isArabic ? 'خطأ' : 'Error',
         isArabic ? 'حدث خطأ في إرسال الطلب. يرجى المحاولة مرة أخرى' : 'Error placing order. Please try again'
       );
+      isSubmittingRef.current = false;
+      orderIdRef.current = null;
+      if (isMountedRef.current) setIsSubmitting(false);
     }
   };
 
@@ -178,8 +211,19 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         onBack={() => navigation.goBack()}
       />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <View style={styles.section}>
+      <KeyboardAvoidingView
+        style={styles.content}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 24}
+      >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
+        >
+          <View style={styles.section}>
           <Text style={styles.sectionTitle}>{isArabic ? 'معلومات التوصيل' : 'Delivery Information'}</Text>
           
           <View style={styles.inputGroup}>
@@ -352,19 +396,32 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.placeOrderButton} onPress={handlePlaceOrder}>
+        <TouchableOpacity
+          style={[styles.placeOrderButton, isSubmitting && styles.placeOrderButtonDisabled]}
+          onPress={handlePlaceOrder}
+          disabled={isSubmitting}
+        >
           <Text style={styles.placeOrderText}>
-            {isArabic ? 'إتمام الطلب' : 'Place Order'}
+            {isSubmitting
+              ? isArabic
+                ? 'جاري إرسال الطلب...'
+                : 'Placing order...'
+              : isArabic
+                ? 'إتمام الطلب'
+                : 'Place Order'}
           </Text>
         </TouchableOpacity>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
+  content: { flex: 1 },
   scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: SPACING.xl },
   section: {
     backgroundColor: COLORS.white,
     margin: SPACING.md,
@@ -512,6 +569,9 @@ const styles = StyleSheet.create({
     fontSize: FONT_SIZE.lg,
     fontWeight: '700',
     color: COLORS.white,
+  },
+  placeOrderButtonDisabled: {
+    opacity: 0.7,
   },
   phoneInputContainer: {
     flexDirection: 'row',
