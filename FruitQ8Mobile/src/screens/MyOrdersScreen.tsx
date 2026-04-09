@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { Header } from '../components';
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, orderBy, limit } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 const USER_INFO_KEY = '@user_info';
@@ -31,13 +31,44 @@ export const MyOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
     loadUserPhone();
   }, []);
 
+  const toPhoneDigits = (value: unknown) => {
+    if (typeof value !== 'string') return '';
+    return value.replace(/[^0-9]/g, '');
+  };
+
+  const getPhoneVariants = (phone: string) => {
+    const digits = toPhoneDigits(phone);
+    const last8 = digits.length >= 8 ? digits.slice(-8) : digits;
+    const with965 = last8 ? `965${last8}` : '';
+    const plus965 = last8 ? `+965${last8}` : '';
+    return Array.from(new Set([digits, last8, with965, plus965].filter(Boolean)));
+  };
+
+  const extractOrderPhoneDigits = (order: any) => {
+    const candidates = [
+      order?.phoneNumber,
+      order?.phone,
+      order?.customer?.phone,
+      order?.customerPhone,
+      order?.userPhone,
+      order?.userInfo?.phone,
+    ];
+
+    for (const candidate of candidates) {
+      const digits = toPhoneDigits(candidate);
+      if (digits) return digits;
+    }
+    return '';
+  };
+
   const loadUserPhone = async () => {
     try {
       const saved = await AsyncStorage.getItem(USER_INFO_KEY);
       if (saved) {
         const userInfo = JSON.parse(saved);
-        setUserPhone(userInfo.phone || '');
-        loadOrders(userInfo.phone);
+        const phone = userInfo.phone || '';
+        setUserPhone(phone);
+        loadOrders(phone);
       } else {
         setLoading(false);
       }
@@ -55,17 +86,23 @@ export const MyOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
 
     try {
       const ordersRef = collection(db, 'orders');
-      const q = query(
-        ordersRef,
-        where('phoneNumber', '==', phone),
-        orderBy('createdAt', 'desc')
-      );
-      const snapshot = await getDocs(q);
-      const ordersData = snapshot.docs.map(doc => ({
+      // Phone formatting differs across sources (mobile/web) (+965, spaces, etc.).
+      // Fetch a recent window and filter client-side by normalized phone digits.
+      const phoneVariants = getPhoneVariants(phone);
+      const snapshot = await getDocs(query(ordersRef, orderBy('createdAt', 'desc'), limit(250)));
+      const ordersDataAll = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data(),
       }));
-      setOrders(ordersData);
+
+      const filtered = ordersDataAll.filter((order: any) => {
+        const orderDigits = extractOrderPhoneDigits(order);
+        if (!orderDigits) return false;
+        const orderVariants = getPhoneVariants(orderDigits);
+        return orderVariants.some(v => phoneVariants.includes(v));
+      });
+
+      setOrders(filtered);
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {
