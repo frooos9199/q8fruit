@@ -19,6 +19,79 @@ import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE } from '../constants';
 
 const { width } = Dimensions.get('window');
 
+const FeaturedCarousel: React.FC<{
+  title: string;
+  viewAllLabel: string;
+  swipeHint: string;
+  featuredProducts: Product[];
+  cardWidth: number;
+  snapInterval: number;
+  onAddToCart: (product: any, unit?: any) => void;
+}> = ({
+  title,
+  viewAllLabel,
+  swipeHint,
+  featuredProducts,
+  cardWidth,
+  snapInterval,
+  onAddToCart,
+}) => {
+  const [featuredIndex, setFeaturedIndex] = useState(0);
+
+  if (!featuredProducts.length) {
+    return null;
+  }
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        <TouchableOpacity>
+          <Text style={styles.viewAllText}>{viewAllLabel}</Text>
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        data={featuredProducts}
+        keyExtractor={(item) => item.id}
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.featuredContainer}
+        snapToInterval={snapInterval}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        disableIntervalMomentum
+        onMomentumScrollEnd={(event) => {
+          const rawX = event.nativeEvent.contentOffset.x;
+          const x = Math.abs(rawX);
+          const nextIndex = Math.max(
+            0,
+            Math.min(featuredProducts.length - 1, Math.round(x / snapInterval))
+          );
+          setFeaturedIndex(nextIndex);
+        }}
+        renderItem={({ item }) => (
+          <View style={{ width: cardWidth, marginRight: SPACING.md }}>
+            <ProductCard product={item} onAddToCart={onAddToCart} />
+          </View>
+        )}
+      />
+
+      <View style={styles.featuredFooter}>
+        <Text style={styles.featuredHint}>{swipeHint}</Text>
+        <View style={styles.dotsRow}>
+          {featuredProducts.map((_, idx) => (
+            <View
+              key={`featured-dot-${idx}`}
+              style={[styles.dot, idx === featuredIndex ? styles.dotActive : styles.dotInactive]}
+            />
+          ))}
+        </View>
+      </View>
+    </View>
+  );
+};
+
 export const HomeScreen: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { addToCart } = useCart();
@@ -109,6 +182,10 @@ export const HomeScreen: React.FC = () => {
 
   const featuredProducts = useMemo(() => products.filter((p) => p.discount), [products]);
 
+  // Keep featured cards same size as the original grid cards
+  const featuredCardWidth = useMemo(() => (width - SPACING.md * 3) / 2, [width]);
+  const featuredSnapInterval = useMemo(() => featuredCardWidth + SPACING.md, [featuredCardWidth]);
+
   const renderProductItem = useCallback(({ item }: { item: Product }) => (
     <ProductCard
       key={item.id}
@@ -154,28 +231,15 @@ export const HomeScreen: React.FC = () => {
         </ScrollView>
       </View>
 
-      {featuredProducts.length > 0 && (
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>{t('featuredProducts')}</Text>
-            <TouchableOpacity>
-              <Text style={styles.viewAllText}>{t('viewAll')}</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.featuredContainer}>
-            {featuredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={addToCart}
-              />
-            ))}
-          </ScrollView>
-        </View>
-      )}
+      <FeaturedCarousel
+        title={t('featuredProducts')}
+        viewAllLabel={t('viewAll')}
+        swipeHint={t('swipeForMore')}
+        featuredProducts={featuredProducts}
+        cardWidth={featuredCardWidth}
+        snapInterval={featuredSnapInterval}
+        onAddToCart={addToCart}
+      />
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t('products')}</Text>
@@ -186,7 +250,7 @@ export const HomeScreen: React.FC = () => {
         ) : null}
       </View>
     </>
-  ), [t, selectedCategory, categories, isArabic, featuredProducts, addToCart, loading, products.length]);
+  ), [t, selectedCategory, categories, isArabic, featuredProducts, addToCart, loading, products.length, featuredCardWidth, featuredSnapInterval]);
 
   return (
     <View style={styles.container}>
@@ -344,6 +408,34 @@ const styles = StyleSheet.create({
   },
   featuredContainer: {
     paddingLeft: SPACING.md,
-    gap: SPACING.md,
+    paddingRight: SPACING.md,
+  },
+  featuredFooter: {
+    paddingHorizontal: SPACING.md,
+    marginTop: SPACING.xs,
+    alignItems: 'center',
+    gap: SPACING.xs,
+  },
+  featuredHint: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textSecondary,
+    fontWeight: '500',
+  },
+  dotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: SPACING.xs,
+  },
+  dot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  dotActive: {
+    backgroundColor: COLORS.primary,
+  },
+  dotInactive: {
+    backgroundColor: COLORS.lightGray,
   },
 });
