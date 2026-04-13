@@ -678,13 +678,41 @@ export default function Home() {
               </div>
             </div>
             <div className="text-center md:text-left">
-              <h4 className="mb-3 text-base font-semibold text-emerald-200 sm:mb-4 sm:text-lg">روابط مهمة</h4>
-              <div className="space-y-2">
-                <Link href="/" className="block text-sm text-emerald-50/90 transition-colors hover:text-white sm:text-base">الرئيسية</Link>
-                <Link href="/cart" className="block text-sm text-emerald-50/90 transition-colors hover:text-white sm:text-base">السلة</Link>
-                <Link href="/login" className="block text-sm text-emerald-50/90 transition-colors hover:text-white sm:text-base">تسجيل الدخول</Link>
-                <Link href="/privacy" className="block text-sm text-emerald-50/90 transition-colors hover:text-white sm:text-base">سياسة الخصوصية</Link>
-                <Link href="/terms" className="block text-sm text-emerald-50/90 transition-colors hover:text-white sm:text-base">الشروط والأحكام</Link>
+              <h4 className="mb-3 text-base font-semibold text-emerald-200 sm:mb-4 sm:text-lg">حمّل التطبيق</h4>
+              <div className="space-y-3 mb-4">
+                {/* Google Play */}
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.fruitq8.store"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-xl bg-black/30 px-3 py-2 text-white transition-all hover:bg-black/50 border border-white/10"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3.18 23.76a2 2 0 0 0 2.25-.24l.06-.05 12.6-7.28-2.74-2.74-12.17 10.31zm-1.1-20.5C2 3.6 2 3.96 2 4.35v15.3c0 .4.04.76.12 1.1L14.4 8.5 2.08 3.26zM20.5 10.5l-2.75-1.59-3.07 3.09 3.07 3.08 2.78-1.61a1.98 1.98 0 0 0 0-2.97zM5.43.48a2 2 0 0 0-2.25-.24L15.5 11.5 18.24 8.74 5.43.48z"/></svg>
+                  <div className="text-right">
+                    <div className="text-[10px] text-white/70 leading-none">GET IT ON</div>
+                    <div className="text-sm font-bold leading-tight">Google Play</div>
+                  </div>
+                </a>
+                {/* App Store */}
+                <a
+                  href="https://apps.apple.com/us/app/q8fruit-%D9%81%D9%83%D9%87%D8%A7%D9%86%D9%89-%D8%A7%D9%84%D9%83%D9%88%D9%8A%D8%AA/id1487406440"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 rounded-xl bg-black/30 px-3 py-2 text-white transition-all hover:bg-black/50 border border-white/10"
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                  <div className="text-right">
+                    <div className="text-[10px] text-white/70 leading-none">Download on the</div>
+                    <div className="text-sm font-bold leading-tight">App Store</div>
+                  </div>
+                </a>
+              </div>
+              <h4 className="mb-2 text-sm font-semibold text-emerald-200">روابط مهمة</h4>
+              <div className="space-y-1.5">
+                <Link href="/" className="block text-sm text-emerald-50/90 transition-colors hover:text-white">الرئيسية</Link>
+                <Link href="/cart" className="block text-sm text-emerald-50/90 transition-colors hover:text-white">السلة</Link>
+                <Link href="/privacy" className="block text-sm text-emerald-50/90 transition-colors hover:text-white">سياسة الخصوصية</Link>
+                <Link href="/terms" className="block text-sm text-emerald-50/90 transition-colors hover:text-white">الشروط والأحكام</Link>
               </div>
             </div>
           </div>
