@@ -492,8 +492,9 @@ export const loadAllDataFromFirebase = async () => {
     console.log(`📦 تم جلب ${products.length} منتج من Firebase`);
     
     // حفظ المنتجات حتى لو كانت فارغة (لا تحذف البيانات الموجودة)
-    if (products.length > 0) {
-      localStorage.setItem('products', JSON.stringify(products));
+    const activeProducts = products.filter((p: any) => p.active !== false);
+    if (activeProducts.length > 0) {
+      localStorage.setItem('products', JSON.stringify(activeProducts));
       console.log('✅ تم حفظ المنتجات في localStorage');
     } else {
       console.warn('⚠️ لم يتم العثور على منتجات في Firebase - الاحتفاظ بالبيانات الموجودة');
@@ -542,8 +543,9 @@ export const emergencyLoadFromFirebase = async () => {
     console.log('🆘 جلب طوارئ من Firebase...');
     
     const products = await getProductsFromFirebase();
-    if (products.length > 0) {
-      localStorage.setItem('products', JSON.stringify(products));
+    const activeProducts = products.filter((p: any) => p.active !== false);
+    if (activeProducts.length > 0) {
+      localStorage.setItem('products', JSON.stringify(activeProducts));
     }
     
     const categories = await getCategoriesFromFirebase();
