@@ -4,6 +4,7 @@ import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import BottomNav from "../components/BottomNav";
 import AppDownloadBanner from "../components/AppDownloadBanner";
 import Analytics from "../components/Analytics";
+import SnapchatPixel from "../components/SnapchatPixel";
 import { organizationSchema, websiteSchema, localBusinessSchema } from "@/lib/schema";
 import "./globals.css";
 
@@ -102,8 +103,8 @@ export const metadata: Metadata = {
     },
   },
   other: {
-    "apple-itunes-app": "app-id=YOUR_APP_ID, app-argument=https://www.q8fruit.com",
-    "google-play-app": "app-id=com.q8fruit.app",
+    "apple-itunes-app": "app-id=1487406440, app-argument=https://www.q8fruit.com",
+    "google-play-app": "app-id=com.fruitq8.store",
   },
 };
 
@@ -180,6 +181,7 @@ export default function RootLayout({
         {children}
         <BottomNav />
         <Analytics />
+        <SnapchatPixel />
         {gaId && <GoogleAnalytics gaId={gaId} />}
         {gtmId && <GoogleTagManager gtmId={gtmId} />}
       </body>

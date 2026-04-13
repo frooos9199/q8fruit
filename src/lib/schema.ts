@@ -14,7 +14,7 @@ export const organizationSchema = {
   ],
   contactPoint: {
     '@type': 'ContactPoint',
-    telephone: '+965-XXXX-XXXX',
+    telephone: '+96598899426',
     contactType: 'Customer Service',
     areaServed: 'KW',
     availableLanguage: ['Arabic', 'English'],
@@ -56,7 +56,7 @@ export const localBusinessSchema = {
     longitude: 47.9774,
   },
   url: 'https://www.q8fruit.com',
-  telephone: '+965-XXXX-XXXX',
+  telephone: '+96598899426',
   servesCuisine: 'Fresh Fruits and Vegetables',
   openingHoursSpecification: [
     {
