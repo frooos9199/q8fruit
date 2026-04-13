@@ -244,7 +244,7 @@ export default function Home() {
                     typeof u.name === "string" &&
                     typeof u.price === "number"
                 ) &&
-                typeof p.active === "boolean" &&
+                p.active === true &&
                 typeof p.category === "string"
             )
           : [];
@@ -262,7 +262,7 @@ export default function Home() {
             const parsed = JSON.parse(fallbackProducts);
             if (Array.isArray(parsed) && parsed.length > 0) {
               console.log('🔄 استخدام المنتجات المخزنة كـ Fallback');
-              setProducts(parsed);
+              setProducts(parsed.filter((p: Product) => p.active === true));
               return;
             }
           }
