@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { getDeliverySettingsFromFirebase } from "../../lib/firebaseSync";
 // تعريف نوع بيانات المستخدم
 interface UserInfo {
   name: string;
@@ -88,11 +89,23 @@ export default function CartPage() {
         setCart(stored ? JSON.parse(stored) : []);
       };
       updateCart();
-      // جلب قيمة التوصيل من localStorage (تتم مزامنتها من صفحة الإدارة)
-      const storedDelivery = window.localStorage.getItem("deliveryPrice");
-      if (storedDelivery && !isNaN(Number(storedDelivery))) {
-        setDeliveryPrice(Number(storedDelivery));
-      }
+      // جلب قيمة التوصيل من Firebase أولاً، ثم localStorage كـ fallback
+      getDeliverySettingsFromFirebase().then((settings) => {
+        if (settings && typeof settings.fee === 'number') {
+          setDeliveryPrice(settings.fee);
+          window.localStorage.setItem("deliveryPrice", String(settings.fee));
+        } else {
+          const storedDelivery = window.localStorage.getItem("deliveryPrice");
+          if (storedDelivery && !isNaN(Number(storedDelivery))) {
+            setDeliveryPrice(Number(storedDelivery));
+          }
+        }
+      }).catch(() => {
+        const storedDelivery = window.localStorage.getItem("deliveryPrice");
+        if (storedDelivery && !isNaN(Number(storedDelivery))) {
+          setDeliveryPrice(Number(storedDelivery));
+        }
+      });
       // جلب ملاحظة التوصيل من localStorage
       const storedNote = window.localStorage.getItem("deliveryNote");
       if (storedNote) setDeliveryNote(storedNote);
