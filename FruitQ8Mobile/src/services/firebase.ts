@@ -5,6 +5,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { firebaseConfig } from './firebaseConfig';
 import { API_CONFIG } from '../config/api';
 import { getOrderDate } from '../utils/orderDate';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 const db = getFirestore(app);
@@ -174,16 +175,28 @@ export const uploadImage = async (uri: string, path: string) => {
 };
 
 export const fetchDeliverySettings = async () => {
+  const CACHE_KEY = 'deliverySettings_cache';
   try {
     const docRef = doc(db, 'settings', 'delivery');
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      return docSnap.data();
+      const data = docSnap.data();
+      // حفظ في AsyncStorage كـ cache للاستخدام عند انقطاع الاتصال
+      await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(data));
+      return data;
     }
-    return { fee: 0, freeAbove: 0 };
+    return { fee: 2, freeAbove: 100 };
   } catch (error) {
     console.error('Error fetching delivery settings:', error);
-    return { fee: 0, freeAbove: 0 };
+    // استخدام القيمة المحفوظة مسبقاً عند فشل الاتصال
+    try {
+      const cached = await AsyncStorage.getItem(CACHE_KEY);
+      if (cached) {
+        console.log('Using cached delivery settings');
+        return JSON.parse(cached);
+      }
+    } catch {}
+    return { fee: 2, freeAbove: 100 };
   }
 };
 
@@ -429,9 +442,18 @@ export const addProduct = async (data: any) => {
 export const createOrder = async (orderData: any) => {
   try {
     const ordersRef = collection(db, 'orders');
-    const orderRef = doc(ordersRef);
-    const orderNumber = await getNextOrderNumber();
     const currentUser = auth.currentUser;
+
+    const requestedOrderId =
+      typeof orderData?.id === 'string' && orderData.id.trim()
+        ? orderData.id.trim()
+        : typeof orderData?.orderId === 'string' && orderData.orderId.trim()
+          ? orderData.orderId.trim()
+          : typeof orderData?.clientOrderId === 'string' && orderData.clientOrderId.trim()
+            ? orderData.clientOrderId.trim()
+            : '';
+
+    const orderRef = requestedOrderId ? doc(ordersRef, requestedOrderId) : doc(ordersRef);
     const deliveryAddress = {
       ...(orderData.deliveryAddress || {}),
       fullAddress:
@@ -461,10 +483,9 @@ export const createOrder = async (orderData: any) => {
       image: item.image || '',
     }));
 
-    const newOrder = {
+    const newOrderBase = {
       ...orderData,
       id: orderRef.id,
-      orderNumber,
       source: 'mobile',
       userId: currentUser?.uid || orderData.userId || '',
       customer: {
@@ -495,41 +516,68 @@ export const createOrder = async (orderData: any) => {
       updatedAt: new Date(),
       status: 'pending',
     };
-    await setDoc(orderRef, newOrder);
+
+    const counterRef = doc(db, 'settings', 'orderCounter');
+
+    const transactionResult = await runTransaction(db, async (transaction) => {
+      const existingOrderSnapshot = await transaction.get(orderRef);
+      if (existingOrderSnapshot.exists()) {
+        const existingData = existingOrderSnapshot.data() as any;
+        return {
+          created: false,
+          orderId: orderRef.id,
+          orderNumber: existingData?.orderNumber,
+        };
+      }
+
+      const counterSnapshot = await transaction.get(counterRef);
+      const lastOrderNumber = counterSnapshot.exists()
+        ? Number(counterSnapshot.data().lastOrderNumber) || ORDER_COUNTER_START
+        : ORDER_COUNTER_START;
+
+      const nextOrderNumber = Math.max(lastOrderNumber + 1, 100);
+
+      transaction.set(
+        counterRef,
+        {
+          lastOrderNumber: nextOrderNumber,
+          updatedAt: new Date(),
+        },
+        { merge: true }
+      );
+
+      transaction.set(orderRef, { ...newOrderBase, orderNumber: nextOrderNumber });
+
+      return {
+        created: true,
+        orderId: orderRef.id,
+        orderNumber: nextOrderNumber,
+      };
+    });
+
+    const orderNumber = transactionResult.orderNumber;
+    const newOrder = { ...newOrderBase, orderNumber };
+    const shouldSendSideEffects = transactionResult.created === true;
     
-    // Send notification to admin
-    await sendAdminNotification({
-      title: '📦 طلب جديد',
-      message: `طلب جديد رقم ${orderNumber} من ${orderData.customerName} - ${(orderData.total || 0).toFixed(3)} د.ك`,
+    if (shouldSendSideEffects) {
+      // Send notification to admin
+      await sendAdminNotification({
+        title: '📦 طلب جديد',
+        message: `طلب جديد رقم ${orderNumber} من ${orderData.customerName} - ${(orderData.total || 0).toFixed(3)} د.ك`,
+        orderId: orderRef.id,
+        orderNumber,
+        type: 'new_order',
+      });
+    }
+
+    // Email notifications are handled server-side via Firebase Cloud Functions.
+    
+    return {
+      success: true,
       orderId: orderRef.id,
       orderNumber,
-      type: 'new_order',
-    });
-    
-    // إرسال إيميل للإدارة
-    try {
-      const { sendOrderEmail } = await import('../config/api');
-      await sendOrderEmail({
-        ...newOrder,
-        id: orderRef.id,
-        orderNumber: newOrder.orderNumber,
-        date: new Date().toLocaleString('ar-EG'),
-        customerName: orderData.customerName,
-        phoneNumber: orderData.phoneNumber,
-        deliveryAddress,
-        deliveryNotes: orderData.deliveryNotes,
-        paymentMethod: orderData.paymentMethod,
-        items: normalizedItems,
-        subtotal: orderData.subtotal,
-        deliveryFee: orderData.deliveryFee,
-        total: orderData.total,
-      });
-    } catch (emailError) {
-      console.error('خطأ في إرسال الإيميل (لن يؤثر على الطلب):', emailError);
-      // لا نريد أن يفشل الطلب إذا فشل الإيميل
-    }
-    
-    return { success: true, orderId: orderRef.id };
+      created: transactionResult.created === true,
+    };
   } catch (error) {
     console.error('Error creating order:', error);
     return { success: false };
@@ -722,30 +770,6 @@ export const sendAdminNotification = async (notification: any) => {
     };
 
     await addDoc(notificationsRef, createdNotification);
-
-    try {
-      await fetch(`${API_CONFIG.BASE_URL}/api/notifications/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: createdNotification.title,
-          body: createdNotification.message,
-          topic: 'admin-orders',
-          badgeSource: 'adminNotifications',
-          data: {
-            type: createdNotification.type || 'admin_notification',
-            screen: createdNotification.type === 'new_order' ? 'ManageOrders' : 'Notifications',
-            orderId: createdNotification.orderId || '',
-            orderNumber: createdNotification.orderNumber ? String(createdNotification.orderNumber) : '',
-            channelId: 'q8fruit-orders',
-          },
-        }),
-      });
-    } catch (pushError) {
-      console.error('Error sending admin push notification:', pushError);
-    }
 
     return { success: true };
   } catch (error) {
