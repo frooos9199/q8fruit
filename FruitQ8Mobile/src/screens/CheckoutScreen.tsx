@@ -189,7 +189,8 @@ export const CheckoutScreen: React.FC<{ navigation: any }> = ({ navigation }) =>
         orderIdRef.current = null;
         if (isMountedRef.current) setIsSubmitting(false);
       } else {
-        throw new Error('Order failed');
+        const orderError = 'error' in result ? result.error : undefined;
+        throw new Error(orderError || 'Order failed');
       }
     } catch (error) {
       console.error('Order error:', error);

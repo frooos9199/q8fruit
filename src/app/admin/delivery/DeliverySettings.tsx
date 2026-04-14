@@ -31,6 +31,7 @@ export default function DeliverySettings() {
           }
           if (Number.isFinite(resolvedFreeAbove)) {
             setFreeAbove(resolvedFreeAbove);
+            window.localStorage.setItem('freeAbove', String(resolvedFreeAbove));
           }
           setDeliveryTime(resolvedTime);
           setDeliveryNote(resolvedNote);
@@ -52,6 +53,10 @@ export default function DeliverySettings() {
       if (storedPrice && !Number.isNaN(Number(storedPrice))) {
         setDeliveryPrice(Number(storedPrice));
       }
+      const storedFreeAbove = window.localStorage.getItem('freeAbove');
+      if (storedFreeAbove && !Number.isNaN(Number(storedFreeAbove))) {
+        setFreeAbove(Number(storedFreeAbove));
+      }
       setLoading(false);
     };
 
@@ -61,6 +66,7 @@ export default function DeliverySettings() {
   const saveDeliverySettings = async (nextPrice: number, nextTime: string, nextNote: string, nextFreeAbove: number) => {
     if (typeof window !== "undefined") {
       window.localStorage.setItem("deliveryPrice", String(nextPrice));
+      window.localStorage.setItem("freeAbove", String(nextFreeAbove));
       window.localStorage.setItem("deliveryTime", nextTime);
       window.localStorage.setItem("deliveryNote", nextNote);
     }

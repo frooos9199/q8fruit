@@ -15,6 +15,21 @@ type CreateOrderItemInput = {
   image?: string;
 };
 
+type FirestoreProductUnit = {
+  name?: string;
+  price?: number;
+};
+
+type FirestoreProductData = {
+  name?: string;
+  nameAr?: string;
+  active?: boolean;
+  isHidden?: boolean;
+  image?: string;
+  images?: string[];
+  units?: FirestoreProductUnit[];
+};
+
 let firestoreSettingsApplied = false;
 
 function normalizePhoneNumber(input: unknown) {
@@ -63,6 +78,56 @@ function normalizeItems(input: unknown) {
       };
     })
     .filter(Boolean);
+}
+
+async function resolveOrderItemsPricing(
+  firestore: admin.firestore.Firestore,
+  items: ReturnType<typeof normalizeItems>
+) {
+  const resolvedItems = [] as any[];
+
+  for (const item of items) {
+    const productId = normalizeText(item?.productId);
+    const requestedUnit = normalizeText(item?.unit);
+
+    if (!productId) {
+      resolvedItems.push(item);
+      continue;
+    }
+
+    const productSnapshot = await firestore.collection('products').doc(productId).get();
+    if (!productSnapshot.exists) {
+      throw new Error(`المنتج غير موجود أو تم حذفه: ${item.productName}`);
+    }
+
+    const product = productSnapshot.data() as FirestoreProductData;
+    if (product.active === false || product.isHidden === true) {
+      throw new Error(`المنتج غير متاح حالياً: ${product.name || item.productName}`);
+    }
+
+    const units = Array.isArray(product.units) ? product.units : [];
+    const matchedUnit = units.find((unit) => normalizeText(unit.name) === requestedUnit) ?? units[0];
+    if (!matchedUnit) {
+      throw new Error(`لا توجد وحدة صالحة للمنتج: ${product.name || item.productName}`);
+    }
+
+    const quantity = normalizeNumber(item.quantity) ?? 0;
+    const price = normalizeNumber(matchedUnit.price) ?? 0;
+    const image = Array.isArray(product.images) && product.images[0] ? product.images[0] : normalizeText(product.image);
+
+    resolvedItems.push({
+      ...item,
+      productName: normalizeText(product.name) || item.productName,
+      productNameAr: normalizeText(product.nameAr) || item.productNameAr,
+      unit: normalizeText(matchedUnit.name) || requestedUnit,
+      quantity,
+      price,
+      total: quantity * price,
+      ...(image ? { image } : {}),
+    });
+  }
+
+  return resolvedItems;
 }
 
 // Initialize Firebase Admin (once per server runtime)
@@ -127,10 +192,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const subtotal = normalizeNumber(payload.subtotal) ?? items.reduce((sum, item) => sum + (item.total || 0), 0);
-    const deliveryFee = normalizeNumber(payload.deliveryFee ?? payload.deliveryPrice) ?? 0;
-    const total = normalizeNumber(payload.total) ?? subtotal + deliveryFee;
-
     const paymentMethodRaw = normalizeText(payload.paymentMethod || payload.paymentType);
     const paymentMethod = paymentMethodRaw === 'knet' ? 'knet' : 'cash';
 
@@ -145,6 +206,17 @@ export async function POST(request: NextRequest) {
       }
       firestoreSettingsApplied = true;
     }
+
+    const pricedItems = await resolveOrderItemsPricing(firestore, items);
+    const subtotal = pricedItems.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+
+    const deliverySettingsSnapshot = await firestore.collection('settings').doc('delivery').get();
+    const deliverySettings = deliverySettingsSnapshot.exists ? deliverySettingsSnapshot.data() || {} : {};
+    const deliveryFeeValue = normalizeNumber(deliverySettings.fee ?? deliverySettings.deliveryPrice ?? deliverySettings.price) ?? 0;
+    const freeAboveValue = normalizeNumber(deliverySettings.freeAbove) ?? 0;
+    const deliveryFee = subtotal >= freeAboveValue ? 0 : deliveryFeeValue;
+    const total = subtotal + deliveryFee;
+
     const counterRef = firestore.collection('settings').doc('orderCounter');
 
     const created = await firestore.runTransaction(async (transaction) => {
@@ -178,8 +250,8 @@ export async function POST(request: NextRequest) {
         deliveryAddress: addressText,
         deliveryNotes: userNote || undefined,
         userNote: userNote || undefined,
-        items,
-        products: items,
+        items: pricedItems,
+        products: pricedItems,
         subtotal,
         deliveryFee,
         total,

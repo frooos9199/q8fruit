@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getDeliverySettingsFromFirebase } from "../../lib/firebaseSync";
+import { getDeliverySettingsFromFirebase, getProductsFromFirebase } from "../../lib/firebaseSync";
 // تعريف نوع بيانات المستخدم
 interface UserInfo {
   name: string;
@@ -14,7 +14,7 @@ import { sendInvoiceToWhatsApp } from "../../lib/whatsappInvoice";
 import { updateUserProfile } from "../../lib/auth";
 
 interface CartItem {
-  id: number;
+  id: number | string;
   name: string;
   image?: string;
   unit: string;
@@ -78,6 +78,7 @@ export default function CartPage() {
   const [showAlert, setShowAlert] = useState(false);
   const [deletedName, setDeletedName] = useState("");
   const [deliveryPrice, setDeliveryPrice] = useState(2.5); // تحديث القيمة الافتراضية
+  const [freeAbove, setFreeAbove] = useState(100);
   const [paymentType, setPaymentType] = useState("cash"); // الافتراضي نقدي
   const [deliveryNote, setDeliveryNote] = useState("");
   const [deliveryTime, setDeliveryTime] = useState("");
@@ -88,10 +89,56 @@ export default function CartPage() {
         const stored = window.localStorage.getItem("cart");
         setCart(stored ? JSON.parse(stored) : []);
       };
+
+      const syncCartWithFirebase = async () => {
+        const stored = window.localStorage.getItem("cart");
+        const parsedCart = stored ? JSON.parse(stored) : [];
+        if (!Array.isArray(parsedCart) || parsedCart.length === 0) {
+          setCart([]);
+          return;
+        }
+
+        try {
+          const firebaseProducts = await getProductsFromFirebase();
+          const productMap = new Map(
+            (Array.isArray(firebaseProducts) ? firebaseProducts : []).map((product) => [String(product.id), product])
+          );
+
+          const syncedCart = parsedCart.flatMap((item: CartItem) => {
+            const product = productMap.get(String(item.id));
+            if (!product || product.active === false || (product as { isHidden?: boolean }).isHidden === true) {
+              return [];
+            }
+
+            const units = Array.isArray(product.units) ? product.units : [];
+            const matchedUnit = units.find((unit) => unit.name === item.unit) ?? units[0];
+            if (!matchedUnit) {
+              return [];
+            }
+
+            return [{
+              ...item,
+              name: product.name || item.name,
+              image: (Array.isArray(product.images) && product.images[0]) || item.image,
+              unit: matchedUnit.name,
+              price: Number(matchedUnit.price) || 0,
+            }];
+          });
+
+          window.localStorage.setItem("cart", JSON.stringify(syncedCart));
+          setCart(syncedCart);
+        } catch (error) {
+          console.error('❌ خطأ في مزامنة أسعار السلة مع Firebase:', error);
+          updateCart();
+        }
+      };
+
       updateCart();
+      syncCartWithFirebase();
       // جلب قيمة التوصيل من Firebase أولاً، ثم localStorage كـ fallback
       getDeliverySettingsFromFirebase().then((settings) => {
         const resolvedFee = Number(settings?.fee ?? settings?.deliveryPrice ?? settings?.price);
+        const resolvedFreeAbove = Number(settings?.freeAbove);
         const resolvedNote = typeof settings?.note === 'string' ? settings.note : '';
         const resolvedTime = typeof (settings?.deliveryTime ?? settings?.time) === 'string'
           ? String(settings?.deliveryTime ?? settings?.time)
@@ -100,6 +147,10 @@ export default function CartPage() {
         if (settings && Number.isFinite(resolvedFee)) {
           setDeliveryPrice(resolvedFee);
           window.localStorage.setItem("deliveryPrice", String(resolvedFee));
+          if (Number.isFinite(resolvedFreeAbove)) {
+            setFreeAbove(resolvedFreeAbove);
+            window.localStorage.setItem("freeAbove", String(resolvedFreeAbove));
+          }
           if (resolvedNote) {
             setDeliveryNote(resolvedNote);
             window.localStorage.setItem('deliveryNote', resolvedNote);
@@ -110,14 +161,22 @@ export default function CartPage() {
           }
         } else {
           const storedDelivery = window.localStorage.getItem("deliveryPrice");
+          const storedFreeAbove = window.localStorage.getItem("freeAbove");
           if (storedDelivery && !isNaN(Number(storedDelivery))) {
             setDeliveryPrice(Number(storedDelivery));
+          }
+          if (storedFreeAbove && !isNaN(Number(storedFreeAbove))) {
+            setFreeAbove(Number(storedFreeAbove));
           }
         }
       }).catch(() => {
         const storedDelivery = window.localStorage.getItem("deliveryPrice");
+        const storedFreeAbove = window.localStorage.getItem("freeAbove");
         if (storedDelivery && !isNaN(Number(storedDelivery))) {
           setDeliveryPrice(Number(storedDelivery));
+        }
+        if (storedFreeAbove && !isNaN(Number(storedFreeAbove))) {
+          setFreeAbove(Number(storedFreeAbove));
         }
       });
       // جلب ملاحظة التوصيل من localStorage
@@ -133,6 +192,9 @@ export default function CartPage() {
         if (e.key === "deliveryPrice" && e.newValue && !isNaN(Number(e.newValue))) {
           setDeliveryPrice(Number(e.newValue));
         }
+        if (e.key === "freeAbove" && e.newValue && !isNaN(Number(e.newValue))) {
+          setFreeAbove(Number(e.newValue));
+        }
         if (e.key === "deliveryNote") setDeliveryNote(e.newValue || "");
         if (e.key === "deliveryTime") setDeliveryTime(e.newValue || "");
         if (e.key === "cart") updateCart();
@@ -147,8 +209,9 @@ export default function CartPage() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const calculatedDeliveryPrice = total >= freeAbove ? 0 : deliveryPrice;
 
-  const handleRemove = (id: number) => {
+  const handleRemove = (id: number | string) => {
     const removed = cart.find((item) => item.id === id);
     const updated = cart.filter((item) => item.id !== id);
     setCart(updated);
@@ -162,7 +225,7 @@ export default function CartPage() {
     }
   };
 
-  const handleQuantity = (id: number, delta: number) => {
+  const handleQuantity = (id: number | string, delta: number) => {
     setCart((prev) => {
       const updated = prev.map((item) =>
         item.id === id
@@ -223,8 +286,8 @@ export default function CartPage() {
             userNote: userNote.trim() || undefined,
             items: normalizedItems,
             subtotal: total,
-            deliveryFee: deliveryPrice,
-            total: total + deliveryPrice,
+            deliveryFee: calculatedDeliveryPrice,
+            total: total + calculatedDeliveryPrice,
             paymentMethod: paymentType,
             source: 'web',
           }),
@@ -252,8 +315,8 @@ export default function CartPage() {
         orderNumber: orderNumber, // رقم موحد للفاتورة والطلبية
         date: new Date().toLocaleString(),
         items: cart,
-        total: total + deliveryPrice,
-        deliveryPrice,
+        total: total + calculatedDeliveryPrice,
+        deliveryPrice: calculatedDeliveryPrice,
         deliveryNote,
         deliveryTime,
         userInfo: {
@@ -278,8 +341,8 @@ export default function CartPage() {
         address: addressText,
         deliveryAddress: addressText,
         subtotal: total,
-        deliveryFee: deliveryPrice,
-        total: total + deliveryPrice,
+        deliveryFee: calculatedDeliveryPrice,
+        total: total + calculatedDeliveryPrice,
         paymentMethod: paymentType,
         paymentType,
         status: 'pending',
@@ -480,9 +543,9 @@ export default function CartPage() {
             {deliveryTime && (
               <span className="ml-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-0.5 text-xs font-normal text-emerald-700">{deliveryTime}</span>
             )}
-            <span>التوصيل: {deliveryPrice.toFixed(3)} د.ك</span>
+            <span>التوصيل: {calculatedDeliveryPrice === 0 ? 'مجاني' : `${calculatedDeliveryPrice.toFixed(3)} د.ك`}</span>
           </div>
-          <div className="mt-4 w-full max-w-md text-left text-xl font-extrabold text-emerald-700">الإجمالي: {(total + deliveryPrice).toFixed(3)} د.ك</div>
+          <div className="mt-4 w-full max-w-md text-left text-xl font-extrabold text-emerald-700">الإجمالي: {(total + calculatedDeliveryPrice).toFixed(3)} د.ك</div>
 
           {/* نموذج بيانات المستخدم - الخطوة 2 */}
           {currentStep >= 2 && (
@@ -585,7 +648,7 @@ export default function CartPage() {
                 </div>
                 <div className="flex justify-between text-lg text-slate-800">
                   <span className="text-slate-500">💰 المجموع:</span>
-                  <span className="font-bold text-emerald-700">{(total + deliveryPrice).toFixed(3)} د.ك</span>
+                  <span className="font-bold text-emerald-700">{(total + calculatedDeliveryPrice).toFixed(3)} د.ك</span>
                 </div>
               </div>
               

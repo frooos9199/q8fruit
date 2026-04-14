@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Product } from '../types';
-import { fetchDeliverySettings } from '../services/firebase';
+import { fetchDeliverySettings, fetchProductsFromFirebase } from '../services/firebase';
 
 interface CartItem {
   product: Product;
@@ -41,7 +41,70 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loadCart = async () => {
     try {
       const saved = await AsyncStorage.getItem('cart');
-      if (saved) setItems(JSON.parse(saved));
+      if (!saved) {
+        setItems([]);
+        return;
+      }
+
+      const parsedItems = JSON.parse(saved);
+      if (!Array.isArray(parsedItems) || parsedItems.length === 0) {
+        setItems([]);
+        return;
+      }
+
+      try {
+        const firebaseProducts = await fetchProductsFromFirebase();
+        const productMap = new Map(firebaseProducts.map((product: any) => [String(product.id), product]));
+
+        const syncedItems = parsedItems.flatMap((item: CartItem) => {
+          const product = productMap.get(String(item.product.id));
+          if (!product || product.active === false || product.isHidden === true) {
+            return [];
+          }
+
+          const units = Array.isArray(product.units) ? product.units : [];
+          const matchedUnit = units.find((unit: any) => unit.name === item.unit.name) ?? units[0];
+          if (!matchedUnit) {
+            return [];
+          }
+
+          const image = Array.isArray(product.images) && product.images.length > 0
+            ? product.images[0]
+            : product.image || item.product.image;
+
+          return [{
+            ...item,
+            product: {
+              ...item.product,
+              name: product.name || item.product.name,
+              nameAr: product.nameAr || item.product.nameAr,
+              image,
+              images: product.images || item.product.images,
+              price: Number(matchedUnit.price) || 0,
+              unit: matchedUnit.name,
+              unitAr: matchedUnit.nameAr || matchedUnit.name,
+              units: units.map((unit: any) => ({
+                name: unit.name,
+                nameAr: unit.nameAr || unit.name,
+                price: Number(unit.price) || 0,
+              })),
+              stock: Number(product.quantity ?? product.stock ?? item.product.stock ?? 0),
+              discount: Number(product.discount ?? item.product.discount ?? 0),
+            },
+            unit: {
+              name: matchedUnit.name,
+              nameAr: matchedUnit.nameAr || matchedUnit.name,
+              price: Number(matchedUnit.price) || 0,
+            },
+          }];
+        });
+
+        setItems(syncedItems);
+        await AsyncStorage.setItem('cart', JSON.stringify(syncedItems));
+      } catch (syncError) {
+        console.error('Error syncing cart:', syncError);
+        setItems(parsedItems);
+      }
     } catch (error) {
       console.error('Error loading cart:', error);
     }

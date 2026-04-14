@@ -462,6 +462,9 @@ export const createOrder = async (orderData: any) => {
   try {
     const ordersRef = collection(db, 'orders');
     const currentUser = auth.currentUser;
+    const latestProducts = await fetchProductsFromFirebase();
+    const productMap = new Map(latestProducts.map((product: any) => [String(product.id), product]));
+    const latestDeliverySettings = await fetchDeliverySettings();
 
     const requestedOrderId =
       typeof orderData?.id === 'string' && orderData.id.trim()
@@ -488,19 +491,44 @@ export const createOrder = async (orderData: any) => {
       notes: orderData.deliveryNotes || '',
     };
 
-    const normalizedItems = (orderData.items || []).map((item: any) => ({
-      productId: item.productId || '',
-      name: item.name || item.productName || item.productNameAr || 'منتج',
-      productName: item.productName || item.name || '',
-      productNameAr: item.productNameAr || item.productName || item.name || '',
-      unit: item.unit || '',
-      unitName: item.unit || '',
-      price: item.price ?? item.unitPrice ?? 0,
-      unitPrice: item.unitPrice ?? item.price ?? 0,
-      quantity: item.quantity || 0,
-      total: item.total ?? ((item.price ?? item.unitPrice ?? 0) * (item.quantity || 0)),
-      image: item.image || '',
-    }));
+    const normalizedItems = (orderData.items || []).map((item: any) => {
+      const product = productMap.get(String(item.productId || ''));
+      if (!product) {
+        throw new Error(`المنتج غير متاح حالياً: ${item.productName || item.name || 'منتج'}`);
+      }
+
+      const units = Array.isArray(product.units) ? product.units : [];
+      const matchedUnit = units.find((unit: any) => unit.name === item.unit) ?? units[0];
+      if (!matchedUnit) {
+        throw new Error(`وحدة المنتج غير متاحة حالياً: ${product.name || item.productName || item.name || 'منتج'}`);
+      }
+
+      const quantity = Number(item.quantity) || 0;
+      const latestPrice = Number(matchedUnit.price) || 0;
+      const image = Array.isArray(product.images) && product.images.length > 0
+        ? product.images[0]
+        : product.image || item.image || '';
+
+      return {
+        productId: String(item.productId || product.id || ''),
+        name: product.nameAr || product.name || item.name || item.productName || 'منتج',
+        productName: product.name || item.productName || item.name || '',
+        productNameAr: product.nameAr || item.productNameAr || product.name || item.name || '',
+        unit: matchedUnit.name || item.unit || '',
+        unitName: matchedUnit.name || item.unit || '',
+        price: latestPrice,
+        unitPrice: latestPrice,
+        quantity,
+        total: latestPrice * quantity,
+        image,
+      };
+    });
+
+    const subtotal = normalizedItems.reduce((sum: number, item: any) => sum + (Number(item.total) || 0), 0);
+    const deliveryFeeValue = Number(latestDeliverySettings?.fee ?? latestDeliverySettings?.deliveryPrice ?? latestDeliverySettings?.price) || 0;
+    const freeAboveValue = Number(latestDeliverySettings?.freeAbove) || 0;
+    const resolvedDeliveryFee = subtotal >= freeAboveValue ? 0 : deliveryFeeValue;
+    const resolvedTotal = subtotal + resolvedDeliveryFee;
 
     const newOrderBase = {
       ...orderData,
@@ -522,14 +550,15 @@ export const createOrder = async (orderData: any) => {
       products: normalizedItems,
       items: normalizedItems,
       pricing: {
-        subtotal: orderData.subtotal || 0,
-        deliveryPrice: orderData.deliveryFee || 0,
-        total: orderData.total || 0,
+        subtotal,
+        deliveryPrice: resolvedDeliveryFee,
+        total: resolvedTotal,
       },
-      subtotal: orderData.subtotal || 0,
-      deliveryFee: orderData.deliveryFee || 0,
+      subtotal,
+      deliveryFee: resolvedDeliveryFee,
       paymentType: orderData.paymentMethod || 'cash',
       paymentMethod: orderData.paymentMethod || 'cash',
+      total: resolvedTotal,
       timestamp: Date.now(),
       createdAt: new Date(),
       updatedAt: new Date(),
