@@ -16,6 +16,13 @@ interface StoredCategory {
   image?: string;
 }
 
+const normalizeCategory = (cat: StoredCategory, fallbackId: number): CateringCategory => ({
+  id: Number.isFinite(Number(cat.id)) ? Number(cat.id) : fallbackId,
+  name: cat.name,
+  products: Array.isArray(cat.products) ? cat.products : [],
+  image: cat.image,
+});
+
 const initialCategories: CateringCategory[] = [
   { id: 1, name: "فواكه", products: [] },
   { id: 2, name: "خضار", products: [] },
@@ -51,12 +58,9 @@ export default function CateringTable() {
         const firebaseCategories = await getCategoriesFromFirebase();
 
         if (Array.isArray(firebaseCategories) && firebaseCategories.length > 0) {
-          const normalized = (firebaseCategories as StoredCategory[]).map((cat) => ({
-            id: Number(cat.id),
-            name: cat.name,
-            products: Array.isArray(cat.products) ? cat.products : [],
-            image: cat.image,
-          }));
+          const normalized = (firebaseCategories as StoredCategory[]).map((cat, index) =>
+            normalizeCategory(cat, index + 1)
+          );
           setCategories(normalized);
           window.localStorage.setItem('cateringCategories', JSON.stringify(normalized));
           return;
@@ -69,12 +73,9 @@ export default function CateringTable() {
       if (stored) {
         try {
           const parsed = JSON.parse(stored) as StoredCategory[];
-          const fullCategories = parsed.map((cat) => ({
-            id: cat.id,
-            name: cat.name,
-            products: cat.products || [],
-            image: cat.image
-          }));
+          const fullCategories = parsed.map((cat, index) =>
+            normalizeCategory(cat, index + 1)
+          );
           setCategories(fullCategories);
           return;
         } catch {
