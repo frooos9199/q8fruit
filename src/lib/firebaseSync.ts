@@ -22,6 +22,11 @@ type SyncAllDataOptions = {
   catering?: boolean;
 };
 
+type GetProductsOptions = {
+  includeInactive?: boolean;
+  includeHidden?: boolean;
+};
+
 // مزامنة المنتجات مع Firebase (تحديث آمن)
 export const syncProductsToFirebase = async (products: any[]) => {
   if (!db) {
@@ -70,8 +75,9 @@ export const syncProductsToFirebase = async (products: any[]) => {
 };
 
 // جلب المنتجات من Firebase (فقط عند الحاجة للاستعادة)
-export const getProductsFromFirebase = async () => {
+export const getProductsFromFirebase = async (options: GetProductsOptions = {}) => {
   try {
+    const { includeInactive = false, includeHidden = false } = options;
     console.log('🔍 جلب المنتجات من Firebase...');
     const productsRef = collection(db!, 'products');
     
@@ -99,6 +105,16 @@ export const getProductsFromFirebase = async () => {
         discount: data.discount || 0,
         quantity: data.quantity || 0
       };
+    }).filter((product) => {
+      if (!includeInactive && product.active === false) {
+        return false;
+      }
+
+      if (!includeHidden && (product as { isHidden?: boolean }).isHidden === true) {
+        return false;
+      }
+
+      return true;
     }).sort((a, b) => {
       const aNum = Number(a.id);
       const bNum = Number(b.id);

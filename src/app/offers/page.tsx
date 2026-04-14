@@ -10,6 +10,7 @@ interface Product {
   units: { name: string; price: number }[];
   quantity: number;
   active: boolean;
+  isHidden?: boolean;
   images?: string[];
   image?: string;
   category: string;
@@ -38,7 +39,7 @@ export default function OffersPage() {
 
       const raw = window.localStorage.getItem("products");
       const parsed = raw ? JSON.parse(raw) : [];
-      setProducts(Array.isArray(parsed) ? parsed : []);
+      setProducts(Array.isArray(parsed) ? parsed.filter((p) => p?.active !== false && p?.isHidden !== true) : []);
       setLoading(false);
     };
 

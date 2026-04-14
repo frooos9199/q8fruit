@@ -14,7 +14,7 @@ export default function ProductsPage() {
   const handleExportExcel = async () => {
     let products = [];
     try {
-      const firebaseProducts = await getProductsFromFirebase();
+      const firebaseProducts = await getProductsFromFirebase({ includeInactive: true, includeHidden: true });
       products = Array.isArray(firebaseProducts) && firebaseProducts.length > 0
         ? firebaseProducts
         : JSON.parse(window.localStorage.getItem("products") || "[]");

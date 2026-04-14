@@ -17,6 +17,7 @@ interface Product {
   units: { name: string; price: number }[];
   quantity: number;
   active: boolean;
+  isHidden?: boolean;
   images?: string[]; // صور متعددة
   image?: string; // دعم خلفي للصورة القديمة
   category: string;
@@ -229,7 +230,7 @@ export default function Home() {
 
         const firebaseProducts = await getProductsFromFirebase();
         const validFirebaseProducts = Array.isArray(firebaseProducts)
-          ? firebaseProducts.filter(
+          ? (firebaseProducts as Product[]).filter(
               (p) =>
                 typeof p === "object" &&
                 p !== null &&
@@ -244,7 +245,8 @@ export default function Home() {
                     typeof u.name === "string" &&
                     typeof u.price === "number"
                 ) &&
-                p.active === true &&
+                p.active !== false &&
+                p.isHidden !== true &&
                 typeof p.category === "string"
             )
           : [];
@@ -262,7 +264,7 @@ export default function Home() {
             const parsed = JSON.parse(fallbackProducts);
             if (Array.isArray(parsed) && parsed.length > 0) {
               console.log('🔄 استخدام المنتجات المخزنة كـ Fallback');
-              setProducts(parsed.filter((p: Product) => p.active === true));
+              setProducts(parsed.filter((p: Product) => p.active !== false && p.isHidden !== true));
               return;
             }
           }
