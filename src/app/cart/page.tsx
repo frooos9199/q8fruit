@@ -91,9 +91,23 @@ export default function CartPage() {
       updateCart();
       // جلب قيمة التوصيل من Firebase أولاً، ثم localStorage كـ fallback
       getDeliverySettingsFromFirebase().then((settings) => {
-        if (settings && typeof settings.fee === 'number') {
-          setDeliveryPrice(settings.fee);
-          window.localStorage.setItem("deliveryPrice", String(settings.fee));
+        const resolvedFee = Number(settings?.fee ?? settings?.deliveryPrice ?? settings?.price);
+        const resolvedNote = typeof settings?.note === 'string' ? settings.note : '';
+        const resolvedTime = typeof (settings?.deliveryTime ?? settings?.time) === 'string'
+          ? String(settings?.deliveryTime ?? settings?.time)
+          : '';
+
+        if (settings && Number.isFinite(resolvedFee)) {
+          setDeliveryPrice(resolvedFee);
+          window.localStorage.setItem("deliveryPrice", String(resolvedFee));
+          if (resolvedNote) {
+            setDeliveryNote(resolvedNote);
+            window.localStorage.setItem('deliveryNote', resolvedNote);
+          }
+          if (resolvedTime) {
+            setDeliveryTime(resolvedTime);
+            window.localStorage.setItem('deliveryTime', resolvedTime);
+          }
         } else {
           const storedDelivery = window.localStorage.getItem("deliveryPrice");
           if (storedDelivery && !isNaN(Number(storedDelivery))) {

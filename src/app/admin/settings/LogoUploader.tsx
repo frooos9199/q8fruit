@@ -1,10 +1,35 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function LogoUploader() {
   const [logo, setLogo] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const loadLogo = async () => {
+      try {
+        const { getLogoFromFirebase } = await import('../../../lib/firebaseSync');
+        const firebaseLogo = await getLogoFromFirebase();
+        if (firebaseLogo) {
+          setLogo(firebaseLogo);
+          window.localStorage.setItem('siteLogo', firebaseLogo);
+          return;
+        }
+      } catch (error) {
+        console.error('خطأ في تحميل الشعار من Firebase:', error);
+      }
+
+      const storedLogo = window.localStorage.getItem('siteLogo');
+      if (storedLogo) {
+        setLogo(storedLogo);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      loadLogo();
+    }
+  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -1,6 +1,7 @@
 "use client";
 // import ProductImageUploader from './ProductImageUploader';
 import ProductTable from './ProductTable';
+import { getProductsFromFirebase, syncProductsToFirebase } from '../../../lib/firebaseSync';
 
 import { useRef } from "react";
 import { useState } from "react";
@@ -11,7 +12,15 @@ export default function ProductsPage() {
 
   // تحميل باكاب Excel مع الصور
   const handleExportExcel = async () => {
-    const products = JSON.parse(window.localStorage.getItem("products") || "[]");
+    let products = [];
+    try {
+      const firebaseProducts = await getProductsFromFirebase();
+      products = Array.isArray(firebaseProducts) && firebaseProducts.length > 0
+        ? firebaseProducts
+        : JSON.parse(window.localStorage.getItem("products") || "[]");
+    } catch {
+      products = JSON.parse(window.localStorage.getItem("products") || "[]");
+    }
     
     // إنشاء محتوى CSV مع BOM لدعم العربية
     const BOM = '\uFEFF'; // Byte Order Mark للعربية
@@ -129,7 +138,7 @@ export default function ProductsPage() {
     }
     
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       try {
         const text = event.target?.result as string;
         
@@ -211,9 +220,10 @@ export default function ProductsPage() {
           throw new Error('لم يتم استيراد أي منتجات صحيحة');
         }
         
+        await syncProductsToFirebase(merged);
         window.localStorage.setItem("products", JSON.stringify(merged));
         setRefresh(r => r + 1);
-        alert(`تم استيراد ${importedCount} منتج بنجاح!`);
+        alert(`تم استيراد ${importedCount} منتج بنجاح وتم حفظهم في Firebase!`);
       } catch (error) {
         console.error('خطأ في استيراد XML:', error);
         alert(`خطأ في استيراد الملف: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);

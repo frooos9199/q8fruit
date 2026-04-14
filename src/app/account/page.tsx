@@ -116,8 +116,8 @@ export default function AccountPage() {
 
       setSuccess("تم حفظ البيانات بنجاح");
       setEditMode(false);
-    } catch (error: any) {
-      setError(error.message || "حدث خطأ أثناء حفظ البيانات");
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "حدث خطأ أثناء حفظ البيانات");
     } finally {
       setSaving(false);
     }

@@ -9,6 +9,13 @@ interface CateringCategory {
   image?: string;
 }
 
+interface StoredCategory {
+  id: number | string;
+  name: string;
+  products?: string[];
+  image?: string;
+}
+
 const initialCategories: CateringCategory[] = [
   { id: 1, name: "فواكه", products: [] },
   { id: 2, name: "خضار", products: [] },
@@ -34,30 +41,52 @@ export default function CateringTable() {
     }
   };
 
-  // قراءة الكاترينج من localStorage عند التحميل
+  // قراءة الكاترينج من Firebase أولاً، ثم localStorage كـ fallback
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') return;
+
+    const loadCategories = async () => {
+      try {
+        const { getCategoriesFromFirebase } = await import('../../../lib/firebaseSync');
+        const firebaseCategories = await getCategoriesFromFirebase();
+
+        if (Array.isArray(firebaseCategories) && firebaseCategories.length > 0) {
+          const normalized = (firebaseCategories as StoredCategory[]).map((cat) => ({
+            id: Number(cat.id),
+            name: cat.name,
+            products: Array.isArray(cat.products) ? cat.products : [],
+            image: cat.image,
+          }));
+          setCategories(normalized);
+          window.localStorage.setItem('cateringCategories', JSON.stringify(normalized));
+          return;
+        }
+      } catch (error) {
+        console.error('خطأ في تحميل تصنيفات الكاترينج من Firebase:', error);
+      }
+
       const stored = window.localStorage.getItem("cateringCategories");
       if (stored) {
         try {
-          const parsed = JSON.parse(stored);
-          // تحويل البيانات المخزنة إلى الشكل الكامل
-          const fullCategories = parsed.map((cat: any) => ({
+          const parsed = JSON.parse(stored) as StoredCategory[];
+          const fullCategories = parsed.map((cat) => ({
             id: cat.id,
             name: cat.name,
             products: cat.products || [],
             image: cat.image
           }));
           setCategories(fullCategories);
+          return;
         } catch {
-          setCategories(initialCategories);
-          syncCategoriesToStorage(initialCategories);
+          // ignore and seed defaults below
         }
-      } else {
-        setCategories(initialCategories);
-        syncCategoriesToStorage(initialCategories);
       }
-    }
+
+      setCategories(initialCategories);
+      syncCategoriesToStorage(initialCategories);
+    };
+
+    loadCategories();
   }, []);
   const handleEdit = (category: CateringCategory) => {
     setEditCategory(category);

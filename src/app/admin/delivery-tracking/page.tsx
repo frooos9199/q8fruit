@@ -10,6 +10,12 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../../lib/firebase';
 import DeliveryMap from '../../../components/DeliveryMap';
 
+interface FirestoreTimestampLike {
+  seconds?: number;
+  nanoseconds?: number;
+  toDate?: () => Date;
+}
+
 interface DeliveryDriver {
   userId: string;
   email: string;
@@ -21,7 +27,7 @@ interface DeliveryDriver {
     speed: number | null;
     heading: number | null;
   };
-  timestamp: any;
+  timestamp: FirestoreTimestampLike | number | string | null;
   lastUpdate: number;
   isActive: boolean;
 }
@@ -30,6 +36,7 @@ export default function DeliveryTrackingPage() {
   const [drivers, setDrivers] = useState<DeliveryDriver[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedDriver, setSelectedDriver] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
 
   useEffect(() => {
     if (!db) return;
@@ -69,10 +76,17 @@ export default function DeliveryTrackingPage() {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 15000);
+
+    return () => window.clearInterval(intervalId);
+  }, []);
+
   // حساب الوقت منذ آخر تحديث
   const getTimeSinceUpdate = (lastUpdate: number): string => {
-    const now = Date.now();
-    const diff = Math.floor((now - lastUpdate) / 1000); // بالثواني
+    const diff = Math.floor((currentTime - lastUpdate) / 1000); // بالثواني
 
     if (diff < 60) return `${diff} ثانية`;
     if (diff < 3600) return `${Math.floor(diff / 60)} دقيقة`;

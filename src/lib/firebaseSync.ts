@@ -154,6 +154,15 @@ export const syncCateringToFirebase = async (cateringCategories: any[]) => {
       })
     );
     await Promise.all(addPromises);
+
+    await setDoc(doc(db!, 'settings', 'categories'), {
+      categories: cateringCategories.map((category) => ({
+        id: category.id,
+        name: category.name,
+        image: category.image || null,
+      })),
+      updatedAt: new Date().toISOString()
+    });
     
     console.log(`✅ تم مزامنة ${cateringCategories.length} فئة كيترنج مع Firebase`);
     return true;
@@ -166,6 +175,18 @@ export const syncCateringToFirebase = async (cateringCategories: any[]) => {
 // جلب التصنيفات من Firebase
 export const getCategoriesFromFirebase = async () => {
   try {
+    const cateringRef = collection(db!, 'cateringCategories');
+    const cateringSnapshot = await getDocs(cateringRef);
+
+    if (!cateringSnapshot.empty) {
+      return cateringSnapshot.docs
+        .map((categoryDoc) => ({
+          id: Number(categoryDoc.data().id ?? categoryDoc.id),
+          ...categoryDoc.data(),
+        }))
+        .sort((a, b) => Number(a.id ?? 0) - Number(b.id ?? 0));
+    }
+
     const docRef = doc(db!, 'settings', 'categories');
     const docSnap = await getDoc(docRef);
     
@@ -270,6 +291,36 @@ export const getLogoFromFirebase = async () => {
   } catch (error) {
     console.error('خطأ في جلب الشعار:', error);
     return null;
+  }
+};
+
+export const syncApiKeysToFirebase = async (apiKeys: any[]) => {
+  try {
+    await setDoc(doc(db!, 'settings', 'apiKeys'), {
+      fields: apiKeys,
+      updatedAt: new Date().toISOString()
+    });
+
+    console.log('تم مزامنة مفاتيح الربط مع Firebase');
+    return true;
+  } catch (error) {
+    console.error('خطأ في مزامنة مفاتيح الربط:', error);
+    return false;
+  }
+};
+
+export const getApiKeysFromFirebase = async () => {
+  try {
+    const docRef = doc(db!, 'settings', 'apiKeys');
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      return docSnap.data().fields || [];
+    }
+    return [];
+  } catch (error) {
+    console.error('خطأ في جلب مفاتيح الربط:', error);
+    return [];
   }
 };
 

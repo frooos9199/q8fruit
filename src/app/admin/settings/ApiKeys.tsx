@@ -13,27 +13,55 @@ const defaultKeys = [
 ];
 
 export default function ApiKeysSettings() {
-  const [fields, setFields] = useState(() => {
-    if (typeof window !== "undefined") {
-      const stored = window.localStorage.getItem("apiKeys");
+  const [fields, setFields] = useState(defaultKeys);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const loadApiKeys = async () => {
+      try {
+        const { getApiKeysFromFirebase } = await import('../../../lib/firebaseSync');
+        const firebaseFields = await getApiKeysFromFirebase();
+
+        if (Array.isArray(firebaseFields) && firebaseFields.length > 0) {
+          setFields(firebaseFields);
+          window.localStorage.setItem('apiKeys', JSON.stringify(firebaseFields));
+          return;
+        }
+      } catch (error) {
+        console.error('خطأ في تحميل مفاتيح الربط من Firebase:', error);
+      }
+
+      const stored = window.localStorage.getItem('apiKeys');
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed)) return parsed;
-        } catch {}
+          if (Array.isArray(parsed)) {
+            setFields(parsed);
+          }
+        } catch {
+          setFields(defaultKeys);
+        }
       }
-    }
-    return defaultKeys;
-  });
-  const [saved, setSaved] = useState(false);
+    };
+
+    loadApiKeys();
+  }, []);
 
   const handleChange = (idx: number, value: string) => {
     setFields((prev) => prev.map((f, i) => (i === idx ? { ...f, value } : f)));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (typeof window !== "undefined") {
       window.localStorage.setItem("apiKeys", JSON.stringify(fields));
+      try {
+        const { syncApiKeysToFirebase } = await import('../../../lib/firebaseSync');
+        await syncApiKeysToFirebase(fields);
+      } catch (error) {
+        console.error('خطأ في حفظ مفاتيح الربط في Firebase:', error);
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 1500);
     }
@@ -58,6 +86,7 @@ export default function ApiKeysSettings() {
         <button type="submit" className="w-full rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 py-3 text-lg font-bold text-white shadow transition hover:from-emerald-700 hover:to-teal-600">حفظ الإعدادات</button>
         {saved && <div className="text-green-600 text-center font-bold mt-2">تم الحفظ بنجاح</div>}
       </form>
+      <p className="mt-4 text-center text-xs text-slate-500">يتم تحميل هذه الإعدادات من Firebase وحفظها فيه، مع localStorage كنسخة كاش فقط.</p>
     </div>
   );
 }

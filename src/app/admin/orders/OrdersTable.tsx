@@ -5,7 +5,7 @@ import InvoiceModal from "./InvoiceModal";
 import { sendInvoiceViaWhatsApp } from "../../../lib/whatsappInvoice";
 import { getOrderDisplayNumber, getOrderPricing, normalizeOrderForDisplay } from '../../../lib/orderUtils';
 import { db } from "../../../lib/firebase";
-import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, doc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
 
 interface OrderProduct {
   productId?: string;
@@ -182,29 +182,8 @@ function OrdersTable() {
         return transformFirebaseOrder(doc);
       });
       console.log('✅ Transformed Firebase orders:', firebaseOrders);
-      
-      // Get localStorage orders (legacy)
-      let localOrders: Order[] = [];
-      if (typeof window !== "undefined") {
-        const stored = window.localStorage.getItem("orders");
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            if (Array.isArray(parsed)) {
-              localOrders = parsed.map((order: any) => ({
-                ...order,
-                id: `local_${order.id}` // Prefix to avoid conflicts
-              }));
-            }
-          } catch (e) {
-            console.error("Error parsing orders from localStorage:", e);
-          }
-        }
-      }
-      
-      // Merge orders (Firebase first, then localStorage)
-      const allOrders = [...firebaseOrders, ...localOrders];
-      console.log('🎯 Total orders to display:', allOrders.length, 'orders');
+
+      console.log('🎯 Total orders to display:', firebaseOrders.length, 'orders');
 
       if (browserNotificationsEnabled) {
         firebaseOrders.forEach((order) => {
@@ -220,7 +199,11 @@ function OrdersTable() {
         });
       }
 
-      setOrders(allOrders);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('orders', JSON.stringify(firebaseOrders));
+      }
+
+      setOrders(firebaseOrders);
     }, (error) => {
       console.error('❌ Error listening to orders:', error);
       

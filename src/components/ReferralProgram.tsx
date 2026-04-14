@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Share2, Copy, Gift, Users } from 'lucide-react';
 
 interface ReferralProgramProps {
@@ -14,11 +14,9 @@ export default function ReferralProgram({ userId, userName }: ReferralProgramPro
   const [totalRewards, setTotalRewards] = useState(0);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    fetchReferralData();
-  }, [userId]);
+  void userName;
 
-  const fetchReferralData = async () => {
+  const fetchReferralData = useCallback(async () => {
     try {
       const response = await fetch(`/api/referral/${userId}`);
       const data = await response.json();
@@ -31,7 +29,11 @@ export default function ReferralProgram({ userId, userName }: ReferralProgramPro
     } catch (error) {
       console.error('Error fetching referral data:', error);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchReferralData();
+  }, [fetchReferralData]);
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(referralCode);
