@@ -3,6 +3,7 @@ import { useState, useRef, useMemo } from "react";
 import ProductEditModal from "./ProductEditModal";
 import { useEffect, useState as useStateReact } from "react";
 import CateringTable from "../catering/CateringTable";
+import { clearProductsCache, getProductsFromFirebase, syncProductsToFirebase } from "../../../lib/firebaseSync";
 import { db } from "../../../lib/firebase";
 import { doc, updateDoc, setDoc, getDocs, collection, deleteDoc } from "firebase/firestore";
 
@@ -55,55 +56,23 @@ export default function ProductTable() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    let unsubscribe: (() => void) | undefined;
-
     const loadProducts = async () => {
       try {
-        const stored = window.localStorage.getItem('products');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          console.log('📦 عرض مؤقت من localStorage:', parsed.length);
-          const withOrder = parsed.map((p: Product, index: number) => ({
-            ...p,
-            order: p.order ?? index
-          }));
-          withOrder.sort((a: Product, b: Product) => (a.order || 0) - (b.order || 0));
-          setProducts(withOrder);
-        }
+        const firebaseProducts = await getProductsFromFirebase({ includeInactive: true, includeHidden: true });
+        const normalizedProducts = Array.isArray(firebaseProducts)
+          ? (firebaseProducts as Product[]).map((product) => ({
+              ...product,
+              docId: product.docId ? String(product.docId) : String(product.id),
+              order: typeof product.order === 'number' ? product.order : Number(product.order ?? 0) || 0,
+            })) as Product[]
+          : [];
 
-        if (db) {
-          try {
-            const snapshot = await getDocs(collection(db, 'products'));
-            const firebaseProducts = snapshot.docs.map((productDoc) => {
-              const data = productDoc.data() as Record<string, unknown>;
-              const resolvedId =
-                typeof data.id === 'number' || typeof data.id === 'string'
-                  ? data.id
-                  : productDoc.id;
+        normalizedProducts.sort((a, b) => (a.order || 0) - (b.order || 0));
 
-              return {
-                ...data,
-                id: resolvedId,
-                docId: productDoc.id,
-                order: typeof data.order === 'number' ? data.order : Number(data.order ?? 0) || 0,
-              } as Product;
-            });
-            
-            firebaseProducts.sort((a, b) => (a.order || 0) - (b.order || 0));
-            
-            console.log('🔥 تحميل من Firebase:', firebaseProducts.length);
-
-            setProducts(firebaseProducts);
-            window.localStorage.setItem('products', JSON.stringify(firebaseProducts));
-            window.localStorage.setItem('productsLastUpdate', new Date().toISOString());
-            setLoading(false);
-          } catch (error) {
-            console.error('❌ خطأ في تحميل Firebase:', error);
-            setLoading(false);
-          }
-        } else {
-          setLoading(false);
-        }
+        console.log('🔥 تحميل من Firebase:', normalizedProducts.length);
+        clearProductsCache();
+        setProducts(normalizedProducts);
+        setLoading(false);
       } catch (error) {
         console.error('❌ خطأ في تحميل المنتجات:', error);
         setLoading(false);
@@ -111,13 +80,6 @@ export default function ProductTable() {
     };
 
     loadProducts();
-
-    // تنظيف عند إلغاء الكومبوننت
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
   }, []);
 
   const [editProduct, setEditProduct] = useState<Product | null>(null);
@@ -154,15 +116,11 @@ export default function ProductTable() {
   }, []);
 
   const saveProductsToStorage = async (prods: Product[]) => {
-    console.log('💾 حفظ المنتجات في localStorage:', prods.length);
+    console.log('💾 مزامنة المنتجات مع Firebase:', prods.length);
     if (typeof window !== 'undefined') {
-      // حفظ في localStorage فوراً
-      window.localStorage.setItem('products', JSON.stringify(prods));
-      window.localStorage.setItem('productsLastUpdate', new Date().toISOString());
+      clearProductsCache();
       
-      // 🔥 مزامنة فورية مع Firebase
       try {
-        const { syncProductsToFirebase } = await import('../../../lib/firebaseSync');
         await syncProductsToFirebase(prods);
         console.log('✅ تم مزامنة Firebase فوراً');
       } catch (firebaseError) {
@@ -335,7 +293,7 @@ export default function ProductTable() {
         }, { merge: false });
         
         console.log('✅ تم حفظ المنتج في Firebase:', updated.id);
-        window.localStorage.setItem('productsLastUpdate', new Date().toISOString());
+        clearProductsCache();
         alert(`✅ تم حفظ تعديلات المنتج "${updated.name}" بنجاح!`);
       } else {
         alert(`✅ تم حفظ تعديلات المنتج "${updated.name}" محلياً!`);

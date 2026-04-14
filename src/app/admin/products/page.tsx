@@ -1,10 +1,24 @@
 "use client";
 // import ProductImageUploader from './ProductImageUploader';
 import ProductTable from './ProductTable';
-import { getProductsFromFirebase, syncProductsToFirebase } from '../../../lib/firebaseSync';
+import { clearProductsCache, getProductsFromFirebase, syncProductsToFirebase } from '../../../lib/firebaseSync';
 
 import { useRef } from "react";
 import { useState } from "react";
+
+interface ExportProduct {
+  id: number | string;
+  name: string;
+  category: string;
+  categories?: string[];
+  quantity: number;
+  active: boolean;
+  image?: string;
+  images?: string[];
+  units: { name: string; price: number }[];
+  hasOffer?: boolean;
+  discount?: number;
+}
 
 export default function ProductsPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -12,14 +26,14 @@ export default function ProductsPage() {
 
   // تحميل باكاب Excel مع الصور
   const handleExportExcel = async () => {
-    let products = [];
+    let products: ExportProduct[] = [];
     try {
       const firebaseProducts = await getProductsFromFirebase({ includeInactive: true, includeHidden: true });
       products = Array.isArray(firebaseProducts) && firebaseProducts.length > 0
         ? firebaseProducts
-        : JSON.parse(window.localStorage.getItem("products") || "[]");
+        : [];
     } catch {
-      products = JSON.parse(window.localStorage.getItem("products") || "[]");
+      products = [];
     }
     
     // إنشاء محتوى CSV مع BOM لدعم العربية
@@ -46,9 +60,9 @@ export default function ProductsPage() {
   };
 
   // تصدير المنتجات كـ XML
-  const handleExportXML = () => {
+  const handleExportXML = async () => {
     try {
-      const products = JSON.parse(window.localStorage.getItem("products") || "[]");
+      const products = await getProductsFromFirebase({ includeInactive: true, includeHidden: true }) as ExportProduct[];
       let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<products>\n';
       for (const p of products) {
         // تنظيف البيانات من XML injection
@@ -167,7 +181,7 @@ export default function ProductsPage() {
           throw new Error('لا توجد منتجات في الملف');
         }
         
-        const imported = productNodes.map((node) => {
+        const imported: ExportProduct[] = productNodes.map((node) => {
           const get = (tag: string) => {
             const element = node.getElementsByTagName(tag)[0];
             return element?.textContent?.trim() || "";
@@ -192,20 +206,22 @@ export default function ProductsPage() {
             id: Math.max(0, id),
             name: get("name").substring(0, 200),
             category: get("category").substring(0, 100),
+            categories: [get("category").substring(0, 100)].filter(Boolean),
             quantity: Math.max(0, quantity),
             active,
             image: get("image").substring(0, 500),
+            images: get("image") ? [get("image").substring(0, 500)] : [],
             units: units.slice(0, 10) // حد عدد الوحدات
           };
         });
         
         // دمج المنتجات
-        const products = JSON.parse(window.localStorage.getItem("products") || "[]");
-        const merged = [...products];
+        const products = await getProductsFromFirebase({ includeInactive: true, includeHidden: true }) as ExportProduct[];
+        const merged: ExportProduct[] = [...products];
         let importedCount = 0;
         
         for (const p of imported) {
-          if (p.id > 0 && p.name) { // فقط المنتجات الصحيحة
+          if (Number(p.id) > 0 && p.name) { // فقط المنتجات الصحيحة
             const idx = merged.findIndex((x: any) => x.id === p.id);
             if (idx > -1) {
               merged[idx] = p;
@@ -221,7 +237,7 @@ export default function ProductsPage() {
         }
         
         await syncProductsToFirebase(merged);
-        window.localStorage.setItem("products", JSON.stringify(merged));
+        clearProductsCache();
         setRefresh(r => r + 1);
         alert(`تم استيراد ${importedCount} منتج بنجاح وتم حفظهم في Firebase!`);
       } catch (error) {

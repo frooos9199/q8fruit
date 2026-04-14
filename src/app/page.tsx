@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  clearProductsCache,
   getBannersFromFirebase,
   getCategoriesFromFirebase,
   getLogoFromFirebase,
@@ -253,23 +254,11 @@ export default function Home() {
 
         console.log(`✅ عدد المنتجات المعتمدة من Firebase: ${validFirebaseProducts.length}`);
         setProducts(validFirebaseProducts);
-        window.localStorage.setItem("products", JSON.stringify(validFirebaseProducts));
+        clearProductsCache();
         return;
       } catch (error) {
         console.error('❌ خطأ في جلب المنتجات:', error);
-        
-        try {
-          const fallbackProducts = window.localStorage.getItem("products");
-          if (fallbackProducts) {
-            const parsed = JSON.parse(fallbackProducts);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              console.log('🔄 استخدام المنتجات المخزنة كـ Fallback');
-              setProducts(parsed.filter((p: Product) => p.active !== false && p.isHidden !== true));
-              return;
-            }
-          }
-        } catch {}
-        
+        clearProductsCache();
         setProducts([]);
       }
     }

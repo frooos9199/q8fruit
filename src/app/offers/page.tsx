@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getProductsFromFirebase } from "../../lib/firebaseSync";
+import { clearProductsCache, getProductsFromFirebase } from "../../lib/firebaseSync";
 
 interface Product {
   id: number | string;
@@ -30,16 +30,14 @@ export default function OffersPage() {
         const firebaseProducts = await getProductsFromFirebase();
         const normalizedProducts = Array.isArray(firebaseProducts) ? firebaseProducts : [];
         setProducts(normalizedProducts);
-        window.localStorage.setItem("products", JSON.stringify(normalizedProducts));
+        clearProductsCache();
         setLoading(false);
         return;
       } catch {
-        // ignore
+        clearProductsCache();
       }
 
-      const raw = window.localStorage.getItem("products");
-      const parsed = raw ? JSON.parse(raw) : [];
-      setProducts(Array.isArray(parsed) ? parsed.filter((p) => p?.active !== false && p?.isHidden !== true) : []);
+      setProducts([]);
       setLoading(false);
     };
 

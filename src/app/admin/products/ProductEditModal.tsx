@@ -1,7 +1,6 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 import { uploadImage } from "@/lib/uploadImage";
-import OptimizedImage from "@/components/OptimizedImage";
 
 interface ProductUnit {
   name: string;
@@ -47,20 +46,8 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
       
       const updatedImages = [...(form.images || []), ...imageUrls];
       setForm((prev) => ({ ...prev, images: updatedImages }));
-      
-      // لا تحديث localStorage للمنتجات الجديدة (id = 0) - سيتم الحفظ عند النقر على حفظ
-      if (form.id !== 0) {
-        const products = JSON.parse(localStorage.getItem('products') || '[]');
-        const updatedProducts = products.map((p: Product) => 
-          p.id === form.id ? { ...p, images: updatedImages } : p
-        );
-        localStorage.setItem('products', JSON.stringify(updatedProducts));
-        
-        const { syncProductsToFirebase } = await import('../../../lib/firebaseSync');
-        await syncProductsToFirebase(updatedProducts);
-      }
-      
-      alert(`تم رفع ${imageUrls.length} صورة بنجاح! ✅`);
+
+      alert(`تم رفع ${imageUrls.length} صورة بنجاح! ✅ سيتم حفظها عند الضغط على حفظ المنتج.`);
     } catch (error) {
       console.error("خطأ في رفع الصور:", error);
       alert("فشل رفع الصور. الرجاء المحاولة مرة أخرى.");
@@ -72,20 +59,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
   const handleRemoveImage = useCallback(async (idx: number) => {
     const updatedImages = (form.images || []).filter((_, i) => i !== idx);
     setForm((prev) => ({ ...prev, images: updatedImages }));
-    
-    const products = JSON.parse(localStorage.getItem('products') || '[]');
-    const updatedProducts = products.map((p: Product) => 
-      p.id === form.id ? { ...p, images: updatedImages } : p
-    );
-    localStorage.setItem('products', JSON.stringify(updatedProducts));
-    
-    try {
-      const { syncProductsToFirebase } = await import('../../../lib/firebaseSync');
-      await syncProductsToFirebase(updatedProducts);
-    } catch (error) {
-      console.error('Error syncing to Firebase:', error);
-    }
-  }, [form.id, form.images]);
+  }, [form.images]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;

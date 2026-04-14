@@ -27,6 +27,13 @@ type GetProductsOptions = {
   includeHidden?: boolean;
 };
 
+export const clearProductsCache = () => {
+  if (typeof window === 'undefined') return;
+
+  window.localStorage.removeItem('products');
+  window.localStorage.removeItem('productsLastUpdate');
+};
+
 // مزامنة المنتجات مع Firebase (تحديث آمن)
 export const syncProductsToFirebase = async (products: any[]) => {
   if (!db) {
@@ -558,14 +565,8 @@ export const loadAllDataFromFirebase = async () => {
     const products = await getProductsFromFirebase();
     console.log(`📦 تم جلب ${products.length} منتج من Firebase`);
     
-    // حفظ المنتجات حتى لو كانت فارغة (لا تحذف البيانات الموجودة)
-    const activeProducts = products.filter((p: any) => p.active !== false);
-    if (activeProducts.length > 0) {
-      localStorage.setItem('products', JSON.stringify(activeProducts));
-      console.log('✅ تم حفظ المنتجات في localStorage');
-    } else {
-      console.warn('⚠️ لم يتم العثور على منتجات في Firebase - الاحتفاظ بالبيانات الموجودة');
-    }
+    // المنتجات أصبحت Firebase-only، لذلك نحذف أي كاش قديم محلياً لتجنب الخلط مع بيانات localhost.
+    clearProductsCache();
     
     // جلب التصنيفات
     const categories = await getCategoriesFromFirebase();
@@ -609,11 +610,8 @@ export const emergencyLoadFromFirebase = async () => {
   try {
     console.log('🆘 جلب طوارئ من Firebase...');
     
-    const products = await getProductsFromFirebase();
-    const activeProducts = products.filter((p: any) => p.active !== false);
-    if (activeProducts.length > 0) {
-      localStorage.setItem('products', JSON.stringify(activeProducts));
-    }
+    await getProductsFromFirebase();
+    clearProductsCache();
     
     const categories = await getCategoriesFromFirebase();
     if (categories.length > 0) {
