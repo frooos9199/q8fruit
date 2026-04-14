@@ -14,6 +14,11 @@ const auth = getAuth(app);
 
 export { db, auth };
 
+interface FetchProductsOptions {
+  includeInactive?: boolean;
+  includeHidden?: boolean;
+}
+
 const ORDER_COUNTER_START = 99;
 
 const normalizeText = (value: unknown, fallback = '') => {
@@ -121,7 +126,8 @@ export const saveUserFcmToken = async (userId: string, token: string) => {
   }
 };
 
-export const fetchProductsFromFirebase = async () => {
+export const fetchProductsFromFirebase = async (options: FetchProductsOptions = {}) => {
+  const { includeInactive = false, includeHidden = false } = options;
   const snapshot = await getDocs(collection(db, 'products'));
   const products = snapshot.docs.map((doc) => {
     const data = doc.data() as Record<string, any>;
@@ -145,7 +151,20 @@ export const fetchProductsFromFirebase = async () => {
       images: Array.isArray(data.images) ? data.images : (data.image ? [data.image] : []),
     };
   });
-  return products.sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
+
+  return products
+    .filter((product: any) => {
+      if (!includeInactive && product.active === false) {
+        return false;
+      }
+
+      if (!includeHidden && product.isHidden === true) {
+        return false;
+      }
+
+      return true;
+    })
+    .sort((a: any, b: any) => (a.order || 0) - (b.order || 0));
 };
 
 export const uploadImage = async (uri: string, path: string) => {

@@ -27,7 +27,7 @@ export const ManageProductsScreen: React.FC<{ navigation: any }> = ({ navigation
 
   const loadProducts = async () => {
     try {
-      const data = await fetchProductsFromFirebase();
+      const data = await fetchProductsFromFirebase({ includeInactive: true, includeHidden: true });
       setProducts(data);
       setFilteredProducts(data);
     } catch (error) {
