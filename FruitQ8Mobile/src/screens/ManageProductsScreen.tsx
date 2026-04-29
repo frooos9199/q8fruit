@@ -17,8 +17,9 @@ import { fetchProductsFromFirebase, deleteProduct, updateProduct, reorderProduct
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants';
 
 export const ManageProductsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { i18n } = useTranslation();
-  const isArabic = i18n.language === 'ar';
+  const { t, i18n } = useTranslation();
+  const baseLanguage = (i18n.language || 'en').split('-')[0];
+  const isArabic = baseLanguage === 'ar';
   const [products, setProducts] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,26 +65,27 @@ export const ManageProductsScreen: React.FC<{ navigation: any }> = ({ navigation
     if (result.success) {
       loadProducts();
     } else {
-      Alert.alert(isArabic ? 'خطأ' : 'Error', isArabic ? 'فشل إعادة الترتيب' : 'Failed to reorder');
+      Alert.alert(t('error'), t('admin.manageProducts.reorderFailed'));
     }
   };
 
   const handleDelete = (product: any) => {
+    const displayName = isArabic ? product.nameAr || product.name : product.name;
     Alert.alert(
-      isArabic ? 'حذف المنتج' : 'Delete Product',
-      isArabic ? `هل تريد حذف "${product.nameAr || product.name}"؟` : `Delete "${product.name}"?`,
+      t('admin.manageProducts.deleteTitle'),
+      t('admin.manageProducts.deleteConfirm', { name: displayName }),
       [
-        { text: isArabic ? 'إلغاء' : 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: isArabic ? 'حذف' : 'Delete',
+          text: t('delete'),
           style: 'destructive',
           onPress: async () => {
             const result = await deleteProduct(product.id);
             if (result.success) {
-              Alert.alert(isArabic ? 'نجح' : 'Success', isArabic ? 'تم الحذف بنجاح' : 'Deleted successfully');
+              Alert.alert(t('success'), t('admin.manageProducts.deleted'));
               loadProducts();
             } else {
-              Alert.alert(isArabic ? 'خطأ' : 'Error', isArabic ? 'فشل الحذف' : 'Failed to delete');
+              Alert.alert(t('error'), t('admin.manageProducts.deleteFailed'));
             }
           },
         },
@@ -97,7 +99,7 @@ export const ManageProductsScreen: React.FC<{ navigation: any }> = ({ navigation
     if (result.success) {
       loadProducts();
     } else {
-      Alert.alert(isArabic ? 'خطأ' : 'Error', isArabic ? 'فشل التحديث' : 'Failed to update');
+      Alert.alert(t('error'), t('admin.manageProducts.updateFailed'));
     }
   };
 
@@ -105,7 +107,7 @@ export const ManageProductsScreen: React.FC<{ navigation: any }> = ({ navigation
     return (
       <View style={styles.container}>
         <Header 
-          title={isArabic ? 'إدارة المنتجات' : 'Manage Products'}
+          title={t('admin.manageProducts.title')}
           showBack
           onBack={() => navigation.goBack()}
         />
@@ -119,7 +121,7 @@ export const ManageProductsScreen: React.FC<{ navigation: any }> = ({ navigation
   return (
     <View style={styles.container}>
       <Header 
-        title={isArabic ? 'إدارة المنتجات' : 'Manage Products'}
+        title={t('admin.manageProducts.title')}
         showBack
         onBack={() => navigation.goBack()}
         rightComponent={
@@ -132,7 +134,7 @@ export const ManageProductsScreen: React.FC<{ navigation: any }> = ({ navigation
       <View style={styles.searchContainer}>
         <TextInput
           style={styles.searchInput}
-          placeholder={isArabic ? 'بحث عن منتج...' : 'Search products...'}
+          placeholder={t('admin.manageProducts.searchPlaceholder')}
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholderTextColor={COLORS.textSecondary}
@@ -143,15 +145,15 @@ export const ManageProductsScreen: React.FC<{ navigation: any }> = ({ navigation
       <View style={styles.statsBar}>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{products.length}</Text>
-          <Text style={styles.statLabel}>{isArabic ? 'إجمالي' : 'Total'}</Text>
+          <Text style={styles.statLabel}>{t('admin.manageProducts.total')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{products.filter((p: any) => p.quantity > 0).length}</Text>
-          <Text style={styles.statLabel}>{isArabic ? 'متوفر' : 'In Stock'}</Text>
+          <Text style={styles.statLabel}>{t('admin.manageProducts.inStock')}</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={styles.statValue}>{products.filter((p: any) => p.discount > 0).length}</Text>
-          <Text style={styles.statLabel}>{isArabic ? 'عروض' : 'Offers'}</Text>
+          <Text style={styles.statLabel}>{t('admin.manageProducts.offers')}</Text>
         </View>
       </View>
 
@@ -164,7 +166,7 @@ export const ManageProductsScreen: React.FC<{ navigation: any }> = ({ navigation
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📦</Text>
             <Text style={styles.emptyText}>
-              {isArabic ? 'لا توجد منتجات' : 'No products found'}
+              {t('admin.manageProducts.noProducts')}
             </Text>
           </View>
         ) : (
@@ -195,7 +197,7 @@ export const ManageProductsScreen: React.FC<{ navigation: any }> = ({ navigation
                   </Text>
                   <View style={[styles.stockBadge, product.isHidden ? styles.outOfStock : styles.inStock]}>
                     <Text style={styles.stockText}>
-                      {product.isHidden ? (isArabic ? 'مخفي' : 'Hidden') : (isArabic ? 'ظاهر' : 'Visible')}
+                      {product.isHidden ? t('admin.manageProducts.hidden') : t('admin.manageProducts.visible')}
                     </Text>
                   </View>
                 </View>

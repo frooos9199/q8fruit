@@ -8,9 +8,10 @@ import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants';
 import { formatOrderDateTime } from '../utils/orderDate';
 
 export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { canAccessAdmin } = useAuth();
-  const isArabic = i18n.language === 'ar';
+  const baseLanguage = (i18n.language || 'en').split('-')[0];
+  const isArabic = baseLanguage === 'ar';
   const { order } = route.params;
   const orderNumber = String(order.orderNumber || order.id);
 
@@ -27,34 +28,26 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
   };
 
   const getStatusText = (status: string) => {
-    const statusMap: any = {
-      pending: isArabic ? 'قيد الانتظار' : 'Pending',
-      confirmed: isArabic ? 'مؤكد' : 'Confirmed',
-      preparing: isArabic ? 'قيد التحضير' : 'Preparing',
-      delivering: isArabic ? 'قيد التوصيل' : 'Delivering',
-      delivered: isArabic ? 'تم التوصيل' : 'Delivered',
-      cancelled: isArabic ? 'ملغي' : 'Cancelled',
-    };
-    return statusMap[status] || status;
+    return t(`orderStatus.${status}`, { defaultValue: status });
   };
 
   const handleUpdateStatus = async (newStatus: string) => {
     Alert.alert(
-      isArabic ? 'تحديث الحالة' : 'Update Status',
-      isArabic ? `تحديث الحالة إلى "${getStatusText(newStatus)}"؟` : `Update status to "${getStatusText(newStatus)}"?`,
+      t('admin.orderDetails.updateStatus'),
+      t('admin.orderDetails.updateStatusConfirm', { status: getStatusText(newStatus) }),
       [
-        { text: isArabic ? 'إلغاء' : 'Cancel', style: 'cancel' },
+        { text: t('cancel'), style: 'cancel' },
         {
-          text: isArabic ? 'تحديث' : 'Update',
+          text: t('admin.orderDetails.update'),
           onPress: async () => {
             const result = await updateOrderStatus(order.id, newStatus);
             if (result.success) {
-              Alert.alert(isArabic ? 'نجح' : 'Success', isArabic ? 'تم التحديث' : 'Updated successfully');
+              Alert.alert(t('success'), t('admin.orderDetails.updated'));
               navigation.goBack();
             } else {
               Alert.alert(
-                isArabic ? 'خطأ' : 'Error',
-                result.error || (isArabic ? 'فشل تحديث حالة الطلب' : 'Failed to update order status')
+                t('error'),
+                result.error || t('admin.orderDetails.updateFailed')
               );
             }
           },
@@ -86,7 +79,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
   const sendWhatsAppToCustomer = () => {
     const phone = (order.phoneNumber || order.customerPhone || order.userPhone || order.phone || '').replace(/[^0-9]/g, '');
     if (!phone) {
-      Alert.alert(isArabic ? 'خطأ' : 'Error', isArabic ? 'رقم الهاتف غير متوفر' : 'Phone number not available');
+      Alert.alert(t('error'), isArabic ? 'رقم الهاتف غير متوفر' : 'Phone number not available');
       return;
     }
     
@@ -100,7 +93,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
   return (
     <View style={styles.container}>
       <Header 
-        title={isArabic ? 'تفاصيل الطلب' : 'Order Details'}
+        title={t('admin.orderDetails.title')}
         showBack
         onBack={() => navigation.goBack()}
       />
@@ -115,24 +108,27 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
             </View>
           </View>
           <Text style={styles.orderDate}>
-            {formatOrderDateTime(order, isArabic ? 'ar-EG' : 'en-US')}
+            {formatOrderDateTime(
+              order,
+              baseLanguage === 'ar' ? 'ar-EG' : baseLanguage === 'bn' ? 'bn-BD' : 'en-US'
+            )}
           </Text>
         </View>
 
         {/* Customer Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isArabic ? 'معلومات العميل' : 'Customer Info'}</Text>
+          <Text style={styles.sectionTitle}>{t('admin.orderDetails.customerInfo')}</Text>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{isArabic ? 'الاسم:' : 'Name:'}</Text>
+            <Text style={styles.infoLabel}>{t('admin.orderDetails.nameLabel')}</Text>
             <Text style={styles.infoValue}>{order.customerName || order.customer?.name || order.userName || order.name || ''}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>{isArabic ? 'الهاتف:' : 'Phone:'}</Text>
+            <Text style={styles.infoLabel}>{t('admin.orderDetails.phoneLabel')}</Text>
             <Text style={styles.infoValue}>{order.phoneNumber || order.customer?.phone || order.customerPhone || order.userPhone || order.phone || ''}</Text>
           </View>
           {(order.customer?.email || order.customerEmail || order.email) && (
             <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>{isArabic ? 'البريد:' : 'Email:'}</Text>
+              <Text style={styles.infoLabel}>{t('admin.orderDetails.emailLabel')}</Text>
               <Text style={styles.infoValue}>{order.customer?.email || order.customerEmail || order.email}</Text>
             </View>
           )}
@@ -140,7 +136,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
 
         {/* Delivery Info */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isArabic ? 'معلومات التوصيل' : 'Delivery Info'}</Text>
+          <Text style={styles.sectionTitle}>{t('admin.orderDetails.deliveryInfo')}</Text>
           {(() => {
             const addr = order.deliveryAddress || order.address;
             if (!addr) return null;
@@ -155,37 +151,37 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
               <>
                 {addr.area && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>{isArabic ? 'المنطقة:' : 'Area:'}</Text>
+                    <Text style={styles.infoLabel}>{t('admin.orderDetails.areaLabel')}</Text>
                     <Text style={styles.infoValue}>{addr.area}</Text>
                   </View>
                 )}
                 {addr.block && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>{isArabic ? 'القطعة:' : 'Block:'}</Text>
+                    <Text style={styles.infoLabel}>{t('admin.orderDetails.blockLabel')}</Text>
                     <Text style={styles.infoValue}>{addr.block}</Text>
                   </View>
                 )}
                 {addr.street && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>{isArabic ? 'الشارع:' : 'Street:'}</Text>
+                    <Text style={styles.infoLabel}>{t('admin.orderDetails.streetLabel')}</Text>
                     <Text style={styles.infoValue}>{addr.street}</Text>
                   </View>
                 )}
                 {addr.building && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>{isArabic ? 'البناية:' : 'Building:'}</Text>
+                    <Text style={styles.infoLabel}>{t('admin.orderDetails.buildingLabel')}</Text>
                     <Text style={styles.infoValue}>{addr.building}</Text>
                   </View>
                 )}
                 {addr.floor && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>{isArabic ? 'الدور:' : 'Floor:'}</Text>
+                    <Text style={styles.infoLabel}>{t('admin.orderDetails.floorLabel')}</Text>
                     <Text style={styles.infoValue}>{addr.floor}</Text>
                   </View>
                 )}
                 {addr.apartment && (
                   <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>{isArabic ? 'الشقة:' : 'Apartment:'}</Text>
+                    <Text style={styles.infoLabel}>{t('admin.orderDetails.apartmentLabel')}</Text>
                     <Text style={styles.infoValue}>{addr.apartment}</Text>
                   </View>
                 )}
@@ -194,7 +190,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
           })()}
           {order.deliveryNotes && (
             <View style={styles.notesContainer}>
-              <Text style={styles.notesLabel}>{isArabic ? 'ملاحظات:' : 'Notes:'}</Text>
+              <Text style={styles.notesLabel}>{t('admin.orderDetails.notesLabel')}</Text>
               <Text style={styles.notesText}>{order.deliveryNotes}</Text>
             </View>
           )}
@@ -202,7 +198,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
 
         {/* Items */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isArabic ? 'المنتجات' : 'Items'}</Text>
+          <Text style={styles.sectionTitle}>{t('admin.orderDetails.items')}</Text>
           {order.items?.map((item: any, index: number) => (
             <View key={index} style={styles.itemRow}>
               <View style={styles.itemInfo}>
@@ -222,46 +218,46 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
 
         {/* Payment */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isArabic ? 'الدفع' : 'Payment'}</Text>
+          <Text style={styles.sectionTitle}>{t('admin.orderDetails.payment')}</Text>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{isArabic ? 'المجموع الفرعي' : 'Subtotal'}</Text>
+            <Text style={styles.summaryLabel}>{t('subtotal')}</Text>
             <Text style={styles.summaryValue}>
               {(order.subtotal || 0).toFixed(3)} {isArabic ? 'د.ك' : 'KD'}
             </Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>{isArabic ? 'التوصيل' : 'Delivery'}</Text>
+            <Text style={styles.summaryLabel}>{t('admin.orderDetails.deliveryLabel')}</Text>
             <Text style={styles.summaryValue}>
               {order.deliveryFee === 0 
-                ? (isArabic ? 'مجاناً' : 'Free') 
+                ? t('admin.orderDetails.free')
                 : `${(order.deliveryFee || 0).toFixed(3)} ${isArabic ? 'د.ك' : 'KD'}`}
             </Text>
           </View>
           <View style={[styles.summaryRow, styles.summaryRowTotal]}>
-            <Text style={styles.summaryLabelTotal}>{isArabic ? 'الإجمالي' : 'Total'}</Text>
+            <Text style={styles.summaryLabelTotal}>{t('total')}</Text>
             <Text style={styles.summaryValueTotal}>
               {(order.total || 0).toFixed(3)} {isArabic ? 'د.ك' : 'KD'}
             </Text>
           </View>
           <View style={styles.paymentMethodContainer}>
-            <Text style={styles.paymentMethodLabel}>{isArabic ? 'طريقة الدفع:' : 'Payment Method:'}</Text>
+            <Text style={styles.paymentMethodLabel}>{t('admin.orderDetails.paymentMethod')}</Text>
             <Text style={styles.paymentMethodValue}>
               {order.paymentMethod === 'cash' 
-                ? (isArabic ? 'الدفع عند الاستلام' : 'Cash on Delivery')
-                : (isArabic ? 'كي نت' : 'K-Net')}
+                ? t('admin.orderDetails.cashOnDelivery')
+                : t('admin.orderDetails.kNet')}
             </Text>
           </View>
         </View>
 
         {/* WhatsApp Buttons */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isArabic ? 'واتساب' : 'WhatsApp'}</Text>
+          <Text style={styles.sectionTitle}>{t('admin.orderDetails.whatsapp')}</Text>
           <View style={styles.actionsGrid}>
             <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#25D366' }]} onPress={sendWhatsAppToAdmin}>
-              <Text style={styles.actionButtonText}>{isArabic ? '📱 إرسال للإدارة' : '📱 Send to Admin'}</Text>
+              <Text style={styles.actionButtonText}>{t('admin.orderDetails.sendToAdmin')}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.actionButton, { backgroundColor: '#128C7E' }]} onPress={sendWhatsAppToCustomer}>
-              <Text style={styles.actionButtonText}>{isArabic ? '📱 إرسال للعميل' : '📱 Send to Customer'}</Text>
+              <Text style={styles.actionButtonText}>{t('admin.orderDetails.sendToCustomer')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -269,7 +265,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
         {/* Admin Actions */}
         {canAccessAdmin && order.status !== 'delivered' && order.status !== 'cancelled' && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{isArabic ? 'تحديث الحالة' : 'Update Status'}</Text>
+            <Text style={styles.sectionTitle}>{t('admin.orderDetails.updateStatus')}</Text>
             <View style={styles.actionsGrid}>
               {order.status === 'pending' && (
                 <>
@@ -278,7 +274,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
                     onPress={() => handleUpdateStatus('confirmed')}
                   >
                     <Text style={styles.actionButtonText}>
-                      {isArabic ? 'تأكيد' : 'Confirm'}
+                      {t('confirm')}
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
@@ -286,7 +282,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
                     onPress={() => handleUpdateStatus('cancelled')}
                   >
                     <Text style={styles.actionButtonText}>
-                      {isArabic ? 'إلغاء' : 'Cancel'}
+                      {t('cancel')}
                     </Text>
                   </TouchableOpacity>
                 </>
@@ -297,7 +293,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
                   onPress={() => handleUpdateStatus('preparing')}
                 >
                   <Text style={styles.actionButtonText}>
-                    {isArabic ? 'قيد التحضير' : 'Preparing'}
+                    {t('orderStatus.preparing')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -307,7 +303,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
                   onPress={() => handleUpdateStatus('delivering')}
                 >
                   <Text style={styles.actionButtonText}>
-                    {isArabic ? 'قيد التوصيل' : 'Delivering'}
+                    {t('orderStatus.delivering')}
                   </Text>
                 </TouchableOpacity>
               )}
@@ -317,7 +313,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
                   onPress={() => handleUpdateStatus('delivered')}
                 >
                   <Text style={styles.actionButtonText}>
-                    {isArabic ? 'تم التوصيل' : 'Delivered'}
+                    {t('orderStatus.delivered')}
                   </Text>
                 </TouchableOpacity>
               )}

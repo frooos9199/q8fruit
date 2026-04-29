@@ -16,6 +16,7 @@ import { Product } from '../types';
 import { fetchProductsFromFirebase } from '../services/firebase';
 import { useCart } from '../context';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE } from '../constants';
+import { changeLanguage } from '../utils/i18n';
 
 const { width } = Dimensions.get('window');
 
@@ -102,7 +103,10 @@ export const HomeScreen: React.FC = () => {
   const [refreshing, setRefreshing] = useState(false);
   const deferredSearchQuery = useDeferredValue(searchQuery.trim().toLowerCase());
 
-  const isArabic = i18n.language === 'ar';
+  const baseLanguage = (i18n.language || 'en').split('-')[0];
+  const currentLanguage = baseLanguage === 'ar' || baseLanguage === 'en' || baseLanguage === 'bn' ? baseLanguage : 'en';
+  const isArabic = currentLanguage === 'ar';
+  const languageCycle: Array<'ar' | 'en' | 'bn'> = ['ar', 'en', 'bn'];
   const availableCategories = ['فواكه', 'خضار', 'ورقيات', 'سلات الفواكه'];
 
   const loadProducts = useCallback(async () => {
@@ -258,11 +262,20 @@ export const HomeScreen: React.FC = () => {
         title={t('appName')}
         rightComponent={
           <TouchableOpacity
-            onPress={() => {
-              const newLang = i18n.language === 'ar' ? 'en' : 'ar';
-              i18n.changeLanguage(newLang);
+            onPress={async () => {
+              const currentIndex = languageCycle.indexOf(currentLanguage);
+              const nextLanguage = languageCycle[(currentIndex + 1) % languageCycle.length];
+              await changeLanguage(nextLanguage);
             }}>
-            <Text style={styles.langButton}>{isArabic ? 'EN' : 'ع'}</Text>
+            <Text style={styles.langButton}>
+              {(() => {
+                const currentIndex = languageCycle.indexOf(currentLanguage);
+                const nextLanguage = languageCycle[(currentIndex + 1) % languageCycle.length];
+                if (nextLanguage === 'ar') return 'ع';
+                if (nextLanguage === 'bn') return 'BN';
+                return 'EN';
+              })()}
+            </Text>
           </TouchableOpacity>
         }
       />

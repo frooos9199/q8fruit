@@ -17,8 +17,7 @@ import { fetchDeliverySettings, updateDeliverySettings } from '../services/fireb
 import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants';
 
 export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { i18n } = useTranslation();
-  const isArabic = i18n.language === 'ar';
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [fee, setFee] = useState('');
@@ -46,8 +45,8 @@ export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
 
     if (feeValue < 0 || freeAboveValue < 0) {
       Alert.alert(
-        isArabic ? 'خطأ' : 'Error',
-        isArabic ? 'القيم يجب أن تكون موجبة' : 'Values must be positive'
+        t('error'),
+        t('admin.deliverySettings.valuesPositive')
       );
       return;
     }
@@ -60,18 +59,20 @@ export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
       
       if (result.success) {
         Alert.alert(
-          isArabic ? 'نجح' : 'Success',
-          isArabic ? 'تم حفظ الإعدادات بنجاح' : 'Settings saved successfully',
-          [{ text: isArabic ? 'حسناً' : 'OK', onPress: () => navigation.goBack() }]
+          t('success'),
+          t('admin.deliverySettings.saved'),
+          [{ text: t('ok'), onPress: () => navigation.goBack() }]
         );
       } else {
         throw new Error(result.error || 'Failed to save');
       }
     } catch (error: any) {
       console.error('Save error:', error);
+
+      const errorMessage = error?.message ? String(error.message) : String(error);
       Alert.alert(
-        isArabic ? 'خطأ' : 'Error',
-        isArabic ? `فشل حفظ الإعدادات: ${error.message || error}` : `Failed to save settings: ${error.message || error}`
+        t('error'),
+        t('admin.deliverySettings.saveFailed', { error: errorMessage })
       );
     } finally {
       setSaving(false);
@@ -82,7 +83,7 @@ export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
     return (
       <View style={styles.container}>
         <Header
-          title={isArabic ? 'إعدادات التوصيل' : 'Delivery Settings'}
+          title={t('admin.deliverySettings.title')}
           showBack
           onBack={() => navigation.goBack()}
         />
@@ -96,7 +97,7 @@ export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
   return (
     <View style={styles.container}>
       <Header
-        title={isArabic ? 'إعدادات التوصيل' : 'Delivery Settings'}
+        title={t('admin.deliverySettings.title')}
         showBack
         onBack={() => navigation.goBack()}
       />
@@ -113,12 +114,12 @@ export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
         >
           <View style={styles.card}>
             <Text style={styles.cardTitle}>
-              {isArabic ? '⚙️ إعدادات رسوم التوصيل' : '⚙️ Delivery Fee Settings'}
+              {t('admin.deliverySettings.cardTitle')}
             </Text>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                {isArabic ? 'رسوم التوصيل (د.ك)' : 'Delivery Fee (KD)'}
+                {t('admin.deliverySettings.feeLabel')}
               </Text>
               <TextInput
                 style={styles.input}
@@ -129,15 +130,13 @@ export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
                 placeholderTextColor={COLORS.textSecondary}
               />
               <Text style={styles.hint}>
-                {isArabic
-                  ? 'رسوم التوصيل الافتراضية لكل طلب'
-                  : 'Default delivery fee per order'}
+                {t('admin.deliverySettings.feeHint')}
               </Text>
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>
-                {isArabic ? 'توصيل مجاني فوق (د.ك)' : 'Free Delivery Above (KD)'}
+                {t('admin.deliverySettings.freeAboveLabel')}
               </Text>
               <TextInput
                 style={styles.input}
@@ -148,20 +147,19 @@ export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
                 placeholderTextColor={COLORS.textSecondary}
               />
               <Text style={styles.hint}>
-                {isArabic
-                  ? 'الطلبات فوق هذا المبلغ تحصل على توصيل مجاني'
-                  : 'Orders above this amount get free delivery'}
+                {t('admin.deliverySettings.freeAboveHint')}
               </Text>
             </View>
 
             <View style={styles.exampleBox}>
               <Text style={styles.exampleTitle}>
-                {isArabic ? '📝 مثال:' : '📝 Example:'}
+                {t('admin.deliverySettings.exampleTitle')}
               </Text>
               <Text style={styles.exampleText}>
-                {isArabic
-                  ? `• رسوم التوصيل: ${fee || '0'} د.ك\n• توصيل مجاني فوق: ${freeAbove || '0'} د.ك\n\nإذا كان الطلب ${freeAbove || '0'} د.ك أو أكثر، التوصيل مجاني\nإذا كان أقل، يتم إضافة ${fee || '0'} د.ك`
-                  : `• Delivery Fee: ${fee || '0'} KD\n• Free Above: ${freeAbove || '0'} KD\n\nIf order is ${freeAbove || '0'} KD or more, delivery is free\nIf less, ${fee || '0'} KD will be added`}
+                {t('admin.deliverySettings.exampleText', {
+                  fee: fee || '0',
+                  freeAbove: freeAbove || '0',
+                })}
               </Text>
             </View>
 
@@ -174,7 +172,7 @@ export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
                 <ActivityIndicator color={COLORS.white} />
               ) : (
                 <Text style={styles.saveButtonText}>
-                  {isArabic ? '💾 حفظ الإعدادات' : '💾 Save Settings'}
+                  {t('admin.deliverySettings.saveButton')}
                 </Text>
               )}
             </TouchableOpacity>

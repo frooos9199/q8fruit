@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginWithEmail, registerWithEmail, logoutUser, getUserData } from '../services/firebase';
+import { changeLanguage } from '../utils/i18n';
 
 interface User {
   id: string;
@@ -9,6 +10,7 @@ interface User {
   phone: string;
   isAdmin: boolean;
   role?: 'admin' | 'delivery' | 'user' | string;
+  language?: 'ar' | 'en' | 'bn' | string;
 }
 
 interface AuthContextType {
@@ -56,6 +58,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             phone: latestUserData.phone || parsedUser.phone,
             isAdmin: Boolean(latestUserData.isAdmin || latestUserData.role === 'admin'),
             role: latestUserData.role || parsedUser.role,
+            language: latestUserData.language || parsedUser.language,
           };
 
           await saveUser(refreshedUser);
@@ -75,6 +78,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       await AsyncStorage.setItem('@user_id', userData.id); // حفظ user_id بشكل منفصل
+
+      const preferredLanguage = typeof userData.language === 'string' ? userData.language.trim().toLowerCase() : '';
+      if (preferredLanguage === 'ar' || preferredLanguage === 'en' || preferredLanguage === 'bn') {
+        await changeLanguage(preferredLanguage);
+      }
+
       setUser(userData);
     } catch (error) {
       console.error('Error saving user:', error);

@@ -15,23 +15,27 @@ import { changeLanguage } from '../utils/i18n';
 export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { t, i18n } = useTranslation();
   const { user, logout } = useAuth();
-  const isArabic = i18n.language === 'ar';
+
+  const baseLanguage = (i18n.language || 'en').split('-')[0];
+  const currentLanguage = baseLanguage === 'ar' || baseLanguage === 'en' || baseLanguage === 'bn' ? baseLanguage : 'en';
+  const languageCycle: Array<'ar' | 'en' | 'bn'> = ['ar', 'en', 'bn'];
 
   const menuItems = [
-    { icon: '📦', title: isArabic ? 'طلباتي' : 'My Orders', action: () => navigation.navigate('MyOrders') },
-    { icon: '📍', title: isArabic ? 'العنوان' : 'Address', action: () => navigation.navigate('Address') },
-    { icon: '💳', title: isArabic ? 'طرق الدفع' : 'Payment Methods', action: () => {} },
+    { icon: '📦', title: t('myOrders'), action: () => navigation.navigate('MyOrders') },
+    { icon: '📍', title: t('address'), action: () => navigation.navigate('Address') },
+    { icon: '💳', title: t('paymentMethods'), action: () => {} },
     {
       icon: '🌍',
-      title: isArabic ? 'اللغة' : 'Language',
-      value: isArabic ? 'العربية' : 'English',
-      action: () => {
-        const newLang = isArabic ? 'en' : 'ar';
-        changeLanguage(newLang);
+      title: t('language'),
+      value: t(`languageNames.${currentLanguage}`),
+      action: async () => {
+        const currentIndex = languageCycle.indexOf(currentLanguage);
+        const nextLanguage = languageCycle[(currentIndex + 1) % languageCycle.length];
+        await changeLanguage(nextLanguage);
       },
     },
-    { icon: '🔔', title: isArabic ? 'الإشعارات' : 'Notifications', action: () => {} },
-    { icon: '⚙️', title: isArabic ? 'الإعدادات' : 'Settings', action: () => {} },
+    { icon: '🔔', title: t('notifications'), action: () => {} },
+    { icon: '⚙️', title: t('settings'), action: () => {} },
   ];
 
   const handleLogout = async () => {
@@ -41,21 +45,21 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
   return (
     <View style={styles.container}>
-      <Header title={isArabic ? 'الملف الشخصي' : 'Profile'} />
+      <Header title={t('profile')} />
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.userCard}>
           <View style={styles.avatar}>
             <Text style={styles.avatarText}>👤</Text>
           </View>
-          <Text style={styles.userName}>{user?.name || (isArabic ? 'ضيف' : 'Guest')}</Text>
-          <Text style={styles.userEmail}>{user?.email || (isArabic ? 'غير مسجل' : 'Not logged in')}</Text>
+          <Text style={styles.userName}>{user?.name || t('guest')}</Text>
+          <Text style={styles.userEmail}>{user?.email || t('notLoggedIn')}</Text>
           {!user && (
             <TouchableOpacity
               style={styles.loginButton}
               onPress={() => navigation.navigate('Login')}>
               <Text style={styles.loginButtonText}>
-                {isArabic ? 'تسجيل الدخول' : 'Login'}
+                {t('login')}
               </Text>
             </TouchableOpacity>
           )}
@@ -86,12 +90,12 @@ export const ProfileScreen: React.FC<{ navigation: any }> = ({ navigation }) => 
 
         {user && (
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutText}>{isArabic ? 'تسجيل الخروج' : 'Logout'}</Text>
+            <Text style={styles.logoutText}>{t('logout')}</Text>
           </TouchableOpacity>
         )}
 
         {/* App Version */}
-        <Text style={styles.version}>Version 2.0.8</Text>
+        <Text style={styles.version}>Version 2.1.6</Text>
       </ScrollView>
     </View>
   );

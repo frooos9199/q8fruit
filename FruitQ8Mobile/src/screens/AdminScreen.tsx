@@ -17,7 +17,8 @@ import { COLORS, SPACING, FONT_SIZE, BORDER_RADIUS } from '../constants';
 export const AdminScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { t, i18n } = useTranslation();
   const { unreadCount } = useNotifications();
-  const isArabic = i18n.language === 'ar';
+  const baseLanguage = (i18n.language || 'en').split('-')[0];
+  const isArabic = baseLanguage === 'ar';
 
   const [stats, setStats] = useState({
     todayOrders: 0,
@@ -60,14 +61,14 @@ export const AdminScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     {
       id: 'today',
       icon: '📅',
-      title: isArabic ? 'طلبات اليوم' : "Today's Orders",
+      title: t('admin.stats.todayOrders'),
       value: stats.todayOrders,
       color: '#FF6B6B',
     },
     {
       id: 'pending',
       icon: '⏳',
-      title: isArabic ? 'طلبات قيد المعالجة' : 'Pending Orders',
+      title: t('admin.stats.pendingOrders'),
       value: stats.pendingOrders,
       color: '#FFA500',
       badge: stats.pendingOrders,
@@ -75,28 +76,28 @@ export const AdminScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     {
       id: 'revenue',
       icon: '💰',
-      title: isArabic ? 'إجمالي الإيرادات' : 'Total Revenue',
+      title: t('admin.stats.totalRevenue'),
       value: `${stats.totalRevenue.toFixed(3)} ${isArabic ? 'د.ك' : 'KD'}`,
       color: '#4CAF50',
     },
     {
       id: 'products',
       icon: '📦',
-      title: isArabic ? 'إجمالي المنتجات' : 'Total Products',
+      title: t('admin.stats.totalProducts'),
       value: stats.totalProducts,
       color: '#2196F3',
     },
     {
       id: 'customers',
       icon: '👥',
-      title: isArabic ? 'إجمالي العملاء' : 'Total Customers',
+      title: t('admin.stats.totalCustomers'),
       value: stats.totalCustomers,
       color: '#9C27B0',
     },
     {
       id: 'completed',
       icon: '✅',
-      title: isArabic ? 'الطلبات المكتملة' : 'Completed Orders',
+      title: t('admin.stats.completedOrders'),
       value: stats.completedOrders,
       color: '#00BCD4',
     },
@@ -106,44 +107,44 @@ export const AdminScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     { 
       id: 'products', 
       icon: '📦', 
-      title: isArabic ? 'إدارة المنتجات' : 'Manage Products',
+      title: t('admin.options.products'),
       screen: 'ManageProducts',
     },
     { 
       id: 'orders', 
       icon: '📋', 
-      title: isArabic ? 'إدارة الطلبات' : 'Manage Orders', 
+      title: t('admin.options.orders'),
       badge: stats.pendingOrders,
       screen: 'ManageOrders',
     },
     { 
       id: 'users', 
       icon: '👥', 
-      title: isArabic ? 'إدارة المستخدمين' : 'Manage Users',
+      title: t('admin.options.users'),
       screen: 'ManageUsers',
     },
     { 
       id: 'categories', 
       icon: '🗂️', 
-      title: isArabic ? 'إدارة الفئات' : 'Manage Categories',
+      title: t('admin.options.categories'),
       screen: 'ManageCategories',
     },
     { 
       id: 'offers', 
       icon: '🎁', 
-      title: isArabic ? 'إدارة العروض' : 'Manage Offers',
+      title: t('admin.options.offers'),
       screen: 'ManageOffers',
     },
     { 
       id: 'delivery', 
       icon: '🚚', 
-      title: isArabic ? 'إعدادات التوصيل' : 'Delivery Settings',
+      title: t('admin.options.delivery'),
       screen: 'DeliverySettings',
     },
     { 
       id: 'reports', 
       icon: '📊', 
-      title: isArabic ? 'التقارير' : 'Reports',
+      title: t('admin.options.reports'),
       screen: 'Reports',
     },
   ];
@@ -151,11 +152,11 @@ export const AdminScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   if (loading) {
     return (
       <View style={styles.container}>
-        <Header title={isArabic ? 'لوحة الإدارة' : 'Admin Dashboard'} />
+        <Header title={t('admin.dashboard.title')} />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={COLORS.primary} />
           <Text style={styles.loadingText}>
-            {isArabic ? 'جاري تحميل البيانات...' : 'Loading data...'}
+            {t('loading')}
           </Text>
         </View>
       </View>
@@ -165,7 +166,7 @@ export const AdminScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Header 
-        title={isArabic ? 'لوحة الإدارة' : 'Admin Dashboard'}
+        title={t('admin.dashboard.title')}
         rightComponent={
           <TouchableOpacity 
             onPress={() => navigation.navigate('Notifications')}
@@ -189,7 +190,7 @@ export const AdminScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         }
       >
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isArabic ? 'الإحصائيات' : 'Statistics'}</Text>
+          <Text style={styles.sectionTitle}>{t('admin.dashboard.statistics')}</Text>
           <View style={styles.statsGrid}>
             {statsCards.map((stat) => (
               <View key={stat.id} style={[styles.statCard, { borderLeftColor: stat.color }]}>
@@ -209,7 +210,7 @@ export const AdminScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>{isArabic ? 'الإدارة' : 'Management'}</Text>
+          <Text style={styles.sectionTitle}>{t('admin.dashboard.management')}</Text>
           <View style={styles.grid}>
             {adminOptions.map((option) => (
               <TouchableOpacity

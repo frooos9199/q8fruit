@@ -41,6 +41,9 @@ const normalizeUserDocument = (raw: Record<string, any>, uidFallback = '') => {
   const uid = normalizeText(raw.uid ?? raw.id, uidFallback);
   const email = normalizeText(raw.email).trim().toLowerCase();
   const rawRole = normalizeText(raw.role).trim().toLowerCase();
+  const rawLanguage = normalizeText(raw.language).trim().toLowerCase();
+
+  const language = rawLanguage === 'ar' || rawLanguage === 'en' || rawLanguage === 'bn' ? rawLanguage : undefined;
 
   const isAdminRole = rawRole === 'admin' || rawRole === 'manager' || rawRole === 'مدير';
   const isDeliveryRole = rawRole === 'delivery' || rawRole === 'delegate' || rawRole === 'courier' || rawRole === 'مندوب';
@@ -56,6 +59,7 @@ const normalizeUserDocument = (raw: Record<string, any>, uidFallback = '') => {
     email,
     phone: normalizeText(raw.phone),
     address: raw.address ?? '',
+    language,
     role,
     isAdmin,
     active: !isBlocked,
@@ -74,6 +78,7 @@ const toMobileUser = (raw: Record<string, any>, uidFallback = '') => {
     email: normalized.email,
     phone: normalized.phone,
     address: normalized.address,
+    language: normalized.language,
     role: normalized.role,
     isAdmin: normalized.isAdmin,
     active: normalized.active,

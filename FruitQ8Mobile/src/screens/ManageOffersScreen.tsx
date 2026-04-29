@@ -5,13 +5,12 @@ import { Header } from '../components';
 import { COLORS, SPACING, FONT_SIZE } from '../constants';
 
 export const ManageOffersScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { i18n } = useTranslation();
-  const isArabic = i18n.language === 'ar';
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
       <Header 
-        title={isArabic ? 'إدارة العروض' : 'Manage Offers'}
+        title={t('admin.manageOffers.title')}
         showBack
         onBack={() => navigation.goBack()}
       />
@@ -19,7 +18,7 @@ export const ManageOffersScreen: React.FC<{ navigation: any }> = ({ navigation }
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>🎁</Text>
           <Text style={styles.emptyText}>
-            {isArabic ? 'قريباً - إدارة العروض' : 'Coming Soon - Manage Offers'}
+            {t('admin.manageOffers.comingSoon')}
           </Text>
         </View>
       </ScrollView>

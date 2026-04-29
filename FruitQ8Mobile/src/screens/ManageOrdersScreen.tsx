@@ -16,7 +16,8 @@ import { formatOrderDateTime } from '../utils/orderDate';
 
 export const ManageOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const { t, i18n } = useTranslation();
-  const isArabic = i18n.language === 'ar';
+  const baseLanguage = (i18n.language || 'en').split('-')[0];
+  const isArabic = baseLanguage === 'ar';
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,29 +60,21 @@ export const ManageOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }
   };
 
   const getStatusText = (status: string) => {
-    const statusMap: any = {
-      pending: isArabic ? 'قيد الانتظار' : 'Pending',
-      confirmed: isArabic ? 'مؤكد' : 'Confirmed',
-      preparing: isArabic ? 'قيد التحضير' : 'Preparing',
-      delivering: isArabic ? 'قيد التوصيل' : 'Delivering',
-      delivered: isArabic ? 'تم التوصيل' : 'Delivered',
-      cancelled: isArabic ? 'ملغي' : 'Cancelled',
-    };
-    return statusMap[status] || status;
+    return t(`orderStatus.${status}`, { defaultValue: status });
   };
 
   const filters = [
-    { id: 'all', label: isArabic ? 'الكل' : 'All' },
-    { id: 'pending', label: isArabic ? 'قيد الانتظار' : 'Pending' },
-    { id: 'confirmed', label: isArabic ? 'مؤكد' : 'Confirmed' },
-    { id: 'delivered', label: isArabic ? 'مكتمل' : 'Delivered' },
+    { id: 'all', label: t('admin.manageOrders.filters.all') },
+    { id: 'pending', label: t('admin.manageOrders.filters.pending') },
+    { id: 'confirmed', label: t('admin.manageOrders.filters.confirmed') },
+    { id: 'delivered', label: t('admin.manageOrders.filters.delivered') },
   ];
 
   if (loading) {
     return (
       <View style={styles.container}>
         <Header 
-          title={isArabic ? 'إدارة الطلبات' : 'Manage Orders'}
+          title={t('admin.manageOrders.title')}
           showBack
           onBack={() => navigation.goBack()}
         />
@@ -95,7 +88,7 @@ export const ManageOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }
   return (
     <View style={styles.container}>
       <Header 
-        title={isArabic ? 'إدارة الطلبات' : 'Manage Orders'}
+        title={t('admin.manageOrders.title')}
         showBack
         onBack={() => navigation.goBack()}
       />
@@ -125,7 +118,7 @@ export const ManageOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📦</Text>
             <Text style={styles.emptyText}>
-              {isArabic ? 'لا توجد طلبات' : 'No orders found'}
+              {t('admin.manageOrders.noOrders')}
             </Text>
           </View>
         ) : (
@@ -146,11 +139,11 @@ export const ManageOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }
               </View>
               
               <Text style={styles.customerName}>
-                {order.customerName || order.customer?.name || order.userName || order.name || (isArabic ? 'عميل' : 'Customer')}
+                {order.customerName || order.customer?.name || order.userName || order.name || t('admin.manageOrders.customer')}
               </Text>
               
               <Text style={styles.customerPhone}>
-                📱 {order.phoneNumber || order.customer?.phone || order.customerPhone || order.userPhone || order.phone || (isArabic ? 'غير متوفر' : 'N/A')}
+                📱 {order.phoneNumber || order.customer?.phone || order.customerPhone || order.userPhone || order.phone || t('admin.manageOrders.na')}
               </Text>
               
               <Text style={styles.customerAddress} numberOfLines={2}>
@@ -167,7 +160,10 @@ export const ManageOrdersScreen: React.FC<{ navigation: any }> = ({ navigation }
                   {(order.total || 0).toFixed(3)} {isArabic ? 'د.ك' : 'KD'}
                 </Text>
                 <Text style={styles.orderDate}>
-                  {formatOrderDateTime(order, isArabic ? 'ar-EG' : 'en-US')}
+                  {formatOrderDateTime(
+                    order,
+                    baseLanguage === 'ar' ? 'ar-EG' : baseLanguage === 'bn' ? 'bn-BD' : 'en-US'
+                  )}
                 </Text>
               </View>
             </TouchableOpacity>
