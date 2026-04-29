@@ -233,3 +233,73 @@ exports.sendOrderNotificationEmail = onDocumentCreated('orders/{orderId}', async
       return { success: false, error: error.message };
     }
   });
+
+/**
+ * Cloud Function ترسل Push Notification للأدمن عند إنشاء طلب جديد
+ * - ترسل إلى topic: admin-orders
+ * - تعمل حتى لو تطبيق الأدمن مغلق (OS يعرض الإشعار)
+ * - تدعم ChannelId للاندرويد + Sound مخصص
+ */
+exports.sendAdminOrderPushNotification = onDocumentCreated('orders/{orderId}', async (event) => {
+  try {
+    const snap = event.data;
+    if (!snap) {
+      return null;
+    }
+
+    const orderData = snap.data() || {};
+    const orderId = event.params.orderId;
+    const orderNumber = orderData.orderNumber ? String(orderData.orderNumber) : '';
+    const customerName = orderData.customerName || orderData?.customer?.name || 'عميل';
+    const total = Number(orderData.total || orderData?.pricing?.total || 0) || 0;
+
+    const title = '📦 طلب جديد';
+    const body = `طلب جديد${orderNumber ? ` رقم ${orderNumber}` : ''} من ${customerName} - ${total.toFixed(3)} د.ك`;
+
+    // Sound notes:
+    // - Android: sound is determined by the notification channel (q8fruit-orders)
+    // - iOS: custom sound file must be bundled in the app (e.g. order_sound.caf)
+    const ANDROID_CHANNEL_ID = 'q8fruit-orders';
+    const ANDROID_SOUND = 'order_sound';
+    const IOS_SOUND = 'order_sound.caf';
+
+    const message = {
+      topic: 'admin-orders',
+      notification: {
+        title,
+        body,
+      },
+      data: {
+        type: 'new_order',
+        screen: 'ManageOrders',
+        orderId: orderId || '',
+        orderNumber,
+        channelId: ANDROID_CHANNEL_ID,
+      },
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: ANDROID_CHANNEL_ID,
+          sound: ANDROID_SOUND,
+        },
+      },
+      apns: {
+        headers: {
+          'apns-priority': '10',
+        },
+        payload: {
+          aps: {
+            sound: IOS_SOUND,
+          },
+        },
+      },
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log('✅ Admin order push sent:', response);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Error sending admin order push:', error);
+    return { success: false, error: error.message };
+  }
+});

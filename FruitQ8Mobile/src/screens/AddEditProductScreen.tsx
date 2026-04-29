@@ -9,6 +9,8 @@ import {
   Alert,
   Image,
   Switch,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Header } from '../components';
@@ -159,14 +161,17 @@ export const AddEditProductScreen: React.FC<{ navigation: any; route: any }> = (
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 24}>
       <Header
         title={isEdit ? (isArabic ? 'تعديل المنتج' : 'Edit Product') : (isArabic ? 'إضافة منتج' : 'Add Product')}
         showBack
         onBack={() => navigation.goBack()}
       />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}>
         <View style={styles.form}>
           {/* 1. صور المنتج */}
           <Text style={styles.sectionTitle}>{isArabic ? 'صور المنتج *' : 'Product Images *'}</Text>
@@ -333,7 +338,7 @@ export const AddEditProductScreen: React.FC<{ navigation: any; route: any }> = (
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 };
 

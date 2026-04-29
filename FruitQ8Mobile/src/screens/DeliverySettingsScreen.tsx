@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Header } from '../components';
@@ -98,76 +101,86 @@ export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
         onBack={() => navigation.goBack()}
       />
 
-      <View style={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>
-            {isArabic ? '⚙️ إعدادات رسوم التوصيل' : '⚙️ Delivery Fee Settings'}
-          </Text>
+      <KeyboardAvoidingView
+        style={styles.content}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 24}
+      >
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>
+              {isArabic ? '⚙️ إعدادات رسوم التوصيل' : '⚙️ Delivery Fee Settings'}
+            </Text>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              {isArabic ? 'رسوم التوصيل (د.ك)' : 'Delivery Fee (KD)'}
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={fee}
-              onChangeText={setFee}
-              keyboardType="decimal-pad"
-              placeholder="0.000"
-              placeholderTextColor={COLORS.textSecondary}
-            />
-            <Text style={styles.hint}>
-              {isArabic
-                ? 'رسوم التوصيل الافتراضية لكل طلب'
-                : 'Default delivery fee per order'}
-            </Text>
-          </View>
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              {isArabic ? 'توصيل مجاني فوق (د.ك)' : 'Free Delivery Above (KD)'}
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={freeAbove}
-              onChangeText={setFreeAbove}
-              keyboardType="decimal-pad"
-              placeholder="0.000"
-              placeholderTextColor={COLORS.textSecondary}
-            />
-            <Text style={styles.hint}>
-              {isArabic
-                ? 'الطلبات فوق هذا المبلغ تحصل على توصيل مجاني'
-                : 'Orders above this amount get free delivery'}
-            </Text>
-          </View>
-
-          <View style={styles.exampleBox}>
-            <Text style={styles.exampleTitle}>
-              {isArabic ? '📝 مثال:' : '📝 Example:'}
-            </Text>
-            <Text style={styles.exampleText}>
-              {isArabic
-                ? `• رسوم التوصيل: ${fee || '0'} د.ك\n• توصيل مجاني فوق: ${freeAbove || '0'} د.ك\n\nإذا كان الطلب ${freeAbove || '0'} د.ك أو أكثر، التوصيل مجاني\nإذا كان أقل، يتم إضافة ${fee || '0'} د.ك`
-                : `• Delivery Fee: ${fee || '0'} KD\n• Free Above: ${freeAbove || '0'} KD\n\nIf order is ${freeAbove || '0'} KD or more, delivery is free\nIf less, ${fee || '0'} KD will be added`}
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color={COLORS.white} />
-            ) : (
-              <Text style={styles.saveButtonText}>
-                {isArabic ? '💾 حفظ الإعدادات' : '💾 Save Settings'}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                {isArabic ? 'رسوم التوصيل (د.ك)' : 'Delivery Fee (KD)'}
               </Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </View>
+              <TextInput
+                style={styles.input}
+                value={fee}
+                onChangeText={setFee}
+                keyboardType="decimal-pad"
+                placeholder="0.000"
+                placeholderTextColor={COLORS.textSecondary}
+              />
+              <Text style={styles.hint}>
+                {isArabic
+                  ? 'رسوم التوصيل الافتراضية لكل طلب'
+                  : 'Default delivery fee per order'}
+              </Text>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>
+                {isArabic ? 'توصيل مجاني فوق (د.ك)' : 'Free Delivery Above (KD)'}
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={freeAbove}
+                onChangeText={setFreeAbove}
+                keyboardType="decimal-pad"
+                placeholder="0.000"
+                placeholderTextColor={COLORS.textSecondary}
+              />
+              <Text style={styles.hint}>
+                {isArabic
+                  ? 'الطلبات فوق هذا المبلغ تحصل على توصيل مجاني'
+                  : 'Orders above this amount get free delivery'}
+              </Text>
+            </View>
+
+            <View style={styles.exampleBox}>
+              <Text style={styles.exampleTitle}>
+                {isArabic ? '📝 مثال:' : '📝 Example:'}
+              </Text>
+              <Text style={styles.exampleText}>
+                {isArabic
+                  ? `• رسوم التوصيل: ${fee || '0'} د.ك\n• توصيل مجاني فوق: ${freeAbove || '0'} د.ك\n\nإذا كان الطلب ${freeAbove || '0'} د.ك أو أكثر، التوصيل مجاني\nإذا كان أقل، يتم إضافة ${fee || '0'} د.ك`
+                  : `• Delivery Fee: ${fee || '0'} KD\n• Free Above: ${freeAbove || '0'} KD\n\nIf order is ${freeAbove || '0'} KD or more, delivery is free\nIf less, ${fee || '0'} KD will be added`}
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+              onPress={handleSave}
+              disabled={saving}
+            >
+              {saving ? (
+                <ActivityIndicator color={COLORS.white} />
+              ) : (
+                <Text style={styles.saveButtonText}>
+                  {isArabic ? '💾 حفظ الإعدادات' : '💾 Save Settings'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };
@@ -175,6 +188,7 @@ export const DeliverySettingsScreen: React.FC<{ navigation: any }> = ({ navigati
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: COLORS.background },
   content: { flex: 1, padding: SPACING.md },
+  scrollContent: { flexGrow: 1, paddingBottom: SPACING.xl },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   card: {
     backgroundColor: COLORS.white,

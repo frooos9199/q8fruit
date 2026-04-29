@@ -58,24 +58,20 @@
 املأ المعلومات المطلوبة:
 
 #### 📝 App details
-- **App name:** FruitQ8
-- **Short description:** Fresh fruits and vegetables delivery in Kuwait
-- **Full description:**
-```
-FruitQ8 is your premier online destination for fresh fruits and vegetables in Kuwait. 
-Browse our wide selection of farm-fresh produce, place orders easily, and enjoy fast 
-home delivery. We bring the freshest fruits and vegetables right to your doorstep!
 
-Features:
-✓ Wide variety of fresh fruits and vegetables
-✓ Easy browsing and ordering
-✓ Secure payment options
-✓ Fast home delivery
-✓ Real-time order tracking
-✓ Special offers and discounts
+**⚠️ IMPORTANT:** For complete, Google Play compliant store listing descriptions, see:
+📄 **[GOOGLE_PLAY_STORE_LISTING.md](./GOOGLE_PLAY_STORE_LISTING.md)**
 
-Order now and enjoy the freshest produce in Kuwait!
-```
+The file above contains:
+- ✅ Full compliant English description (en-US)
+- ✅ Full compliant Arabic description (ar)
+- ✅ All metadata requirements
+- ✅ Policy compliance checklist
+
+**Quick Reference:**
+- **App name:** FruitQ8 - Fresh Fruits & Vegetables
+- **Short description:** Order fresh fruits & vegetables from Kuwait's Fardha Market with home delivery
+- **Full description:** See GOOGLE_PLAY_STORE_LISTING.md for comprehensive versions
 
 #### 📸 Graphics
 يجب توفير:

@@ -1,11 +1,8 @@
 // API Configuration
 // تحديث هذا العنوان بعد نشر الموقع على Vercel أو أي خادم
 export const API_CONFIG = {
-  // للاختبار المحلي: 'http://localhost:3000'
-  // للإنتاج: 'https://your-domain.vercel.app' أو النطاق الخاص بك
-  BASE_URL: __DEV__ 
-    ? 'http://localhost:3000' 
-    : 'https://www.q8fruit.com', // النطاق الفعلي للموقع
+  // التطبيق منشور ويستخدمه العملاء؛ لا نستخدم localhost نهائياً
+  BASE_URL: 'https://www.q8fruit.com', // النطاق الفعلي للموقع
   
   ENDPOINTS: {
     SEND_ORDER_EMAIL: '/api/orders/send-email',

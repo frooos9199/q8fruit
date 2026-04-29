@@ -1,4 +1,6 @@
 {
     "kiroAgent.configureMCP": "Disabled",
-    "typescript.tsserver.experimental.enableProjectDiagnostics": false
+    "typescript.tsserver.experimental.enableProjectDiagnostics": false,
+    "typescript.tsdk": "FruitQ8Mobile/node_modules/typescript/lib",
+    "typescript.enablePromptUseWorkspaceTsdk": true
 }

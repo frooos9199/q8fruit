@@ -40,6 +40,7 @@ const resources = {
       viewAll: 'View All',
       newArrivals: 'New Arrivals',
       bestSellers: 'Best Sellers',
+      swipeForMore: 'Swipe for more',
       
       // Products
       products: 'Products',
@@ -122,6 +123,7 @@ const resources = {
       viewAll: 'عرض الكل',
       newArrivals: 'وصل حديثاً',
       bestSellers: 'الأكثر مبيعاً',
+      swipeForMore: 'اسحب للمزيد',
       
       // Products
       products: 'المنتجات',

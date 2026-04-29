@@ -24,15 +24,22 @@ interface ProductCardProps {
     unit: { name: string; nameAr?: string; price: number };
     quantity: number;
   }) => void;
+  variant?: 'grid' | 'featured';
+  cardWidth?: number;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onPress,
   onAddToCart,
+  variant = 'grid',
+  cardWidth,
 }) => {
   const { t, i18n } = useTranslation();
   const isArabic = i18n.language === 'ar';
+
+  const effectiveCardWidth = cardWidth ?? (variant === 'featured' ? Math.round(width * 0.82) : CARD_WIDTH);
+  const effectiveImageHeight = Math.round(effectiveCardWidth * 0.75);
 
   const productName = isArabic ? (product.nameAr || product.name || '') : (product.name || product.nameAr || '');
   const fallbackUnits = useMemo(() => {
@@ -55,10 +62,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <CardContainer
-      style={styles.card}
+      style={[styles.card, { width: effectiveCardWidth }]}
       {...(onPress ? { onPress, activeOpacity: 0.9 } : {})}
     >
-      <View style={styles.imageContainer}>
+      <View style={[styles.imageContainer, { height: effectiveImageHeight }]}>
         {imageSource ? (
           <FastImage 
             source={{ 
@@ -188,7 +195,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    width: CARD_WIDTH,
     backgroundColor: COLORS.white,
     borderRadius: BORDER_RADIUS.xl,
     marginBottom: SPACING.md,
@@ -199,7 +205,6 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: '100%',
-    height: CARD_WIDTH * 0.75,
     backgroundColor: '#f8f9fa',
     position: 'relative',
   },

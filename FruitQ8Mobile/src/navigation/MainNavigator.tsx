@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { MainTabParamList } from '../types';
 import { HomeScreen, CartScreen, ProfileScreen, OffersScreen, AdminScreen } from '../screens';
@@ -14,6 +15,7 @@ export const MainNavigator: React.FC = () => {
   const { isAdmin } = useAuth();
   const { itemCount } = useCart();
   const isArabic = i18n.language === 'ar';
+  const insets = useSafeAreaInsets();
 
   return (
     <Tab.Navigator
@@ -22,9 +24,9 @@ export const MainNavigator: React.FC = () => {
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.gray,
         tabBarStyle: {
-          paddingBottom: 8,
+          paddingBottom: 8 + insets.bottom,
           paddingTop: 8,
-          height: 60,
+          height: 60 + insets.bottom,
           borderTopWidth: 1,
           borderTopColor: COLORS.border,
           backgroundColor: COLORS.white,
