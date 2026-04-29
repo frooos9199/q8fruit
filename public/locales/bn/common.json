@@ -1,0 +1,240 @@
+{
+  "welcome": "ফল ও সবজির দোকানে স্বাগতম!",
+  "login": "লগইন",
+  "register": "রেজিস্টার",
+  "cart": "কার্ট",
+  "logout": "লগআউট",
+  "common": {
+    "yes": "হ্যাঁ",
+    "no": "না",
+    "all": "সব",
+    "active": "সক্রিয়",
+    "inactive": "বন্ধ",
+    "activate": "চালু",
+    "deactivate": "বন্ধ",
+    "edit": "সম্পাদনা",
+    "delete": "মুছুন",
+    "view": "দেখুন",
+    "print": "প্রিন্ট",
+    "close": "বন্ধ করুন",
+    "cancel": "বাতিল",
+    "save": "সংরক্ষণ",
+    "savedSuccessfully": "সফলভাবে সংরক্ষণ হয়েছে",
+    "searching": "খোঁজা হচ্ছে...",
+    "sending": "পাঠানো হচ্ছে...",
+    "notSpecified": "নির্দিষ্ট নয়",
+    "percent": "%"
+  },
+  "admin": {
+    "panelTitle": "অ্যাডমিন প্যানেল",
+    "backToSite": "সাইটে ফিরে যান",
+    "brand": {
+      "logoAlt": "সাইট লোগো"
+    },
+    "auth": {
+      "checkingPermissions": "অনুমতি যাচাই করা হচ্ছে..."
+    },
+    "nav": {
+      "dashboard": "ড্যাশবোর্ড",
+      "banners": "ব্যানার",
+      "orders": "অর্ডার",
+      "users": "ইউজার",
+      "products": "পণ্য",
+      "delivery": "ডেলিভারি",
+      "deliveryTracking": "ডেলিভারি ট্র্যাকিং",
+      "catering": "ক্যাটারিং",
+      "bulkMessage": "বাল্ক মেসেজ",
+      "settings": "সেটিংস"
+    },
+    "bulkMessage": {
+      "title": "বাল্ক মেসেজ পাঠান",
+      "description": "এখান থেকে আপনি ইমেইল বা WhatsApp-এর মাধ্যমে ব্যবহারকারীদের অফার এবং নোটিফিকেশন পাঠাতে পারবেন।"
+    },
+    "products": {
+      "title": "পণ্য ব্যবস্থাপনা",
+      "subtitle": "পণ্য পরিচালনা, ইমপোর্ট/এক্সপোর্ট এবং ওয়েবসাইটে প্রদর্শনের ক্রম।",
+      "exportExcel": "📈 এক্সেল ব্যাকআপ ডাউনলোড",
+      "exportXml": "XML ডাউনলোড",
+      "importXml": "XML আপলোড",
+      "exportCsvHeaders": "ID,নাম,ক্যাটেগরি,পরিমাণ,সক্রিয়,ছবির লিংক,ইউনিট",
+      "exportExcelSuccess": "✅ এক্সেল ব্যাকআপ সফলভাবে ডাউনলোড হয়েছে!",
+      "exportXmlError": "XML এক্সপোর্ট করতে সমস্যা হয়েছে",
+      "importXmlOnly": "অনুগ্রহ করে শুধু XML ফাইল নির্বাচন করুন",
+      "importXmlTooLarge": "ফাইলটি খুব বড়। সর্বোচ্চ 5MB",
+      "importXmlInvalidContent": "ফাইলের কনটেন্ট সঠিক নয়",
+      "importXmlUnsafe": "এই XML ফাইলটি নিরাপদ নয়",
+      "importXmlInvalid": "XML ফাইলটি সঠিক নয়",
+      "importXmlNoProducts": "ফাইলে কোনো পণ্য নেই",
+      "importXmlNoValidProducts": "কোনো বৈধ পণ্য ইমপোর্ট করা যায়নি",
+      "importXmlSuccess": "{{count}}টি পণ্য সফলভাবে ইমপোর্ট হয়েছে এবং Firebase-এ সেভ হয়েছে!",
+      "importXmlUnknownError": "অজানা ত্রুটি",
+      "importXmlError": "ফাইল ইমপোর্টে সমস্যা: {{message}}",
+      "importXmlReadError": "ফাইল পড়তে সমস্যা হয়েছে",
+      "edit": {
+        "title": "পণ্য সম্পাদনা",
+        "images": "পণ্যের ছবি",
+        "imageAlt": "পণ্যের ছবি {{index}}",
+        "removeImageAria": "ছবি {{index}} মুছুন",
+        "uploading": "আপলোড হচ্ছে...",
+        "addImages": "ছবি যোগ করুন",
+        "name": "পণ্যের নাম",
+        "category": "ক্যাটেগরি",
+        "selectCategory": "ক্যাটেগরি বেছে নিন",
+        "quantity": "স্টকে পরিমাণ",
+        "quantityPlaceholder": "স্টকে উপলব্ধ পরিমাণ",
+        "unitsAndPrices": "ইউনিট এবং দাম",
+        "addUnit": "ইউনিট যোগ করুন",
+        "unitNamePlaceholder": "ইউনিটের নাম",
+        "unitPricePlaceholder": "দাম",
+        "removeUnitAria": "ইউনিট {{index}} মুছুন",
+        "imagesUploadSuccess": "{{count}}টি ছবি সফলভাবে আপলোড হয়েছে! ✅ পণ্য সেভ করলে এগুলো সেভ হবে।",
+        "imagesUploadError": "ছবি আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+        "validation": {
+          "nameRequired": "পণ্যের নাম লিখুন",
+          "categoryRequired": "ক্যাটেগরি নির্বাচন করুন",
+          "unitsRequired": "অনুগ্রহ করে সঠিক ইউনিট এবং দাম দিন",
+          "unitsFixed": "কিছু খালি/ভুল দাম স্বয়ংক্রিয়ভাবে 0.001 করা হয়েছে। অনুগ্রহ করে দামগুলো যাচাই করুন।"
+        }
+      },
+      "table": {
+        "confirmDelete": "আপনি কি নিশ্চিত যে পণ্যটি মুছতে চান?",
+        "deleteSuccess": "✅ পণ্যটি সফলভাবে মুছে ফেলা হয়েছে!",
+        "deletePartialError": "⚠️ লোকাল থেকে মুছে গেছে, কিন্তু Firebase থেকে মুছতে ব্যর্থ হয়েছে। আবার চেষ্টা করুন।",
+        "discountRangeError": "ডিসকাউন্ট 0 থেকে 100 এর মধ্যে হতে হবে",
+        "saveSuccess": "✅ \"{{name}}\" পণ্য আপডেট সফল!",
+        "saveLocalSuccess": "✅ \"{{name}}\" পণ্য লোকালভাবে সেভ হয়েছে!",
+        "saveError": "❌ সেভ করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।",
+        "loadingFromFirebase": "🔄 Firebase থেকে লোড হচ্ছে...",
+        "addProduct": "+ পণ্য যোগ করুন",
+        "counts": "মোট পণ্য: {{total}} | দেখানো হচ্ছে: {{shown}}",
+        "dragHint": "ওয়েবসাইটে ক্রম পরিবর্তন করতে ড্র্যাগ & ড্রপ করুন",
+        "searchByName": "নাম দিয়ে খুঁজুন",
+        "searchPlaceholder": "পণ্যের নাম... (সব দেখাতে খালি রাখুন)",
+        "status": "স্ট্যাটাস",
+        "noMatches": "মিলে এমন কোনো পণ্য নেই",
+        "headers": {
+          "reorder": "↕️",
+          "id": "#",
+          "image": "ছবি",
+          "name": "পণ্যের নাম",
+          "unitsPrices": "ইউনিট/দাম",
+          "quantity": "পরিমাণ",
+          "catering": "ক্যাটারিং",
+          "offers": "অফার 🎁",
+          "status": "স্ট্যাটাস",
+          "toggle": "চালু/বন্ধ"
+        },
+        "noImage": "কোনো ছবি নেই",
+        "offerEnabled": "🎁 অফার চালু",
+        "enableOffer": "অফার চালু করুন",
+        "discountLabel": "{{discount}}% ছাড়"
+      }
+    },
+    "delivery": {
+      "title": "ডেলিভারি সেটিংস",
+      "settings": {
+        "title": "ডেলিভারি সেটিংস",
+        "loading": "Firebase থেকে সেটিংস লোড হচ্ছে...",
+        "noteLabel": "ডেলিভারি নোট (কার্ট ও ইনভয়েসে দেখায়):",
+        "notePlaceholder": "উদাহরণ: ২ ঘণ্টার মধ্যে ডেলিভারি বা আলোচনা অনুযায়ী...",
+        "timeLabel": "ডেলিভারি সময় (ডেলিভারির পাশে দেখায়):",
+        "timePlaceholder": "উদাহরণ: ২ ঘণ্টার মধ্যে বা আলোচনা অনুযায়ী",
+        "feeLabel": "ডেলিভারি ফি (KWD):",
+        "freeAboveLabel": "ফ্রি ডেলিভারি (এর ওপর) (KWD):",
+        "hint": "এই মানগুলো Firebase-এ সেভ হয় এবং অ্যাপ/ওয়েবসাইটে ব্যবহৃত হয়"
+      }
+    },
+    "orders": {
+      "title": "অর্ডার ও ইনভয়েস",
+      "subtitle": "সব অর্ডার দেখুন/পরিচালনা করুন এবং WhatsApp-এ ইনভয়েস পাঠান",
+      "whatsappFeature": {
+        "title": "WhatsApp-এ ইনভয়েস পাঠানোর ফিচার",
+        "sendToAdmin": "অ্যাডমিনকে পাঠান: অর্ডার ফলো-আপের জন্য",
+        "sendToCustomer": "গ্রাহককে পাঠান: বিস্তারিত ইনভয়েস"
+      },
+      "notifications": {
+        "newOrderTitle": "নতুন অর্ডার এসেছে",
+        "newOrderBody": "{{customer}} - {{total}} KWD"
+      },
+      "recipients": {
+        "admin": "অ্যাডমিন",
+        "customer": "গ্রাহক"
+      },
+      "alerts": {
+        "updateFailed": "অর্ডার আপডেট ব্যর্থ",
+        "confirmDeleteInvoice": "আপনি কি নিশ্চিত যে ইনভয়েসটি মুছতে চান?",
+        "deleteFailed": "অর্ডার মুছতে ব্যর্থ"
+      },
+      "whatsapp": {
+        "sentSuccess": "✅ ইনভয়েসটি {{recipient}}-কে সফলভাবে পাঠানো হয়েছে!",
+        "sendError": "❌ ইনভয়েস পাঠাতে সমস্যা হয়েছে"
+      },
+      "stats": {
+        "totalOrders": "মোট অর্ডার",
+        "completed": "সম্পন্ন",
+        "inProgress": "চলমান",
+        "totalSales": "মোট বিক্রয়"
+      },
+      "table": {
+        "orderNumber": "অর্ডার নম্বর",
+        "customer": "গ্রাহক",
+        "phone": "ফোন",
+        "total": "মোট",
+        "status": "স্ট্যাটাস",
+        "date": "তারিখ",
+        "actions": "অ্যাকশন"
+      },
+      "actions": {
+        "viewInvoice": "ইনভয়েস দেখুন",
+        "printInvoice": "ইনভয়েস প্রিন্ট করুন",
+        "sendToAdminWhatsapp": "WhatsApp-এ অ্যাডমিনকে পাঠান",
+        "sendToCustomerWhatsapp": "WhatsApp-এ গ্রাহককে পাঠান",
+        "phoneMissing": "ফোন নম্বর নেই"
+      },
+      "empty": {
+        "title": "কোনো অর্ডার নেই",
+        "subtitle": "এখনও কোনো অর্ডার তৈরি হয়নি"
+      },
+      "status": {
+        "new": "নতুন",
+        "inProgress": "চলমান",
+        "completed": "সম্পন্ন",
+        "cancelled": "বাতিল"
+      },
+      "edit": {
+        "title": "অর্ডার সম্পাদনা",
+        "customerName": "গ্রাহকের নাম",
+        "total": "মোট",
+        "status": "স্ট্যাটাস",
+        "date": "তারিখ"
+      },
+      "invoice": {
+        "pageTitle": "অর্ডার ইনভয়েস",
+        "printError": "ইনভয়েস প্রিন্ট করতে সমস্যা হয়েছে",
+        "logoAlt": "স্টোর লোগো",
+        "storeName": "ফল ও সবজির দোকান",
+        "invoiceNumber": "ইনভয়েস #{{number}}",
+        "customerInfoTitle": "গ্রাহকের তথ্য",
+        "invoiceDetailsTitle": "ইনভয়েসের বিস্তারিত",
+        "payment": {
+          "online": "অনলাইন পেমেন্ট",
+          "cashOnDelivery": "ডেলিভারির সময় নগদ"
+        },
+        "productsTitle": "পণ্যের বিস্তারিত",
+        "table": {
+          "product": "পণ্য",
+          "unit": "ইউনিট",
+          "price": "দাম",
+          "quantity": "পরিমাণ",
+          "total": "মোট"
+        },
+        "deliveryFee": "ডেলিভারি ফি",
+        "grandTotal": "সর্বমোট",
+        "noProducts": "কোনো পণ্য নেই",
+        "footerThanks": "আমাদের সাথে কেনাকাটার জন্য ধন্যবাদ! 🌟",
+        "footerContact": "📱 সহায়তার জন্য: 98899426 | 🌐 Fruit & Veg Kuwait",
+        "generatedBy": "এই ইনভয়েসটি Q8 Fruit সিস্টেম দ্বারা তৈরি"
+      }
+    }
+  }
+}

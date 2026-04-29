@@ -1,4 +1,7 @@
+"use client";
+
 import React from "react";
+import { useTranslation } from 'react-i18next';
 import { getOrderAddress, getOrderPhone, getOrderPricing, getOrderProducts } from '../../../lib/orderUtils';
 
 interface InvoiceProduct {
@@ -31,12 +34,13 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
   total,
   paymentType,
 }) => {
-  const paymentTypeLabel = paymentType === "knet" ? "دفع أونلاين" : "نقدي عند الاستلام";
+  const { t, i18n } = useTranslation();
+  const paymentTypeLabel = paymentType === "knet" ? t('admin.orders.invoice.payment.online') : t('admin.orders.invoice.payment.cashOnDelivery');
   const normalizedProducts = getOrderProducts({ products, deliveryFee, total });
   const pricing = getOrderPricing({ products, deliveryFee, total });
   
   return (
-    <div style={{
+    <div dir={i18n.dir()} style={{
       width: '100%',
       maxWidth: 900,
       margin: '0 auto',
@@ -45,8 +49,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
       overflow: 'hidden',
       boxShadow: '0 25px 80px rgba(102, 126, 234, 0.3)',
       fontFamily: 'Segoe UI, Tahoma, Arial, sans-serif',
-      color: '#1a202c',
-      direction: 'rtl'
+      color: '#1a202c'
     }}>
       {/* Header */}
       <div style={{
@@ -67,7 +70,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
         }} />
         <img 
           src="/images/fruits.png" 
-          alt="شعار المتجر" 
+          alt={t('admin.orders.invoice.logoAlt')} 
           style={{ 
             width: 100, 
             height: 100, 
@@ -88,7 +91,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
           position: 'relative',
           zIndex: 1
         }}>
-          🍎 متجر الفواكه والخضار
+          🍎 {t('admin.orders.invoice.storeName')}
         </h1>
         <div style={{ 
           background: 'rgba(255,255,255,0.2)',
@@ -101,7 +104,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
           position: 'relative',
           zIndex: 1
         }}>
-          فاتورة رقم #{invoiceNumber}
+          {t('admin.orders.invoice.invoiceNumber', { number: invoiceNumber })}
         </div>
       </div>
 
@@ -120,7 +123,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
           color: 'white',
           boxShadow: '0 10px 30px rgba(240, 147, 251, 0.3)'
         }}>
-          <h3 style={{ margin: '0 0 15px 0', fontSize: 20, fontWeight: 'bold' }}>👤 معلومات العميل</h3>
+          <h3 style={{ margin: '0 0 15px 0', fontSize: 20, fontWeight: 'bold' }}>👤 {t('admin.orders.invoice.customerInfoTitle')}</h3>
           <div style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 8 }}>{customer}</div>
           {phone && <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 5 }}>📱 {getOrderPhone({ phone })}</div>}
           {address && <div style={{ fontSize: 16, opacity: 0.9 }}>📍 {getOrderAddress({ address })}</div>}
@@ -133,7 +136,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
           color: 'white',
           boxShadow: '0 10px 30px rgba(79, 172, 254, 0.3)'
         }}>
-          <h3 style={{ margin: '0 0 15px 0', fontSize: 20, fontWeight: 'bold' }}>📋 تفاصيل الفاتورة</h3>
+          <h3 style={{ margin: '0 0 15px 0', fontSize: 20, fontWeight: 'bold' }}>📋 {t('admin.orders.invoice.invoiceDetailsTitle')}</h3>
           <div style={{ fontSize: 18, marginBottom: 8 }}>📅 {date}</div>
           {paymentType && (
             <div style={{
@@ -163,7 +166,7 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text'
         }}>
-          📦 تفاصيل المنتجات
+          📦 {t('admin.orders.invoice.productsTitle')}
         </h2>
         
         <div style={{
@@ -182,11 +185,11 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
                 color: 'white' 
               }}>
-                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>المنتج</th>
-                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>الوحدة</th>
-                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>السعر</th>
-                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>الكمية</th>
-                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>الإجمالي</th>
+                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>{t('admin.orders.invoice.table.product')}</th>
+                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>{t('admin.orders.invoice.table.unit')}</th>
+                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>{t('admin.orders.invoice.table.price')}</th>
+                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>{t('admin.orders.invoice.table.quantity')}</th>
+                <th style={{ padding: 18, fontWeight: 'bold', fontSize: 18 }}>{t('admin.orders.invoice.table.total')}</th>
               </tr>
             </thead>
             <tbody>
@@ -213,12 +216,12 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
               <tr style={{ background: 'linear-gradient(135deg, #ffeaa7 0%, #fab1a0 100%)' }}>
                 <td colSpan={3} style={{ 
                   padding: 18, 
-                  textAlign: 'left', 
+                  textAlign: 'start', 
                   fontWeight: 'bold', 
                   color: '#2d3748',
                   fontSize: 18
                 }}>
-                  🚚 رسوم التوصيل
+                  🚚 {t('admin.orders.invoice.deliveryFee')}
                 </td>
                 <td style={{ padding: 18, textAlign: 'center', fontWeight: 'bold', fontSize: 18 }}>-</td>
                 <td style={{ padding: 18, textAlign: 'center', fontWeight: 'bold', color: '#e17055', fontSize: 18 }}>
@@ -230,11 +233,11 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
               <tr style={{ background: 'linear-gradient(135deg, #00b894 0%, #00cec9 100%)', color: 'white' }}>
                 <td colSpan={3} style={{ 
                   padding: 20, 
-                  textAlign: 'left', 
+                  textAlign: 'start', 
                   fontWeight: 'bold',
                   fontSize: 22
                 }}>
-                  💰 المجموع الكلي
+                  💰 {t('admin.orders.invoice.grandTotal')}
                 </td>
                 <td style={{ 
                   padding: 20, 
@@ -266,13 +269,13 @@ const InvoicePrint: React.FC<InvoiceProps> = ({
         textAlign: 'center'
       }}>
         <div style={{ fontSize: 24, fontWeight: 'bold', marginBottom: 15 }}>
-          شكراً لتسوقكم معنا! 🌟
+          {t('admin.orders.invoice.footerThanks')}
         </div>
         <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 10 }}>
-          📱 للاستفسار: 98899426 | 🌐 متجر الفواكه والخضار الكويت
+          {t('admin.orders.invoice.footerContact')}
         </div>
         <div style={{ fontSize: 14, opacity: 0.7 }}>
-          تم إنشاء الفاتورة بواسطة نظام Q8 Fruit المتطور
+          {t('admin.orders.invoice.generatedBy')}
         </div>
       </div>
     </div>

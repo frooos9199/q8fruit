@@ -1,3 +1,5 @@
+"use client";
+import { useTranslation } from 'react-i18next';
 import React, { useEffect, useRef } from "react";
 import {
   getOrderAddress,
@@ -37,7 +39,10 @@ interface InvoiceProps {
 }
 
 const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order, onClose, autoPrint }) => {
+  const { t, i18n } = useTranslation();
   const invoiceRef = useRef<HTMLDivElement>(null);
+  const tRef = useRef(t);
+  const i18nRef = useRef(i18n);
   const pricing = getOrderPricing(order);
   const products = getOrderProducts(order);
   const orderPhone = getOrderPhone(order);
@@ -46,8 +51,18 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
   const paymentMethod = getOrderPaymentMethod(order);
 
   useEffect(() => {
+    tRef.current = t;
+  }, [t]);
+
+  useEffect(() => {
+    i18nRef.current = i18n;
+  }, [i18n]);
+
+  useEffect(() => {
     if (autoPrint && invoiceRef.current) {
       try {
+        const translate = tRef.current;
+        const i18nInstance = i18nRef.current;
         const invoiceHtml = invoiceRef.current.innerHTML;
         // تنظيف HTML من المحتوى الضار
         const cleanHtml = invoiceHtml
@@ -58,9 +73,9 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
         const printWindow = window.open('', '_blank', 'width=800,height=900');
         if (printWindow) {
           printWindow.document.write(`
-            <html dir="rtl" lang="ar">
+            <html dir="${i18nInstance.dir()}" lang="${i18nInstance.language}">
               <head>
-                <title>فاتورة الطلب</title>
+                <title>${translate('admin.orders.invoice.pageTitle')}</title>
                 <style>
                   * { box-sizing: border-box; margin: 0; padding: 0; }
                   body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; background: #f8fafc; padding: 20px; }
@@ -103,23 +118,23 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
         }
       } catch (error) {
         console.error('خطأ في طباعة الفاتورة:', error);
-        alert('حدث خطأ أثناء طباعة الفاتورة');
+        alert(tRef.current('admin.orders.invoice.printError'));
       }
     }
   }, [autoPrint, onClose]);
   
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div ref={invoiceRef} className="invoice max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div dir={i18n.dir()} ref={invoiceRef} className="invoice max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="header">
-          <img src="/images/fruits.png" alt="شعار المتجر" className="logo" />
-          <div className="invoice-title">🍎 متجر الفواكه والخضار</div>
-          <div className="invoice-number">فاتورة رقم {getOrderDisplayNumber(order)}</div>
+          <img src="/images/fruits.png" alt={t('admin.orders.invoice.logoAlt')} className="logo" />
+          <div className="invoice-title">🍎 {t('admin.orders.invoice.storeName')}</div>
+          <div className="invoice-number">{t('admin.orders.invoice.invoiceNumber', { number: getOrderDisplayNumber(order) })}</div>
           <div style={{marginTop: '15px', fontSize: '14px'}}>📅 {order.date}</div>
           {order.paymentType && (
             <div className="payment-badge" style={{marginTop: '10px'}}>
-                💳 {paymentMethod === "knet" ? "دفع أونلاين" : "نقدي عند الاستلام"}
+                💳 {paymentMethod === "knet" ? t('admin.orders.invoice.payment.online') : t('admin.orders.invoice.payment.cashOnDelivery')}
             </div>
           )}
         </div>
@@ -136,15 +151,15 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
 
         {/* Products */}
         <div className="products-section">
-          <div className="products-title">📦 تفاصيل المنتجات</div>
+          <div className="products-title">📦 {t('admin.orders.invoice.productsTitle')}</div>
           <table className="products-table">
             <thead>
               <tr>
-                <th>المنتج</th>
-                <th>الوحدة</th>
-                <th>السعر</th>
-                <th>الكمية</th>
-                <th>الإجمالي</th>
+                <th>{t('admin.orders.invoice.table.product')}</th>
+                <th>{t('admin.orders.invoice.table.unit')}</th>
+                <th>{t('admin.orders.invoice.table.price')}</th>
+                <th>{t('admin.orders.invoice.table.quantity')}</th>
+                <th>{t('admin.orders.invoice.table.total')}</th>
               </tr>
             </thead>
             <tbody>
@@ -165,19 +180,19 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
                     </tr>
                   ))}
                   <tr className="delivery-row">
-                    <td colSpan={3} style={{textAlign: 'left', fontWeight: 'bold'}}>🚚 رسوم التوصيل</td>
+                    <td colSpan={3} style={{textAlign: 'start', fontWeight: 'bold'}}>🚚 {t('admin.orders.invoice.deliveryFee')}</td>
                     <td style={{textAlign: 'center', fontWeight: 'bold'}}>-</td>
                     <td style={{textAlign: 'center', fontWeight: 'bold'}}>{pricing.deliveryFee.toFixed(3)} د.ك</td>
                   </tr>
                   <tr className="total-row">
-                    <td colSpan={3} style={{textAlign: 'left'}}>💰 المجموع الكلي</td>
+                    <td colSpan={3} style={{textAlign: 'start'}}>💰 {t('admin.orders.invoice.grandTotal')}</td>
                     <td style={{textAlign: 'center'}}>{products.reduce((sum, p) => sum + (p.quantity || 0), 0)}</td>
                     <td style={{textAlign: 'center'}}>{pricing.total.toFixed(3)} د.ك</td>
                   </tr>
                 </>
               ) : (
                 <tr>
-                  <td colSpan={5} style={{textAlign: 'center', color: '#a0aec0'}}>لا توجد منتجات</td>
+                  <td colSpan={5} style={{textAlign: 'center', color: '#a0aec0'}}>{t('admin.orders.invoice.noProducts')}</td>
                 </tr>
               )}
             </tbody>
@@ -186,9 +201,9 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
 
         {/* Footer */}
         <div className="footer">
-          <div className="footer-title">شكراً لتسوقكم معنا! 🌟</div>
+          <div className="footer-title">{t('admin.orders.invoice.footerThanks')}</div>
           <div className="footer-contact">
-            📱 للاستفسار: 98899426 | 🌐 متجر الفواكه والخضار الكويت
+            {t('admin.orders.invoice.footerContact')}
           </div>
         </div>
       </div>
@@ -198,14 +213,14 @@ const InvoiceModal: React.FC<InvoiceProps & { autoPrint?: boolean }> = ({ order,
         <button
           onClick={() => window.print()}
           className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-full shadow-lg transition-all"
-          title="طباعة"
+          title={t('common.print')}
         >
           🖨️
         </button>
         <button
           onClick={onClose}
           className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full shadow-lg transition-all"
-          title="إغلاق"
+          title={t('common.close')}
         >
           ✕
         </button>

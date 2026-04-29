@@ -13,6 +13,7 @@ interface User {
   isAdmin?: boolean;
   isBlocked?: boolean;
   role?: "عميل" | "مدير" | "مندوب";
+  language?: "ar" | "en" | "bn";
   password?: string;
 }
 
@@ -69,6 +70,8 @@ export default function UsersTable() {
         const data = doc.data() as Record<string, unknown>;
         const isAdmin = data.isAdmin === true || data.role === 'admin' || data.role === 'مدير';
         const isBlocked = data.isBlocked === true || data.active === false;
+        const rawLanguage = typeof data.language === 'string' ? data.language.trim().toLowerCase() : '';
+        const language = rawLanguage === 'en' || rawLanguage === 'bn' || rawLanguage === 'ar' ? (rawLanguage as User['language']) : undefined;
 
         return {
           id: doc.id,
@@ -79,6 +82,7 @@ export default function UsersTable() {
           isAdmin,
           isBlocked,
           role: resolveRoleLabel(data.role, isAdmin),
+          language,
           password: typeof data.password === 'string' ? data.password : ''
         } as User;
       });
@@ -157,6 +161,7 @@ export default function UsersTable() {
       isAdmin: firestoreRole === 'admin',
       isBlocked: !updated.active,
       active: updated.active,
+      language: updated.language,
     };
     
     const updatedUsers = users.map(u => u.id === updated.id ? normalizedUser : u);
@@ -164,7 +169,7 @@ export default function UsersTable() {
     
     if (db) {
       try {
-        await setDoc(doc(db, 'users', updated.id), {
+        const payload: Record<string, unknown> = {
           id: updated.id,
           uid: updated.id,
           name: updated.name,
@@ -175,7 +180,13 @@ export default function UsersTable() {
           active: updated.active,
           isBlocked: !updated.active,
           updatedAt: new Date(),
-        }, { merge: true });
+        };
+
+        if (updated.language) {
+          payload.language = updated.language;
+        }
+
+        await setDoc(doc(db, 'users', updated.id), payload, { merge: true });
         console.log('✅ تم تحديث المستخدم في Firebase');
         alert('✅ تم حفظ التعديلات بنجاح!');
       } catch (error) {

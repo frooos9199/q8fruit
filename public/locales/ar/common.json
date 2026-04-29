@@ -3,5 +3,238 @@
   "login": "تسجيل الدخول",
   "register": "مستخدم جديد",
   "cart": "سلة المنتجات",
-  "logout": "تسجيل الخروج"
+  "logout": "تسجيل الخروج",
+  "common": {
+    "yes": "نعم",
+    "no": "لا",
+    "all": "الكل",
+    "active": "مفعل",
+    "inactive": "موقوف",
+    "activate": "تفعيل",
+    "deactivate": "إيقاف",
+    "edit": "تعديل",
+    "delete": "حذف",
+    "view": "عرض",
+    "print": "طباعة",
+    "close": "إغلاق",
+    "cancel": "إلغاء",
+    "save": "حفظ",
+    "savedSuccessfully": "تم الحفظ بنجاح",
+    "searching": "جاري البحث...",
+    "sending": "جاري الإرسال...",
+    "notSpecified": "غير محدد",
+    "percent": "%"
+  },
+  "admin": {
+    "panelTitle": "لوحة الإدارة",
+    "backToSite": "العودة للموقع",
+    "brand": {
+      "logoAlt": "شعار الموقع"
+    },
+    "auth": {
+      "checkingPermissions": "جاري التحقق من الصلاحيات..."
+    },
+    "nav": {
+      "dashboard": "لوحة التحكم",
+      "banners": "البانر",
+      "orders": "الطلبات",
+      "users": "المستخدمين",
+      "products": "المنتجات",
+      "delivery": "التوصيل",
+      "deliveryTracking": "تتبع المندوبين",
+      "catering": "الكَاتِرِينج",
+      "bulkMessage": "رسائل جماعية",
+      "settings": "الإعدادات"
+    },
+    "bulkMessage": {
+      "title": "إرسال رسائل جماعية",
+      "description": "هنا يمكنك إرسال عروض وتنبيهات للمستخدمين عبر البريد أو الواتساب."
+    },
+    "products": {
+      "title": "إدارة المنتجات",
+      "subtitle": "إدارة المنتجات والاستيراد والتصدير وترتيب العرض داخل الموقع.",
+      "exportExcel": "📈 تحميل باكاب Excel",
+      "exportXml": "تحميل XML",
+      "importXml": "رفع XML",
+      "exportCsvHeaders": "الرقم,الاسم,الفئة,الكمية,نشط,رابط الصورة,الوحدات",
+      "exportExcelSuccess": "✅ تم تحميل باكاب Excel بنجاح!",
+      "exportXmlError": "حدث خطأ أثناء تصدير XML",
+      "importXmlOnly": "يرجى اختيار ملف XML فقط",
+      "importXmlTooLarge": "حجم الملف كبير جداً. الحد الأقصى 5MB",
+      "importXmlInvalidContent": "محتوى الملف غير صحيح",
+      "importXmlUnsafe": "ملف XML غير آمن",
+      "importXmlInvalid": "ملف XML غير صحيح",
+      "importXmlNoProducts": "لا توجد منتجات في الملف",
+      "importXmlNoValidProducts": "لم يتم استيراد أي منتجات صحيحة",
+      "importXmlSuccess": "تم استيراد {{count}} منتج بنجاح وتم حفظهم في Firebase!",
+      "importXmlUnknownError": "خطأ غير معروف",
+      "importXmlError": "خطأ في استيراد الملف: {{message}}",
+      "importXmlReadError": "خطأ في قراءة الملف",
+      "edit": {
+        "title": "تعديل المنتج",
+        "images": "صور المنتج",
+        "imageAlt": "صورة المنتج {{index}}",
+        "removeImageAria": "حذف الصورة {{index}}",
+        "uploading": "جاري الرفع...",
+        "addImages": "إضافة صور",
+        "name": "اسم المنتج",
+        "category": "الفئة",
+        "selectCategory": "اختر الفئة",
+        "quantity": "الكمية المتوفرة",
+        "quantityPlaceholder": "الكمية المتوفرة في المخزون",
+        "unitsAndPrices": "الوحدات والأسعار",
+        "addUnit": "إضافة وحدة",
+        "unitNamePlaceholder": "اسم الوحدة",
+        "unitPricePlaceholder": "السعر",
+        "removeUnitAria": "حذف الوحدة {{index}}",
+        "imagesUploadSuccess": "تم رفع {{count}} صورة بنجاح! ✅ سيتم حفظها عند الضغط على حفظ المنتج.",
+        "imagesUploadError": "فشل رفع الصور. الرجاء المحاولة مرة أخرى.",
+        "validation": {
+          "nameRequired": "يرجى إدخال اسم المنتج",
+          "categoryRequired": "يرجى اختيار الفئة",
+          "unitsRequired": "يرجى إدخال وحدات صحيحة مع أسعار",
+          "unitsFixed": "تم تصحيح بعض الأسعار الفارغة أو غير الصحيحة تلقائيًا إلى 0.001 د.ك. يرجى مراجعة الأسعار."
+        }
+      },
+      "table": {
+        "confirmDelete": "هل أنت متأكد من حذف المنتج؟",
+        "deleteSuccess": "✅ تم حذف المنتج بنجاح!",
+        "deletePartialError": "⚠️ تم حذف المنتج محلياً، لكن فشل الحذف من Firebase. قد تحتاج لإعادة المحاولة.",
+        "discountRangeError": "يجب أن تكون نسبة الخصم بين 0 و 100",
+        "saveSuccess": "✅ تم حفظ تعديلات المنتج \"{{name}}\" بنجاح!",
+        "saveLocalSuccess": "✅ تم حفظ تعديلات المنتج \"{{name}}\" محلياً!",
+        "saveError": "❌ خطأ في حفظ التعديلات. يرجى المحاولة مرة أخرى.",
+        "loadingFromFirebase": "🔄 جاري التحميل من Firebase...",
+        "addProduct": "+ إضافة منتج",
+        "counts": "إجمالي المنتجات: {{total}} | المعروضة: {{shown}}",
+        "dragHint": "يمكنك سحب وإفلات المنتجات لتغيير ترتيبها في الموقع",
+        "searchByName": "بحث بالاسم",
+        "searchPlaceholder": "اسم المنتج... (فارغ لعرض الكل)",
+        "status": "الحالة",
+        "noMatches": "لا توجد منتجات مطابقة",
+        "headers": {
+          "reorder": "↕️",
+          "id": "#",
+          "image": "الصورة",
+          "name": "اسم المنتج",
+          "unitsPrices": "الوحدات والأسعار",
+          "quantity": "الكمية",
+          "catering": "الكاترينج",
+          "offers": "العروض 🎁",
+          "status": "الحالة",
+          "toggle": "تفعيل/إيقاف"
+        },
+        "noImage": "بدون صورة",
+        "offerEnabled": "🎁 عرض مفعل",
+        "enableOffer": "تفعيل عرض",
+        "discountLabel": "خصم {{discount}}%"
+      }
+    },
+    "delivery": {
+      "title": "إعدادات التوصيل",
+      "settings": {
+        "title": "إعدادات التوصيل",
+        "loading": "جاري تحميل الإعدادات من Firebase...",
+        "noteLabel": "ملاحظة التوصيل (تظهر في السلة والفاتورة):",
+        "notePlaceholder": "مثال: التوصيل خلال ساعتين أو حسب الاتفاق...",
+        "timeLabel": "وقت التوصيل (يظهر بجانب التوصيل):",
+        "timePlaceholder": "مثال: خلال ساعتين أو حسب الاتفاق",
+        "feeLabel": "قيمة التوصيل (د.ك):",
+        "freeAboveLabel": "التوصيل المجاني فوق (د.ك):",
+        "hint": "هذه القيم تُحفظ في Firebase وتستخدمها التطبيقات والموقع"
+      }
+    },
+    "orders": {
+      "title": "إدارة الطلبات والفواتير",
+      "subtitle": "عرض وإدارة جميع الطلبات مع إمكانية إرسال الفواتير عبر الواتساب",
+      "whatsappFeature": {
+        "title": "ميزة إرسال الفواتير عبر الواتساب",
+        "sendToAdmin": "إرسال للإدارة: لمتابعة الطلبات",
+        "sendToCustomer": "إرسال للعميل: فاتورة مفصلة"
+      },
+      "notifications": {
+        "newOrderTitle": "طلب جديد وصل",
+        "newOrderBody": "{{customer}} - {{total}} د.ك"
+      },
+      "recipients": {
+        "admin": "للإدارة",
+        "customer": "للعميل"
+      },
+      "alerts": {
+        "updateFailed": "فشل تحديث الطلب",
+        "confirmDeleteInvoice": "هل أنت متأكد من حذف الفاتورة؟",
+        "deleteFailed": "فشل حذف الطلب"
+      },
+      "whatsapp": {
+        "sentSuccess": "✅ تم إرسال الفاتورة {{recipient}} بنجاح!",
+        "sendError": "❌ حدث خطأ في إرسال الفاتورة"
+      },
+      "stats": {
+        "totalOrders": "إجمالي الطلبات",
+        "completed": "مكتملة",
+        "inProgress": "قيد التنفيذ",
+        "totalSales": "إجمالي المبيعات"
+      },
+      "table": {
+        "orderNumber": "رقم الطلب",
+        "customer": "العميل",
+        "phone": "الهاتف",
+        "total": "الإجمالي",
+        "status": "الحالة",
+        "date": "التاريخ",
+        "actions": "الإجراءات"
+      },
+      "actions": {
+        "viewInvoice": "عرض الفاتورة",
+        "printInvoice": "طباعة الفاتورة",
+        "sendToAdminWhatsapp": "إرسال للإدارة عبر الواتساب",
+        "sendToCustomerWhatsapp": "إرسال للعميل عبر الواتساب",
+        "phoneMissing": "رقم الهاتف غير متوفر"
+      },
+      "empty": {
+        "title": "لا توجد طلبات",
+        "subtitle": "لم يتم إنشاء أي طلبات بعد"
+      },
+      "status": {
+        "new": "جديد",
+        "inProgress": "قيد التنفيذ",
+        "completed": "مكتمل",
+        "cancelled": "ملغي"
+      },
+      "edit": {
+        "title": "تعديل الطلب",
+        "customerName": "اسم العميل",
+        "total": "الإجمالي",
+        "status": "الحالة",
+        "date": "التاريخ"
+      },
+      "invoice": {
+        "pageTitle": "فاتورة الطلب",
+        "printError": "حدث خطأ أثناء طباعة الفاتورة",
+        "logoAlt": "شعار المتجر",
+        "storeName": "متجر الفواكه والخضار",
+        "invoiceNumber": "فاتورة رقم {{number}}",
+        "customerInfoTitle": "معلومات العميل",
+        "invoiceDetailsTitle": "تفاصيل الفاتورة",
+        "payment": {
+          "online": "دفع أونلاين",
+          "cashOnDelivery": "نقدي عند الاستلام"
+        },
+        "productsTitle": "تفاصيل المنتجات",
+        "table": {
+          "product": "المنتج",
+          "unit": "الوحدة",
+          "price": "السعر",
+          "quantity": "الكمية",
+          "total": "الإجمالي"
+        },
+        "deliveryFee": "رسوم التوصيل",
+        "grandTotal": "المجموع الكلي",
+        "noProducts": "لا توجد منتجات",
+        "footerThanks": "شكراً لتسوقكم معنا! 🌟",
+        "footerContact": "📱 للاستفسار: 98899426 | 🌐 متجر الفواكه والخضار الكويت",
+        "generatedBy": "تم إنشاء الفاتورة بواسطة نظام Q8 Fruit المتطور"
+      }
+    }
+  }
 }

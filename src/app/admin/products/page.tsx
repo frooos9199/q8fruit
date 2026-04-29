@@ -5,6 +5,7 @@ import { clearProductsCache, getProductsFromFirebase, syncProductsToFirebase } f
 
 import { useRef } from "react";
 import { useState } from "react";
+import { useTranslation } from 'react-i18next';
 
 interface ExportProduct {
   id: number | string;
@@ -21,6 +22,7 @@ interface ExportProduct {
 }
 
 export default function ProductsPage() {
+  const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [refresh, setRefresh] = useState(0);
 
@@ -36,15 +38,15 @@ export default function ProductsPage() {
       products = [];
     }
     
-    // إنشاء محتوى CSV مع BOM لدعم العربية
-    const BOM = '\uFEFF'; // Byte Order Mark للعربية
-    let csv = BOM + 'الرقم,الاسم,الفئة,الكمية,نشط,رابط الصورة,الوحدات\n';
+    // إنشاء محتوى CSV مع BOM لدعم Excel
+    const BOM = '\uFEFF'; // Byte Order Mark
+    let csv = BOM + t('admin.products.exportCsvHeaders') + '\n';
     
     for (const p of products) {
       // استخدام جميع الصور أو الصورة القديمة
       const imageUrls = p.images && p.images.length > 0 ? p.images.join('; ') : (p.image || '');
       const units = p.units.map((u: any) => `${u.name}:${u.price}`).join('; ');
-      csv += `${p.id},"${p.name}","${p.category}",${p.quantity},${p.active ? 'نعم' : 'لا'},"${imageUrls}","${units}"\n`;
+      csv += `${p.id},"${p.name}","${p.category}",${p.quantity},${p.active ? t('common.yes') : t('common.no')},"${imageUrls}","${units}"\n`;
     }
     
     // تحميل ملف CSV مع ترميز UTF-8
@@ -56,7 +58,7 @@ export default function ProductsPage() {
     a.click();
     URL.revokeObjectURL(url);
     
-    alert('✅ تم تحميل باكاب Excel بنجاح!');
+    alert(t('admin.products.exportExcelSuccess'));
   };
 
   // تصدير المنتجات كـ XML
@@ -130,7 +132,7 @@ export default function ProductsPage() {
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('خطأ في تصدير XML:', error);
-      alert('حدث خطأ أثناء تصدير XML');
+      alert(t('admin.products.exportXmlError'));
     }
   };
 
@@ -141,13 +143,13 @@ export default function ProductsPage() {
     
     // فحص نوع الملف
     if (!file.name.toLowerCase().endsWith('.xml')) {
-      alert('يرجى اختيار ملف XML فقط');
+      alert(t('admin.products.importXmlOnly'));
       return;
     }
     
     // فحص حجم الملف (5MB ماكس)
     if (file.size > 5 * 1024 * 1024) {
-      alert('حجم الملف كبير جداً. الحد الأقصى 5MB');
+      alert(t('admin.products.importXmlTooLarge'));
       return;
     }
     
@@ -158,12 +160,12 @@ export default function ProductsPage() {
         
         // فحص أساسي للمحتوى
         if (!text || typeof text !== 'string') {
-          throw new Error('محتوى الملف غير صحيح');
+          throw new Error(t('admin.products.importXmlInvalidContent'));
         }
         
         // منع XML entities الضارة
         if (text.includes('<!ENTITY') || text.includes('<!DOCTYPE')) {
-          throw new Error('ملف XML غير آمن');
+          throw new Error(t('admin.products.importXmlUnsafe'));
         }
         
         const parser = new DOMParser();
@@ -172,13 +174,13 @@ export default function ProductsPage() {
         // فحص أخطاء XML
         const parseError = xmlDoc.getElementsByTagName('parsererror')[0];
         if (parseError) {
-          throw new Error('ملف XML غير صحيح');
+          throw new Error(t('admin.products.importXmlInvalid'));
         }
         
         const productNodes = Array.from(xmlDoc.getElementsByTagName("product"));
         
         if (productNodes.length === 0) {
-          throw new Error('لا توجد منتجات في الملف');
+          throw new Error(t('admin.products.importXmlNoProducts'));
         }
         
         const imported: ExportProduct[] = productNodes.map((node) => {
@@ -233,21 +235,22 @@ export default function ProductsPage() {
         }
         
         if (importedCount === 0) {
-          throw new Error('لم يتم استيراد أي منتجات صحيحة');
+          throw new Error(t('admin.products.importXmlNoValidProducts'));
         }
         
         await syncProductsToFirebase(merged);
         clearProductsCache();
         setRefresh(r => r + 1);
-        alert(`تم استيراد ${importedCount} منتج بنجاح وتم حفظهم في Firebase!`);
+        alert(t('admin.products.importXmlSuccess', { count: importedCount }));
       } catch (error) {
         console.error('خطأ في استيراد XML:', error);
-        alert(`خطأ في استيراد الملف: ${error instanceof Error ? error.message : 'خطأ غير معروف'}`);
+        const message = error instanceof Error ? error.message : t('admin.products.importXmlUnknownError');
+        alert(t('admin.products.importXmlError', { message }));
       }
     };
     
     reader.onerror = () => {
-      alert('خطأ في قراءة الملف');
+      alert(t('admin.products.importXmlReadError'));
     };
     
     reader.readAsText(file);
@@ -255,15 +258,15 @@ export default function ProductsPage() {
 
   return (
     <div>
-      <div className="mb-6 text-center lg:text-right">
-        <h1 className="mb-4 bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-2xl font-bold text-transparent">إدارة المنتجات</h1>
-        <p className="text-slate-600">إدارة المنتجات والاستيراد والتصدير وترتيب العرض داخل الموقع.</p>
+      <div className="mb-6 text-center lg:text-start">
+        <h1 className="mb-4 bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-2xl font-bold text-transparent">{t('admin.products.title')}</h1>
+        <p className="text-slate-600">{t('admin.products.subtitle')}</p>
       </div>
 
       <div className="flex gap-4 my-6">
-        <button onClick={handleExportExcel} className="px-4 py-2 rounded bg-emerald-700 text-white font-bold hover:bg-emerald-900">📈 تحميل باكاب Excel</button>
-        <button onClick={handleExportXML} className="px-4 py-2 rounded bg-green-700 text-white font-bold hover:bg-green-900">تحميل XML</button>
-        <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 rounded bg-blue-700 text-white font-bold hover:bg-blue-900">رفع XML</button>
+        <button onClick={handleExportExcel} className="px-4 py-2 rounded bg-emerald-700 text-white font-bold hover:bg-emerald-900">{t('admin.products.exportExcel')}</button>
+        <button onClick={handleExportXML} className="px-4 py-2 rounded bg-green-700 text-white font-bold hover:bg-green-900">{t('admin.products.exportXml')}</button>
+        <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 rounded bg-blue-700 text-white font-bold hover:bg-blue-900">{t('admin.products.importXml')}</button>
         <input ref={fileInputRef} type="file" accept=".xml" className="hidden" onChange={handleImportXML} />
       </div>
 

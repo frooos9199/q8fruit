@@ -10,6 +10,7 @@ interface User {
   isAdmin?: boolean;
   isBlocked?: boolean;
   role?: "عميل" | "مدير" | "مندوب";
+  language?: "ar" | "en" | "bn";
   password?: string;
 }
 
@@ -20,7 +21,7 @@ interface Props {
 }
 
 export default function UserEditModal({ user, onSave, onClose }: Props) {
-  const [form, setForm] = useState<User>({ ...user });
+  const [form, setForm] = useState<User>({ ...user, language: user.language || 'ar' });
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -105,6 +106,19 @@ export default function UserEditModal({ user, onSave, onClose }: Props) {
               <option value="عميل">عميل</option>
               <option value="مدير">مدير</option>
               <option value="مندوب">مندوب</option>
+            </select>
+          </label>
+          <label>
+            اللغة
+            <select
+              name="language"
+              value={form.language || 'ar'}
+              onChange={handleChange}
+              className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
+            >
+              <option value="ar">العربية</option>
+              <option value="en">English</option>
+              <option value="bn">বাংলা</option>
             </select>
           </label>
           <label>

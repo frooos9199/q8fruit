@@ -1,6 +1,7 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
 import { uploadImage } from "@/lib/uploadImage";
+import { useTranslation } from 'react-i18next';
 
 interface ProductUnit {
   name: string;
@@ -27,6 +28,7 @@ interface Props {
 }
 
 export default function ProductEditModal({ product, onSave, onClose, categories }: Props) {
+  const { t, i18n } = useTranslation();
   const [form, setForm] = useState<Product>({ ...product });
   const [uploading, setUploading] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -47,14 +49,14 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
       const updatedImages = [...(form.images || []), ...imageUrls];
       setForm((prev) => ({ ...prev, images: updatedImages }));
 
-      alert(`تم رفع ${imageUrls.length} صورة بنجاح! ✅ سيتم حفظها عند الضغط على حفظ المنتج.`);
+      alert(t('admin.products.edit.imagesUploadSuccess', { count: imageUrls.length }));
     } catch (error) {
       console.error("خطأ في رفع الصور:", error);
-      alert("فشل رفع الصور. الرجاء المحاولة مرة أخرى.");
+      alert(t('admin.products.edit.imagesUploadError'));
     } finally {
       setUploading(false);
     }
-  }, [form.id, form.images]);
+  }, [form.images, t]);
 
   const handleRemoveImage = useCallback(async (idx: number) => {
     const updatedImages = (form.images || []).filter((_, i) => i !== idx);
@@ -74,18 +76,18 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
 
     // فحص صحة البيانات
     if (!form.name.trim()) {
-      alert('يرجى إدخال اسم المنتج');
+      alert(t('admin.products.edit.validation.nameRequired'));
       return;
     }
 
     if (!form.category) {
-      alert('يرجى اختيار الفئة');
+      alert(t('admin.products.edit.validation.categoryRequired'));
       return;
     }
 
 
     if (!form.units || form.units.length === 0) {
-      alert('يرجى إدخال وحدات صحيحة مع أسعار');
+      alert(t('admin.products.edit.validation.unitsRequired'));
       return;
     }
     // إذا كان هناك وحدة سعرها فارغ أو <= 0، يتم تعيينه تلقائيًا إلى 0.001 مع تنبيه
@@ -98,7 +100,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
       return { ...u, price: Number(u.price) };
     });
     if (unitsFixed) {
-      alert('تم تصحيح بعض الأسعار الفارغة أو غير الصحيحة تلقائيًا إلى 0.001 د.ك. يرجى مراجعة الأسعار.');
+      alert(t('admin.products.edit.validation.unitsFixed'));
     }
 
     // استخدام البيانات الحالية مباشرة بدون جلب من localStorage
@@ -114,7 +116,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
 
     console.log('✅ المنتج المحدث النهائي:', updatedForm);
     onSave(updatedForm);
-  }, [form, onSave]);
+  }, [form, onSave, t]);
 
   const handleUnitChange = useCallback((idx: number, field: keyof ProductUnit, value: string | number) => {
     try {
@@ -145,18 +147,18 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="rtl max-h-[90vh] min-w-[320px] max-w-[600px] overflow-y-auto rounded-2xl border border-white/80 bg-white/95 p-6 shadow-2xl">
-        <h2 className="mb-4 text-center text-xl font-bold text-slate-800">تعديل المنتج</h2>
+      <div dir={i18n.dir()} className="max-h-[90vh] min-w-[320px] max-w-[600px] overflow-y-auto rounded-2xl border border-white/80 bg-white/95 p-6 shadow-2xl">
+        <h2 className="mb-4 text-center text-xl font-bold text-slate-800">{t('admin.products.edit.title')}</h2>
 
         <div className="flex flex-col gap-3">
           <label className="mb-2">
-            صور المنتج
+            {t('admin.products.edit.images')}
             <div className="flex flex-wrap items-center gap-4 mt-2">
               {form.images && form.images.length > 0 && form.images.map((img, idx) => (
                 <div key={`${img}-${idx}`} className="relative group">
                   <img
                     src={img}
-                    alt={`صورة المنتج ${idx + 1}`}
+                    alt={t('admin.products.edit.imageAlt', { index: idx + 1 })}
                     className="w-20 h-20 object-cover rounded border"
                     onError={(e) => {
                       console.error('فشل تحميل الصورة:', img);
@@ -167,7 +169,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
                     type="button"
                     onClick={() => handleRemoveImage(idx)}
                     className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs opacity-80 group-hover:opacity-100 hover:bg-red-700 transition-colors"
-                    aria-label={`حذف الصورة ${idx + 1}`}
+                    aria-label={t('admin.products.edit.removeImageAria', { index: idx + 1 })}
                   >
                     &times;
                   </button>
@@ -185,14 +187,14 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    جاري الرفع...
+                    {t('admin.products.edit.uploading')}
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
-                    إضافة صور
+                    {t('admin.products.edit.addImages')}
                   </>
                 )}
               </button>
@@ -208,7 +210,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
           </label>
 
           <label>
-            اسم المنتج
+            {t('admin.products.edit.name')}
             <input
               name="name"
               value={form.name}
@@ -219,7 +221,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
           </label>
           
           <label>
-            الفئة
+            {t('admin.products.edit.category')}
             <select
               name="category"
               value={form.category}
@@ -227,7 +229,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               className="mt-1 w-full rounded-xl border border-slate-300 p-2.5"
               required
             >
-              <option value="">اختر الفئة</option>
+              <option value="">{t('admin.products.edit.selectCategory')}</option>
               {categories && categories.length > 0 ? (
                 categories.map(cat => (
                   <option key={cat.id} value={cat.name}>{cat.name}</option>
@@ -244,7 +246,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
           </label>
           
           <label>
-            الكمية المتوفرة
+            {t('admin.products.edit.quantity')}
             <input
               type="number"
               name="quantity"
@@ -252,14 +254,14 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
               min={0}
               onChange={handleChange}
               className="w-full border rounded p-2 mt-1"
-              placeholder="الكمية المتوفرة في المخزون"
+              placeholder={t('admin.products.edit.quantityPlaceholder')}
               required
             />
           </label>
           
           <div className="border rounded p-2 mt-2">
             <div className="flex justify-between items-center mb-2">
-              <span className="font-bold">الوحدات والأسعار</span>
+              <span className="font-bold">{t('admin.products.edit.unitsAndPrices')}</span>
               <button 
                 type="button" 
                 onClick={addUnit} 
@@ -268,7 +270,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
                 <svg className="w-4 h-4 inline ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                إضافة وحدة
+                {t('admin.products.edit.addUnit')}
               </button>
             </div>
             {form.units.map((unit, idx) => (
@@ -277,7 +279,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
                   type="text"
                   value={unit.name}
                   onChange={e => handleUnitChange(idx, "name", e.target.value)}
-                  placeholder="اسم الوحدة"
+                  placeholder={t('admin.products.edit.unitNamePlaceholder')}
                   className="border rounded p-1 w-1/2"
                   required
                 />
@@ -285,7 +287,7 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
                   type="number"
                   value={unit.price}
                   onChange={e => handleUnitChange(idx, "price", e.target.value)}
-                  placeholder="السعر"
+                  placeholder={t('admin.products.edit.unitPricePlaceholder')}
                   className="border rounded p-1 w-1/3"
                   min={0}
                   step={0.01}
@@ -295,9 +297,9 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
                   type="button" 
                   onClick={() => removeUnit(idx)} 
                   className="px-2 py-1 bg-red-500 hover:bg-red-600 text-white rounded text-xs font-bold transition-colors"
-                  aria-label={`حذف الوحدة ${idx + 1}`}
+                  aria-label={t('admin.products.edit.removeUnitAria', { index: idx + 1 })}
                 >
-                  حذف
+                  {t('common.delete')}
                 </button>
               </div>
             ))}
@@ -310,14 +312,14 @@ export default function ProductEditModal({ product, onSave, onClose, categories 
             onClick={onClose}
             className="px-4 py-2 rounded bg-gray-500 hover:bg-gray-600 text-white font-bold transition-colors"
           >
-            إلغاء
+            {t('common.cancel')}
           </button>
           <button
             type="button"
             onClick={handleSave}
             className="px-4 py-2 rounded bg-green-500 hover:bg-green-600 text-white font-bold transition-colors"
           >
-            حفظ
+            {t('common.save')}
           </button>
         </div>
       </div>

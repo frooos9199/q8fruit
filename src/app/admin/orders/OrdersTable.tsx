@@ -1,11 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import OrderEditModal from "./OrderEditModal";
 import InvoiceModal from "./InvoiceModal";
 import { sendInvoiceViaWhatsApp } from "../../../lib/whatsappInvoice";
 import { getOrderDisplayNumber, getOrderPricing, normalizeOrderForDisplay } from '../../../lib/orderUtils';
 import { db } from "../../../lib/firebase";
 import { collection, doc, updateDoc, deleteDoc, onSnapshot } from "firebase/firestore";
+import { useTranslation } from 'react-i18next';
 
 interface OrderProduct {
   productId?: string;
@@ -52,12 +53,35 @@ interface Order {
 }
 
 function OrdersTable() {
+  const { t, i18n } = useTranslation();
   const [orders, setOrders] = useState<Order[]>([]);
   const [editOrder, setEditOrder] = useState<Order | null>(null);
   const [invoiceOrder, setInvoiceOrder] = useState<Order | null>(null);
   const [printOrder, setPrintOrder] = useState<Order | null>(null);
   const [sendingWhatsApp, setSendingWhatsApp] = useState<{ orderId: string; type: string } | null>(null);
   const [browserNotificationsEnabled, setBrowserNotificationsEnabled] = useState(false);
+
+  const browserNotificationsEnabledRef = useRef(browserNotificationsEnabled);
+  const tRef = useRef(t);
+
+  useEffect(() => {
+    browserNotificationsEnabledRef.current = browserNotificationsEnabled;
+  }, [browserNotificationsEnabled]);
+
+  useEffect(() => {
+    tRef.current = t;
+  }, [t]);
+
+  const getStatusLabel = (status: Order['status']) => {
+    const statusKeyMap: Record<Order['status'], string> = {
+      'جديد': 'new',
+      'قيد التنفيذ': 'inProgress',
+      'مكتمل': 'completed',
+      'ملغي': 'cancelled',
+    };
+
+    return t(`admin.orders.status.${statusKeyMap[status]}`);
+  };
 
   // Transform Firebase order to match Order interface
   function transformFirebaseOrder(doc: any): Order {
@@ -185,12 +209,16 @@ function OrdersTable() {
 
       console.log('🎯 Total orders to display:', firebaseOrders.length, 'orders');
 
-      if (browserNotificationsEnabled) {
+      if (browserNotificationsEnabledRef.current) {
         firebaseOrders.forEach((order) => {
           if (!seenOrders.has(order.id)) {
             if (seenOrders.size > 0) {
-              new Notification('طلب جديد وصل', {
-                body: `${order.customer} - ${getOrderPricing(order).total.toFixed(3)} د.ك`,
+              const translate = tRef.current;
+              new Notification(translate('admin.orders.notifications.newOrderTitle'), {
+                body: translate('admin.orders.notifications.newOrderBody', {
+                  customer: order.customer,
+                  total: getOrderPricing(order).total.toFixed(3),
+                }),
                 tag: order.id,
               });
             }
@@ -258,7 +286,7 @@ function OrdersTable() {
         }
       } catch (error) {
         console.error('Error updating order in Firebase:', error);
-        alert('فشل تحديث الطلب');
+        alert(t('admin.orders.alerts.updateFailed'));
         return;
       }
     } else {
@@ -280,7 +308,7 @@ function OrdersTable() {
 
   // حذف الطلب (الفاتورة)
   const handleDeleteOrder = async (orderId: string) => {
-    if (window.confirm('هل أنت متأكد من حذف الفاتورة؟')) {
+    if (window.confirm(t('admin.orders.alerts.confirmDeleteInvoice'))) {
       // Check if it's a Firebase order
       if (!orderId.startsWith('local_')) {
         // Delete from Firebase
@@ -291,7 +319,7 @@ function OrdersTable() {
           }
         } catch (error) {
           console.error('Error deleting order from Firebase:', error);
-          alert('فشل حذف الطلب');
+          alert(t('admin.orders.alerts.deleteFailed'));
         }
       } else {
         // Delete from localStorage for legacy orders
@@ -317,12 +345,15 @@ function OrdersTable() {
       const result = await sendInvoiceViaWhatsApp(order, recipient);
       
       if (result.success) {
-        alert(`✅ تم إرسال الفاتورة ${recipient === 'admin' ? 'للإدارة' : 'للعميل'} بنجاح!`);
+        const recipientLabel = recipient === 'admin'
+          ? t('admin.orders.recipients.admin')
+          : t('admin.orders.recipients.customer');
+        alert(t('admin.orders.whatsapp.sentSuccess', { recipient: recipientLabel }));
       } else {
         alert(`❌ ${result.message}`);
       }
-    } catch (error) {
-      alert('❌ حدث خطأ في إرسال الفاتورة');
+    } catch {
+      alert(t('admin.orders.whatsapp.sendError'));
     } finally {
       setSendingWhatsApp(null);
     }
@@ -345,8 +376,11 @@ function OrdersTable() {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) return dateStr;
-    return d.toLocaleDateString('ar-KW', { year: 'numeric', month: 'short', day: 'numeric' }) +
-      ' - ' + d.toLocaleTimeString('ar-KW', { hour: '2-digit', minute: '2-digit' });
+
+    const locale = i18n.language === 'ar' ? 'ar-KW' : i18n.language === 'bn' ? 'bn-BD' : 'en-US';
+
+    return d.toLocaleDateString(locale, { year: 'numeric', month: 'short', day: 'numeric' }) +
+      ' - ' + d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' });
   }
 
   return (
@@ -355,22 +389,22 @@ function OrdersTable() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="rounded-xl border border-cyan-200 bg-gradient-to-r from-cyan-50 via-white to-sky-100 p-4 text-center">
           <div className="text-2xl mb-2">📦</div>
-          <div className="text-sm font-medium text-slate-600">إجمالي الطلبات</div>
+          <div className="text-sm font-medium text-slate-600">{t('admin.orders.stats.totalOrders')}</div>
           <div className="text-xl font-bold text-cyan-700">{orders.length}</div>
         </div>
         <div className="rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-teal-100 p-4 text-center">
           <div className="text-2xl mb-2">✅</div>
-          <div className="text-sm font-medium text-slate-600">مكتملة</div>
+          <div className="text-sm font-medium text-slate-600">{t('admin.orders.stats.completed')}</div>
           <div className="text-xl font-bold text-emerald-700">{orders.filter(o => o.status === 'مكتمل').length}</div>
         </div>
         <div className="rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 via-white to-orange-100 p-4 text-center">
           <div className="text-2xl mb-2">⏳</div>
-          <div className="text-sm font-medium text-slate-600">قيد التنفيذ</div>
+          <div className="text-sm font-medium text-slate-600">{t('admin.orders.stats.inProgress')}</div>
           <div className="text-xl font-bold text-amber-700">{orders.filter(o => o.status === 'قيد التنفيذ').length}</div>
         </div>
         <div className="rounded-xl border border-teal-200 bg-gradient-to-r from-teal-50 via-white to-cyan-100 p-4 text-center">
           <div className="text-2xl mb-2">💰</div>
-          <div className="text-sm font-medium text-slate-600">إجمالي المبيعات</div>
+          <div className="text-sm font-medium text-slate-600">{t('admin.orders.stats.totalSales')}</div>
           <div className="text-lg font-bold text-teal-700">{orders.reduce((sum, o) => sum + getOrderPricing(o).total, 0).toFixed(3)} د.ك</div>
         </div>
       </div>
@@ -380,7 +414,7 @@ function OrdersTable() {
         <div className="p-6 bg-gradient-to-r from-green-500 to-blue-500">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <span>📋</span>
-            إدارة الطلبات والفواتير
+            {t('admin.orders.title')}
           </h2>
         </div>
         
@@ -388,13 +422,13 @@ function OrdersTable() {
           <table className="min-w-full">
             <thead className="bg-slate-50">
               <tr>
-                <th className="p-4 text-right font-semibold text-slate-700">رقم الطلب</th>
-                <th className="p-4 text-right font-semibold text-slate-700">العميل</th>
-                <th className="p-4 text-right font-semibold text-slate-700">الهاتف</th>
-                <th className="p-4 text-right font-semibold text-slate-700">الإجمالي</th>
-                <th className="p-4 text-right font-semibold text-slate-700">الحالة</th>
-                <th className="p-4 text-right font-semibold text-slate-700">التاريخ</th>
-                <th className="p-4 text-center font-semibold text-slate-700">الإجراءات</th>
+                <th className="p-4 text-start font-semibold text-slate-700">{t('admin.orders.table.orderNumber')}</th>
+                <th className="p-4 text-start font-semibold text-slate-700">{t('admin.orders.table.customer')}</th>
+                <th className="p-4 text-start font-semibold text-slate-700">{t('admin.orders.table.phone')}</th>
+                <th className="p-4 text-start font-semibold text-slate-700">{t('admin.orders.table.total')}</th>
+                <th className="p-4 text-start font-semibold text-slate-700">{t('admin.orders.table.status')}</th>
+                <th className="p-4 text-start font-semibold text-slate-700">{t('admin.orders.table.date')}</th>
+                <th className="p-4 text-center font-semibold text-slate-700">{t('admin.orders.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -402,7 +436,7 @@ function OrdersTable() {
                 <tr key={order.id} className={`border-b border-slate-200 transition-colors hover:bg-emerald-50/60 ${index % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}`}>
                   <td className="p-4 font-bold text-cyan-700">{getOrderDisplayNumber(order)}</td>
                   <td className="p-4 font-medium">{order.customer}</td>
-                  <td className="p-4 text-slate-600">{order.phone || 'غير محدد'}</td>
+                  <td className="p-4 text-slate-600">{order.phone || t('common.notSpecified')}</td>
                   <td className="p-4 font-bold text-emerald-700">{getOrderPricing(order).total.toFixed(3)} د.ك</td>
                   <td className="p-4">
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -411,7 +445,7 @@ function OrdersTable() {
                       order.status === 'جديد' ? 'bg-cyan-100 text-cyan-800' :
                       'bg-red-100 text-red-800'
                     }`}>
-                      {order.status}
+                      {getStatusLabel(order.status)}
                     </span>
                   </td>
                   <td className="p-4 text-slate-600">{formatDateTime(order.date)}</td>
@@ -421,30 +455,30 @@ function OrdersTable() {
                       <button
                         onClick={() => setEditOrder(order)}
                         className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-                        title="تعديل الطلب"
+                        title={t('common.edit')}
                       >
                         <span>✏️</span>
-                        <span className="hidden sm:inline">تعديل</span>
+                        <span className="hidden sm:inline">{t('common.edit')}</span>
                       </button>
                       
                       {/* عرض الفاتورة */}
                       <button
                         onClick={() => setInvoiceOrder(order)}
                         className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-                        title="عرض الفاتورة"
+                        title={t('admin.orders.actions.viewInvoice')}
                       >
                         <span>👁️</span>
-                        <span className="hidden sm:inline">عرض</span>
+                        <span className="hidden sm:inline">{t('common.view')}</span>
                       </button>
                       
                       {/* طباعة */}
                       <button
                         onClick={() => setPrintOrder(order)}
                         className="px-3 py-1 bg-gray-600 hover:bg-gray-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-                        title="طباعة الفاتورة"
+                        title={t('admin.orders.actions.printInvoice')}
                       >
                         <span>🖨️</span>
-                        <span className="hidden sm:inline">طباعة</span>
+                        <span className="hidden sm:inline">{t('common.print')}</span>
                       </button>
                       
                       {/* إرسال للإدارة */}
@@ -452,11 +486,11 @@ function OrdersTable() {
                         onClick={() => handleSendWhatsApp(order, 'admin')}
                         disabled={sendingWhatsApp?.orderId === order.id && sendingWhatsApp?.type === 'admin'}
                         className="px-3 py-1 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-300 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-                        title="إرسال للإدارة عبر الواتساب"
+                        title={t('admin.orders.actions.sendToAdminWhatsapp')}
                       >
                         <span>👨‍💼</span>
                         <span className="hidden sm:inline">
-                          {sendingWhatsApp?.orderId === order.id && sendingWhatsApp?.type === 'admin' ? 'جاري الإرسال...' : 'للإدارة'}
+                          {sendingWhatsApp?.orderId === order.id && sendingWhatsApp?.type === 'admin' ? t('common.sending') : t('admin.orders.recipients.admin')}
                         </span>
                       </button>
                       
@@ -465,11 +499,11 @@ function OrdersTable() {
                         onClick={() => handleSendWhatsApp(order, 'customer')}
                         disabled={sendingWhatsApp?.orderId === order.id && sendingWhatsApp?.type === 'customer' || !order.phone}
                         className="px-3 py-1 bg-teal-500 hover:bg-teal-600 disabled:bg-teal-300 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-                        title={order.phone ? 'إرسال للعميل عبر الواتساب' : 'رقم الهاتف غير متوفر'}
+                        title={order.phone ? t('admin.orders.actions.sendToCustomerWhatsapp') : t('admin.orders.actions.phoneMissing')}
                       >
                         <span>👤</span>
                         <span className="hidden sm:inline">
-                          {sendingWhatsApp?.orderId === order.id && sendingWhatsApp?.type === 'customer' ? 'جاري الإرسال...' : 'للعميل'}
+                          {sendingWhatsApp?.orderId === order.id && sendingWhatsApp?.type === 'customer' ? t('common.sending') : t('admin.orders.recipients.customer')}
                         </span>
                       </button>
                       
@@ -477,10 +511,10 @@ function OrdersTable() {
                       <button
                         onClick={() => handleDeleteOrder(order.id)}
                         className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-lg text-xs font-medium transition-colors flex items-center gap-1"
-                        title="حذف الطلب"
+                        title={t('common.delete')}
                       >
                         <span>🗑️</span>
-                        <span className="hidden sm:inline">حذف</span>
+                        <span className="hidden sm:inline">{t('common.delete')}</span>
                       </button>
                     </div>
                   </td>
@@ -492,8 +526,8 @@ function OrdersTable() {
           {orders.length === 0 && (
             <div className="text-center py-12">
               <div className="text-6xl mb-4">📦</div>
-              <h3 className="text-xl font-semibold text-slate-600 mb-2">لا توجد طلبات</h3>
-              <p className="text-slate-500">لم يتم إنشاء أي طلبات بعد</p>
+              <h3 className="text-xl font-semibold text-slate-600 mb-2">{t('admin.orders.empty.title')}</h3>
+              <p className="text-slate-500">{t('admin.orders.empty.subtitle')}</p>
             </div>
           )}
         </div>

@@ -3,8 +3,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const router = useRouter();
   const [logo, setLogo] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -47,7 +50,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fffdf6] via-[#f7fbf7] to-[#eef7f2]">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-emerald-500 border-t-transparent"></div>
-          <p className="text-slate-600">جاري التحقق من الصلاحيات...</p>
+          <p className="text-slate-600">{t('admin.auth.checkingPermissions')}</p>
         </div>
       </div>
     );
@@ -86,25 +89,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="flex items-center justify-center mb-6 mt-12 lg:mt-0">
           <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-50 via-white to-cyan-50 shadow-[0_18px_40px_rgba(15,118,110,0.14)] lg:h-24 lg:w-24">
             {logo ? (
-              <Image src={logo} alt="شعار الموقع" width={96} height={96} className="object-contain w-full h-full" />
+              <Image src={logo} alt={t('admin.brand.logoAlt')} width={96} height={96} className="object-contain w-full h-full" />
             ) : (
               <span className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">Q8</span>
             )}
           </div>
         </div>
+
+        {/* Language Switcher */}
+        <div className="flex items-center justify-center mb-4">
+          <LanguageSwitcher />
+        </div>
         
         {/* قائمة الأقسام */}
         <nav className="flex flex-col gap-2 overflow-y-auto flex-1">
-          <NavLink href="/admin" icon="🏠" text="لوحة التحكم" />
-          <NavLink href="/admin/banners" icon="🖼️" text="البانر" />
-          <NavLink href="/admin/orders" icon="📦" text="الطلبات" />
-          <NavLink href="/admin/users" icon="👥" text="المستخدمين" />
-          <NavLink href="/admin/products" icon="🛒" text="المنتجات" />
-          <NavLink href="/admin/delivery" icon="🚚" text="التوصيل" />
-          <NavLink href="/admin/delivery-tracking" icon="🗺️" text="تتبع المندوبين" highlight />
-          <NavLink href="/admin/catering" icon="🍽️" text="الكَاتِرِينج" />
-          <NavLink href="/admin/bulk-message" icon="📢" text="رسائل جماعية" />
-          <NavLink href="/admin/settings" icon="⚙️" text="الإعدادات" />
+          <NavLink href="/admin" icon="🏠" text={t('admin.nav.dashboard')} />
+          <NavLink href="/admin/banners" icon="🖼️" text={t('admin.nav.banners')} />
+          <NavLink href="/admin/orders" icon="📦" text={t('admin.nav.orders')} />
+          <NavLink href="/admin/users" icon="👥" text={t('admin.nav.users')} />
+          <NavLink href="/admin/products" icon="🛒" text={t('admin.nav.products')} />
+          <NavLink href="/admin/delivery" icon="🚚" text={t('admin.nav.delivery')} />
+          <NavLink href="/admin/delivery-tracking" icon="🗺️" text={t('admin.nav.deliveryTracking')} highlight />
+          <NavLink href="/admin/catering" icon="🍽️" text={t('admin.nav.catering')} />
+          <NavLink href="/admin/bulk-message" icon="📢" text={t('admin.nav.bulkMessage')} />
+          <NavLink href="/admin/settings" icon="⚙️" text={t('admin.nav.settings')} />
         </nav>
         
         {/* زر العودة للموقع */}
@@ -118,7 +126,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
-            <span>العودة للموقع</span>
+            <span>{t('admin.backToSite')}</span>
           </a>
         </div>
       </aside>
@@ -135,7 +143,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <h1 className="bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-xl font-bold text-transparent">لوحة الإدارة</h1>
+          <h1 className="bg-gradient-to-r from-emerald-700 to-teal-600 bg-clip-text text-xl font-bold text-transparent">{t('admin.panelTitle')}</h1>
           <div className="w-12"></div> {/* Spacer */}
         </header>
         

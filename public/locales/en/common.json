@@ -3,5 +3,238 @@
   "login": "Login",
   "register": "Register",
   "cart": "Cart",
-  "logout": "Logout"
+  "logout": "Logout",
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive",
+    "activate": "Activate",
+    "deactivate": "Deactivate",
+    "edit": "Edit",
+    "delete": "Delete",
+    "view": "View",
+    "print": "Print",
+    "close": "Close",
+    "cancel": "Cancel",
+    "save": "Save",
+    "savedSuccessfully": "Saved successfully",
+    "searching": "Searching...",
+    "sending": "Sending...",
+    "notSpecified": "Not specified",
+    "percent": "%"
+  },
+  "admin": {
+    "panelTitle": "Admin Panel",
+    "backToSite": "Back to website",
+    "brand": {
+      "logoAlt": "Site logo"
+    },
+    "auth": {
+      "checkingPermissions": "Checking permissions..."
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "banners": "Banners",
+      "orders": "Orders",
+      "users": "Users",
+      "products": "Products",
+      "delivery": "Delivery",
+      "deliveryTracking": "Delivery tracking",
+      "catering": "Catering",
+      "bulkMessage": "Bulk message",
+      "settings": "Settings"
+    },
+    "bulkMessage": {
+      "title": "Send bulk messages",
+      "description": "Here you can send offers and alerts to users via email or WhatsApp."
+    },
+    "products": {
+      "title": "Products",
+      "subtitle": "Manage products, import/export, and display order on the site.",
+      "exportExcel": "📈 Download Excel backup",
+      "exportXml": "Download XML",
+      "importXml": "Upload XML",
+      "exportCsvHeaders": "ID,Name,Category,Quantity,Active,Image URLs,Units",
+      "exportExcelSuccess": "✅ Excel backup downloaded successfully!",
+      "exportXmlError": "An error occurred while exporting XML",
+      "importXmlOnly": "Please select an XML file only",
+      "importXmlTooLarge": "File is too large. Max 5MB",
+      "importXmlInvalidContent": "Invalid file content",
+      "importXmlUnsafe": "Unsafe XML file",
+      "importXmlInvalid": "Invalid XML file",
+      "importXmlNoProducts": "No products found in the file",
+      "importXmlNoValidProducts": "No valid products were imported",
+      "importXmlSuccess": "Imported {{count}} products successfully and saved to Firebase!",
+      "importXmlUnknownError": "Unknown error",
+      "importXmlError": "Import error: {{message}}",
+      "importXmlReadError": "Error reading file",
+      "edit": {
+        "title": "Edit product",
+        "images": "Product images",
+        "imageAlt": "Product image {{index}}",
+        "removeImageAria": "Remove image {{index}}",
+        "uploading": "Uploading...",
+        "addImages": "Add images",
+        "name": "Product name",
+        "category": "Category",
+        "selectCategory": "Select category",
+        "quantity": "Available quantity",
+        "quantityPlaceholder": "Quantity available in stock",
+        "unitsAndPrices": "Units & prices",
+        "addUnit": "Add unit",
+        "unitNamePlaceholder": "Unit name",
+        "unitPricePlaceholder": "Price",
+        "removeUnitAria": "Remove unit {{index}}",
+        "imagesUploadSuccess": "Uploaded {{count}} images successfully! ✅ They will be saved when you save the product.",
+        "imagesUploadError": "Image upload failed. Please try again.",
+        "validation": {
+          "nameRequired": "Please enter a product name",
+          "categoryRequired": "Please select a category",
+          "unitsRequired": "Please enter valid units with prices",
+          "unitsFixed": "Some empty/invalid prices were automatically set to 0.001 KWD. Please review prices."
+        }
+      },
+      "table": {
+        "confirmDelete": "Are you sure you want to delete this product?",
+        "deleteSuccess": "✅ Product deleted successfully!",
+        "deletePartialError": "⚠️ Deleted locally, but failed to delete from Firebase. You may need to retry.",
+        "discountRangeError": "Discount must be between 0 and 100",
+        "saveSuccess": "✅ Saved changes for \"{{name}}\" successfully!",
+        "saveLocalSuccess": "✅ Saved changes for \"{{name}}\" locally!",
+        "saveError": "❌ Failed to save changes. Please try again.",
+        "loadingFromFirebase": "🔄 Loading from Firebase...",
+        "addProduct": "+ Add product",
+        "counts": "Total products: {{total}} | Shown: {{shown}}",
+        "dragHint": "Drag and drop products to change their order on the website",
+        "searchByName": "Search by name",
+        "searchPlaceholder": "Product name... (leave empty to show all)",
+        "status": "Status",
+        "noMatches": "No matching products",
+        "headers": {
+          "reorder": "↕️",
+          "id": "#",
+          "image": "Image",
+          "name": "Name",
+          "unitsPrices": "Units & Prices",
+          "quantity": "Qty",
+          "catering": "Catering",
+          "offers": "Offers 🎁",
+          "status": "Status",
+          "toggle": "Enable/Disable"
+        },
+        "noImage": "No image",
+        "offerEnabled": "🎁 Offer on",
+        "enableOffer": "Enable offer",
+        "discountLabel": "{{discount}}% off"
+      }
+    },
+    "delivery": {
+      "title": "Delivery settings",
+      "settings": {
+        "title": "Delivery settings",
+        "loading": "Loading settings from Firebase...",
+        "noteLabel": "Delivery note (shown in cart & invoice):",
+        "notePlaceholder": "Example: Delivery within 2 hours or as agreed...",
+        "timeLabel": "Delivery time (shown next to delivery):",
+        "timePlaceholder": "Example: Within 2 hours or as agreed",
+        "feeLabel": "Delivery fee (KWD):",
+        "freeAboveLabel": "Free delivery above (KWD):",
+        "hint": "These values are saved to Firebase and used by the apps and website"
+      }
+    },
+    "orders": {
+      "title": "Orders & Invoices",
+      "subtitle": "View and manage all orders and send invoices via WhatsApp",
+      "whatsappFeature": {
+        "title": "WhatsApp invoice sending",
+        "sendToAdmin": "Send to admin: for order follow-up",
+        "sendToCustomer": "Send to customer: detailed invoice"
+      },
+      "notifications": {
+        "newOrderTitle": "New order received",
+        "newOrderBody": "{{customer}} - {{total}} KWD"
+      },
+      "recipients": {
+        "admin": "Admin",
+        "customer": "Customer"
+      },
+      "alerts": {
+        "updateFailed": "Failed to update order",
+        "confirmDeleteInvoice": "Are you sure you want to delete this invoice?",
+        "deleteFailed": "Failed to delete order"
+      },
+      "whatsapp": {
+        "sentSuccess": "✅ Invoice sent to {{recipient}} successfully!",
+        "sendError": "❌ Failed to send invoice"
+      },
+      "stats": {
+        "totalOrders": "Total orders",
+        "completed": "Completed",
+        "inProgress": "In progress",
+        "totalSales": "Total sales"
+      },
+      "table": {
+        "orderNumber": "Order #",
+        "customer": "Customer",
+        "phone": "Phone",
+        "total": "Total",
+        "status": "Status",
+        "date": "Date",
+        "actions": "Actions"
+      },
+      "actions": {
+        "viewInvoice": "View invoice",
+        "printInvoice": "Print invoice",
+        "sendToAdminWhatsapp": "Send to admin on WhatsApp",
+        "sendToCustomerWhatsapp": "Send to customer on WhatsApp",
+        "phoneMissing": "Phone number not available"
+      },
+      "empty": {
+        "title": "No orders",
+        "subtitle": "No orders have been created yet"
+      },
+      "status": {
+        "new": "New",
+        "inProgress": "In progress",
+        "completed": "Completed",
+        "cancelled": "Cancelled"
+      },
+      "edit": {
+        "title": "Edit order",
+        "customerName": "Customer name",
+        "total": "Total",
+        "status": "Status",
+        "date": "Date"
+      },
+      "invoice": {
+        "pageTitle": "Order invoice",
+        "printError": "Failed to print invoice",
+        "logoAlt": "Store logo",
+        "storeName": "Fruit & Vegetables Store",
+        "invoiceNumber": "Invoice #{{number}}",
+        "customerInfoTitle": "Customer information",
+        "invoiceDetailsTitle": "Invoice details",
+        "payment": {
+          "online": "Online payment",
+          "cashOnDelivery": "Cash on delivery"
+        },
+        "productsTitle": "Products",
+        "table": {
+          "product": "Product",
+          "unit": "Unit",
+          "price": "Price",
+          "quantity": "Qty",
+          "total": "Total"
+        },
+        "deliveryFee": "Delivery fee",
+        "grandTotal": "Grand total",
+        "noProducts": "No products",
+        "footerThanks": "Thanks for shopping with us! 🌟",
+        "footerContact": "📱 For inquiries: 98899426 | 🌐 Fruit & Veg Kuwait",
+        "generatedBy": "Invoice generated by Q8 Fruit system"
+      }
+    }
+  }
 }

@@ -5,14 +5,9 @@ const LanguageSwitcher = () => {
   const { i18n } = useTranslation();
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
-    if (lng === 'ar') {
-      document.documentElement.dir = 'rtl';
-    } else {
-      document.documentElement.dir = 'ltr';
-    }
   };
   return (
-    <div className="flex gap-2">
+    <div className="flex gap-2 items-center">
       <button
         onClick={() => changeLanguage('ar')}
         className={
@@ -33,6 +28,17 @@ const LanguageSwitcher = () => {
         }
       >
         English
+      </button>
+      <span>|</span>
+      <button
+        onClick={() => changeLanguage('bn')}
+        className={
+          i18n.language === 'bn'
+            ? 'font-bold underline text-purple-600'
+            : 'text-gray-500'
+        }
+      >
+        বাংলা
       </button>
     </div>
   );

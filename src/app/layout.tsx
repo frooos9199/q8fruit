@@ -5,6 +5,7 @@ import BottomNav from "../components/BottomNav";
 import AppDownloadBanner from "../components/AppDownloadBanner";
 import Analytics from "../components/Analytics";
 import SnapchatPixel from "../components/SnapchatPixel";
+import I18nClient from "../components/I18nClient";
 import { organizationSchema, websiteSchema, localBusinessSchema } from "@/lib/schema";
 import "./globals.css";
 
@@ -177,6 +178,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gradient-to-br from-[#fffdf6] via-[#f7fbf7] to-[#eef7f2] overflow-x-hidden min-h-screen text-slate-800`}
         style={{ WebkitTapHighlightColor: 'transparent', touchAction: 'manipulation' }}
       >
+        <I18nClient />
         <AppDownloadBanner />
         {children}
         <BottomNav />

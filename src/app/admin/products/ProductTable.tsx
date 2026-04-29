@@ -6,6 +6,7 @@ import CateringTable from "../catering/CateringTable";
 import { clearProductsCache, getProductsFromFirebase, syncProductsToFirebase } from "../../../lib/firebaseSync";
 import { db } from "../../../lib/firebase";
 import { doc, updateDoc, setDoc, getDocs, collection, deleteDoc } from "firebase/firestore";
+import { useTranslation } from 'react-i18next';
 
 interface ProductUnit {
   name: string;
@@ -49,6 +50,7 @@ const getProductDisplayId = (product: Product) => {
 };
 
 export default function ProductTable() {
+  const { t, i18n } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
@@ -146,7 +148,7 @@ export default function ProductTable() {
   };
 
   const removeProduct = async (docId: string) => {
-    if (!confirm(`هل أنت متأكد من حذف المنتج؟`)) return;
+    if (!confirm(t('admin.products.table.confirmDelete'))) return;
     
     console.log(`🗑️ بدء حذف المنتج ${docId}`);
     
@@ -164,13 +166,13 @@ export default function ProductTable() {
         const productRef = doc(db, 'products', docId);
         await deleteDoc(productRef);
         console.log(`✅ تم حذف المنتج ${docId} من Firebase`);
-        alert('✅ تم حذف المنتج بنجاح!');
+        alert(t('admin.products.table.deleteSuccess'));
       } catch (err) {
         console.error('❌ خطأ في حذف المنتج من Firebase:', err);
-        alert('⚠️ تم حذف المنتج محلياً، لكن فشل الحذف من Firebase. قد تحتاج لإعادة المحاولة.');
+        alert(t('admin.products.table.deletePartialError'));
       }
     } else {
-      alert('✅ تم حذف المنتج بنجاح!');
+      alert(t('admin.products.table.deleteSuccess'));
     }
   };
 
@@ -248,7 +250,7 @@ export default function ProductTable() {
 
   const updateDiscount = async (docId: string, discount: number) => {
     if (discount < 0 || discount > 100) {
-      alert('يجب أن تكون نسبة الخصم بين 0 و 100');
+      alert(t('admin.products.table.discountRangeError'));
       return;
     }
 
@@ -294,15 +296,15 @@ export default function ProductTable() {
         
         console.log('✅ تم حفظ المنتج في Firebase:', updated.id);
         clearProductsCache();
-        alert(`✅ تم حفظ تعديلات المنتج "${updated.name}" بنجاح!`);
+        alert(t('admin.products.table.saveSuccess', { name: updated.name }));
       } else {
-        alert(`✅ تم حفظ تعديلات المنتج "${updated.name}" محلياً!`);
+        alert(t('admin.products.table.saveLocalSuccess', { name: updated.name }));
       }
       
       setEditProduct(null);
     } catch (err) {
       console.error('❌ خطأ في حفظ المنتج:', err);
-      alert('❌ خطأ في حفظ التعديلات. يرجى المحاولة مرة أخرى.');
+      alert(t('admin.products.table.saveError'));
     }
   };
 
@@ -405,7 +407,7 @@ export default function ProductTable() {
     <div>
       {loading && (
         <div className="mb-4 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-center text-cyan-800">
-          <p className="font-bold">🔄 جاري التحميل من Firebase...</p>
+          <p className="font-bold">{t('admin.products.table.loadingFromFirebase')}</p>
         </div>
       )}
       
@@ -414,14 +416,14 @@ export default function ProductTable() {
           className="px-4 py-2 bg-green-600 text-white rounded font-bold"
           onClick={() => setAddModalOpen(true)}
         >
-          + إضافة منتج
+          {t('admin.products.table.addProduct')}
         </button>
         <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-3">
           <p className="flex items-center gap-2 text-sm text-emerald-700">
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
-            إجمالي المنتجات: {products.length} | المعروضة: {filteredProducts.length}
+            {t('admin.products.table.counts', { total: products.length, shown: filteredProducts.length })}
           </p>
         </div>
         <div className="rounded-lg border border-cyan-200 bg-cyan-50 p-3">
@@ -429,11 +431,11 @@ export default function ProductTable() {
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
             </svg>
-            يمكنك سحب وإفلات المنتجات لتغيير ترتيبها في الموقع
+            {t('admin.products.table.dragHint')}
           </p>
         </div>
         <div>
-          <label className="block text-sm font-bold mb-1">بحث بالاسم</label>
+          <label className="block text-sm font-bold mb-1">{t('admin.products.table.searchByName')}</label>
           <input
             type="text"
             value={inputValue}
@@ -447,43 +449,43 @@ export default function ProductTable() {
               }, 350);
             }}
             className="border rounded p-2 min-w-[180px]"
-            placeholder="اسم المنتج... (فارغ لعرض الكل)"
+            placeholder={t('admin.products.table.searchPlaceholder')}
           />
         </div>
         <div>
-          <label className="block text-sm font-bold mb-1">الحالة</label>
+          <label className="block text-sm font-bold mb-1">{t('admin.products.table.status')}</label>
           <select
             value={filterStatus}
             onChange={e => setFilterStatus(e.target.value)}
             className="border rounded p-2 min-w-[120px]"
           >
-            <option value="all">الكل</option>
-            <option value="active">مفعل</option>
-            <option value="inactive">موقوف</option>
+            <option value="all">{t('common.all')}</option>
+            <option value="active">{t('common.active')}</option>
+            <option value="inactive">{t('common.inactive')}</option>
           </select>
         </div>
       </div>
       <div className="overflow-x-auto">
         {searching ? (
-          <div className="text-center text-green-600 font-bold py-6">جاري البحث...</div>
+          <div className="text-center text-green-600 font-bold py-6">{t('common.searching')}</div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center text-gray-500 font-bold py-6">لا توجد منتجات مطابقة</div>
+          <div className="text-center text-gray-500 font-bold py-6">{t('admin.products.table.noMatches')}</div>
         ) : (
-          <table className="min-w-full border text-center rtl">
+          <table dir={i18n.dir()} className="min-w-full border text-center">
             <thead>
               <tr className="bg-slate-100 text-slate-700">
-                <th className="p-2">↕️</th>
-                <th className="p-2">#</th>
-                <th className="p-2">الصورة</th>
-                <th className="p-2">اسم المنتج</th>
-                <th className="p-2">الوحدات والأسعار</th>
-                <th className="p-2">الكمية</th>
-                <th className="p-2">الكاترينج</th>
-                <th className="p-2">العروض 🎁</th>
-                <th className="p-2">الحالة</th>
-                <th className="p-2">تفعيل/إيقاف</th>
-                <th className="p-2">تعديل</th>
-                <th className="p-2">حذف</th>
+                <th className="p-2">{t('admin.products.table.headers.reorder')}</th>
+                <th className="p-2">{t('admin.products.table.headers.id')}</th>
+                <th className="p-2">{t('admin.products.table.headers.image')}</th>
+                <th className="p-2">{t('admin.products.table.headers.name')}</th>
+                <th className="p-2">{t('admin.products.table.headers.unitsPrices')}</th>
+                <th className="p-2">{t('admin.products.table.headers.quantity')}</th>
+                <th className="p-2">{t('admin.products.table.headers.catering')}</th>
+                <th className="p-2">{t('admin.products.table.headers.offers')}</th>
+                <th className="p-2">{t('admin.products.table.headers.status')}</th>
+                <th className="p-2">{t('admin.products.table.headers.toggle')}</th>
+                <th className="p-2">{t('common.edit')}</th>
+                <th className="p-2">{t('common.delete')}</th>
               </tr>
             </thead>
             <tbody>
@@ -505,7 +507,7 @@ export default function ProductTable() {
                     ) : product.image ? (
                       <img src={product.image} alt={product.name} className="w-16 h-16 object-cover rounded mx-auto" />
                     ) : (
-                      <span className="text-gray-400">بدون صورة</span>
+                      <span className="text-gray-400">{t('admin.products.table.noImage')}</span>
                     )}
                   </td>
                   <td className="p-2">{product.name}</td>
@@ -538,7 +540,7 @@ export default function ProductTable() {
                       className={`px-2 py-1 rounded ${product.hasOffer ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-700'}`}
                       onClick={() => toggleOffer(getProductDocId(product))}
                     >
-                      {product.hasOffer ? "🎁 عرض مفعل" : "تفعيل عرض"}
+                      {product.hasOffer ? t('admin.products.table.offerEnabled') : t('admin.products.table.enableOffer')}
                     </button>
                     {product.hasOffer && (
                       <div className="mt-2">
@@ -550,16 +552,16 @@ export default function ProductTable() {
                           onChange={(e) => updateDiscount(getProductDocId(product), parseInt(e.target.value) || 0)}
                           className="border rounded p-1 w-16 text-center"
                         />
-                        <span className="ml-1">%</span>
+                        <span className="ml-1">{t('common.percent')}</span>
                       </div>
                     )}
                     {product.hasOffer && product.discount && (
-                      <div className="text-xs text-green-700 mt-1">خصم {product.discount}%</div>
+                      <div className="text-xs text-green-700 mt-1">{t('admin.products.table.discountLabel', { discount: product.discount })}</div>
                     )}
                   </td>
                   <td className="p-2">
                     <span className={product.active ? "text-green-600 font-bold" : "text-red-600 font-bold"}>
-                      {product.active ? "مفعل" : "موقوف"}
+                      {product.active ? t('common.active') : t('common.inactive')}
                     </span>
                   </td>
                   <td className="p-2">
@@ -567,7 +569,7 @@ export default function ProductTable() {
                       className="px-2 py-1 bg-blue-500 text-white rounded"
                       onClick={() => toggleActive(getProductDocId(product))}
                     >
-                      {product.active ? "إيقاف" : "تفعيل"}
+                      {product.active ? t('common.deactivate') : t('common.activate')}
                     </button>
                   </td>
                   <td className="p-2">
@@ -575,7 +577,7 @@ export default function ProductTable() {
                       className="px-2 py-1 bg-yellow-500 text-white rounded"
                       onClick={() => setEditProduct(product)}
                     >
-                      تعديل
+                      {t('common.edit')}
                     </button>
                   </td>
                   <td className="p-2">
@@ -583,7 +585,7 @@ export default function ProductTable() {
                       className="px-2 py-1 bg-red-500 text-white rounded"
                       onClick={() => removeProduct(getProductDocId(product))}
                     >
-                      حذف
+                      {t('common.delete')}
                     </button>
                   </td>
                 </tr>

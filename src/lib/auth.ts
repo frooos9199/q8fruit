@@ -3,11 +3,11 @@ import {
   signInWithEmailAndPassword, 
   signOut, 
   sendPasswordResetEmail,
-  updateProfile,
-  User
+  updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import i18n from '@/i18n';
 
 // أنواع البيانات
 export interface UserProfile {
@@ -18,6 +18,7 @@ export interface UserProfile {
   phone: string;
   address?: string;
   role: 'admin' | 'user';
+  language: 'ar' | 'en' | 'bn';
   active: boolean;
   isAdmin?: boolean;
   isBlocked?: boolean;
@@ -53,6 +54,12 @@ const normalizeDate = (value: unknown): Date => {
   return parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : new Date();
 };
 
+const normalizeLanguage = (value: unknown): UserProfile['language'] => {
+  const lang = normalizeString(value, 'ar').trim().toLowerCase();
+  if (lang === 'en' || lang === 'bn') return lang;
+  return 'ar';
+};
+
 const resolveUserRole = (raw: Partial<UserProfile> | Record<string, unknown>) => {
   const roleValue = normalizeString((raw as { role?: unknown }).role).toLowerCase();
   const isAdmin = (raw as { isAdmin?: unknown }).isAdmin === true || roleValue === 'admin' || roleValue === 'مدير';
@@ -76,6 +83,7 @@ const toFirestoreUserProfile = (
     phone: normalizeString((raw as { phone?: unknown }).phone),
     address: normalizeAddress((raw as { address?: unknown }).address),
     role,
+    language: normalizeLanguage((raw as { language?: unknown }).language),
     isAdmin: role === 'admin',
     active: !isBlocked,
     isBlocked,
@@ -102,6 +110,22 @@ export const persistUserSession = (profile: UserProfile) => {
 
   window.localStorage.setItem('isAdmin', profile.role === 'admin' ? 'true' : 'false');
   window.localStorage.setItem('currentUser', JSON.stringify(cachedUser));
+
+  if (profile.language) {
+    try {
+      window.localStorage.setItem('app_language', profile.language);
+    } catch {
+      // ignore
+    }
+
+    try {
+      if (i18n.language !== profile.language) {
+        i18n.changeLanguage(profile.language);
+      }
+    } catch {
+      // ignore
+    }
+  }
 };
 
 export const normalizeUserProfile = (raw: Partial<UserProfile> | Record<string, unknown>, uidFallback = ''): UserProfile => {

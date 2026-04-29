@@ -2,8 +2,10 @@
 import { useState, useEffect } from "react";
 import { db } from "../../../lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
+import { useTranslation } from 'react-i18next';
 
 export default function DeliverySettings() {
+  const { t } = useTranslation();
   const [deliveryNote, setDeliveryNote] = useState("التوصيل خلال ساعتين");
   const [deliveryTime, setDeliveryTime] = useState("خلال ساعتين");
   const [deliveryPrice, setDeliveryPrice] = useState(2);
@@ -100,29 +102,29 @@ export default function DeliverySettings() {
 
   return (
     <div className="mx-auto max-w-md rounded-2xl border border-emerald-100 bg-white/92 p-6 shadow-[0_20px_60px_rgba(15,118,110,0.10)] backdrop-blur-sm">
-      <h2 className="mb-4 text-xl font-bold text-slate-800">إعدادات التوصيل</h2>
-      {loading && <div className="mb-4 text-sm text-slate-500">جاري تحميل الإعدادات من Firebase...</div>}
+      <h2 className="mb-4 text-xl font-bold text-slate-800">{t('admin.delivery.settings.title')}</h2>
+      {loading && <div className="mb-4 text-sm text-slate-500">{t('admin.delivery.settings.loading')}</div>}
       <label className="block mb-3">
-        <span className="font-semibold">ملاحظة التوصيل (تظهر في السلة والفاتورة):</span>
+        <span className="font-semibold">{t('admin.delivery.settings.noteLabel')}</span>
         <textarea
           className="mt-1 min-h-[60px] w-full rounded-xl border border-slate-300 p-3"
           value={deliveryNote}
           onChange={e => setDeliveryNote(e.target.value)}
-          placeholder="مثال: التوصيل خلال ساعتين أو حسب الاتفاق..."
+          placeholder={t('admin.delivery.settings.notePlaceholder')}
         />
       </label>
       <label className="block mb-3">
-        <span className="font-semibold">وقت التوصيل (يظهر بجانب التوصيل):</span>
+        <span className="font-semibold">{t('admin.delivery.settings.timeLabel')}</span>
         <input
           type="text"
           className="mt-1 w-full rounded-xl border border-slate-300 p-3"
           value={deliveryTime}
           onChange={e => setDeliveryTime(e.target.value)}
-          placeholder="مثال: خلال ساعتين أو حسب الاتفاق"
+          placeholder={t('admin.delivery.settings.timePlaceholder')}
         />
       </label>
       <label className="block mb-3">
-        <span className="font-semibold">قيمة التوصيل (د.ك):</span>
+        <span className="font-semibold">{t('admin.delivery.settings.feeLabel')}</span>
         <input
           type="number"
           className="mt-1 w-full rounded-xl border border-slate-300 p-3"
@@ -136,7 +138,7 @@ export default function DeliverySettings() {
         />
       </label>
       <label className="block mb-3">
-        <span className="font-semibold">التوصيل المجاني فوق (د.ك):</span>
+        <span className="font-semibold">{t('admin.delivery.settings.freeAboveLabel')}</span>
         <input
           type="number"
           className="mt-1 w-full rounded-xl border border-slate-300 p-3"
@@ -146,16 +148,16 @@ export default function DeliverySettings() {
           step={1}
         />
         <p className="mt-1 text-xs text-slate-500">
-          💡 هذه القيم تُحفظ في Firebase وتستخدمها التطبيقات والموقع
+          💡 {t('admin.delivery.settings.hint')}
         </p>
       </label>
       <button
         onClick={handleSave}
         className="mt-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-4 py-2 font-bold text-white"
       >
-        حفظ
+        {t('common.save')}
       </button>
-      {saved && <div className="text-green-600 mt-2">تم الحفظ بنجاح</div>}
+      {saved && <div className="text-green-600 mt-2">{t('common.savedSuccessfully')}</div>}
     </div>
   );
 }
