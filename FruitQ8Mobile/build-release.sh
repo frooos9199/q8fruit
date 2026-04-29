@@ -7,8 +7,11 @@ echo ""
 # الانتقال لمجلد المشروع
 cd "$(dirname "$0")"
 
-echo "📦 الإصدار: 2.0.9"
-echo "🔢 Version Code: 17"
+VERSION_NAME=$(node -p "require('./package.json').version" 2>/dev/null || echo "")
+VERSION_CODE=$(grep -E "^[[:space:]]*versionCode[[:space:]]+[0-9]+" -m 1 android/app/build.gradle 2>/dev/null | awk '{print $2}')
+
+echo "📦 الإصدار: ${VERSION_NAME:-unknown}"
+echo "🔢 Version Code: ${VERSION_CODE:-unknown}"
 echo ""
 
 # تنظيف البناء السابق
