@@ -8,11 +8,13 @@ interface User {
   email: string;
   phone: string;
   isAdmin: boolean;
+  role?: 'admin' | 'delivery' | 'user' | string;
 }
 
 interface AuthContextType {
   user: User | null;
   isAdmin: boolean;
+  canAccessAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, phone: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -53,6 +55,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             email: latestUserData.email || parsedUser.email,
             phone: latestUserData.phone || parsedUser.phone,
             isAdmin: Boolean(latestUserData.isAdmin || latestUserData.role === 'admin'),
+            role: latestUserData.role || parsedUser.role,
           };
 
           await saveUser(refreshedUser);
@@ -116,7 +119,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <AuthContext.Provider
-      value={{ user, isAdmin: user?.isAdmin || false, login, register, logout, updateProfile }}
+      value={{
+        user,
+        isAdmin: user?.isAdmin || false,
+        canAccessAdmin: Boolean(user && (user.isAdmin || user.role === 'delivery')),
+        login,
+        register,
+        logout,
+        updateProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

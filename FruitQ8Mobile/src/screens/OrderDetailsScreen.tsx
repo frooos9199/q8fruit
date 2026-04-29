@@ -9,7 +9,7 @@ import { formatOrderDateTime } from '../utils/orderDate';
 
 export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ navigation, route }) => {
   const { i18n } = useTranslation();
-  const { isAdmin } = useAuth();
+  const { canAccessAdmin } = useAuth();
   const isArabic = i18n.language === 'ar';
   const { order } = route.params;
   const orderNumber = String(order.orderNumber || order.id);
@@ -267,7 +267,7 @@ export const OrderDetailsScreen: React.FC<{ navigation: any; route: any }> = ({ 
         </View>
 
         {/* Admin Actions */}
-        {isAdmin && order.status !== 'delivered' && order.status !== 'cancelled' && (
+        {canAccessAdmin && order.status !== 'delivered' && order.status !== 'cancelled' && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>{isArabic ? 'تحديث الحالة' : 'Update Status'}</Text>
             <View style={styles.actionsGrid}>

@@ -12,7 +12,7 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 export const MainNavigator: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { isAdmin } = useAuth();
+  const { canAccessAdmin } = useAuth();
   const { itemCount } = useCart();
   const isArabic = i18n.language === 'ar';
   const insets = useSafeAreaInsets();
@@ -69,7 +69,7 @@ export const MainNavigator: React.FC = () => {
           tabBarIcon: ({ color }) => <TabIcon icon="👤" />,
         }}
       />
-      {isAdmin && (
+      {canAccessAdmin && (
         <Tab.Screen
           name="Admin"
           component={AdminScreen}

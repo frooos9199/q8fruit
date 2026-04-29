@@ -40,9 +40,13 @@ const normalizeDate = (value: unknown) => {
 const normalizeUserDocument = (raw: Record<string, any>, uidFallback = '') => {
   const uid = normalizeText(raw.uid ?? raw.id, uidFallback);
   const email = normalizeText(raw.email).trim().toLowerCase();
-  const rawRole = normalizeText(raw.role).toLowerCase();
-  const isAdmin = raw.isAdmin === true || rawRole === 'admin' || email === 'summit_kw@hotmail.com';
-  const role = isAdmin ? 'admin' : rawRole === 'delivery' ? 'delivery' : 'user';
+  const rawRole = normalizeText(raw.role).trim().toLowerCase();
+
+  const isAdminRole = rawRole === 'admin' || rawRole === 'manager' || rawRole === 'مدير';
+  const isDeliveryRole = rawRole === 'delivery' || rawRole === 'delegate' || rawRole === 'courier' || rawRole === 'مندوب';
+
+  const isAdmin = raw.isAdmin === true || isAdminRole || email === 'summit_kw@hotmail.com';
+  const role = isAdmin ? 'admin' : isDeliveryRole ? 'delivery' : 'user';
   const isBlocked = raw.isBlocked === true || raw.active === false;
 
   return {
